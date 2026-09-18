@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#3A2830"/><stop offset="1" stop-color="#1D1519"/>
+    <radialGradient id="bg" cx=".5" cy=".35" r=".75">
+      <stop stop-color="#4b155f"/><stop offset=".55" stop-color="#22092f"/><stop offset="1" stop-color="#100617"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff0a6"/><stop offset=".3" stop-color="#ffc34b"/><stop offset=".7" stop-color="#e88228"/><stop offset="1" stop-color="#8d2c4f"/>
     </linearGradient>
     <linearGradient id="gem" x1=".15" y1=".1" x2=".85" y2=".9">
-      <stop stop-color="#B9DED1"/><stop offset=".34" stop-color="#61A8B2"/><stop offset=".68" stop-color="#8B6BA7"/><stop offset="1" stop-color="#D27F68"/>
-    </linearGradient>
-    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0">
-      <stop stop-color="#784337"/><stop offset=".5" stop-color="#CF866D"/><stop offset="1" stop-color="#61362F"/>
+      <stop stop-color="#ffd9ff"/><stop offset=".26" stop-color="#cf62f1"/><stop offset=".62" stop-color="#7e34cb"/><stop offset="1" stop-color="#f34c9e"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <rect x="104" y="92" width="304" height="34" rx="17" fill="url(#metal)"/>
-  <path d="M164 184h184l54 35-32 12-80 16-34 143-34-143-80-16-32-12 54-35Z" fill="url(#gem)"/>
-  <path d="M164 184h184l-58 63H222l-58-63Zm58 63 34 143 34-143" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M181 105h34l41 42 41-42h34l22 77-38-28-19 51-40-49-40 49-19-51-38 28 22-77Z" fill="url(#gold)"/>
+  <path d="M256 202 374 278 322 419H190l-52-141 118-76Z" fill="url(#gem)" stroke="#ffd469" stroke-width="12"/>
+  <path d="m138 278 118 141 118-141M138 278h236M256 202v217M138 278l118-76 118 76" fill="none" stroke="#fff" stroke-opacity=".46" stroke-width="8"/>
 </svg>
