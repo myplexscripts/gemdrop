@@ -733,6 +733,56 @@
       }
     }
 
+    bodiesTouch(a,b) {
+      if(!a?.body||!b?.body) return false;
+
+      const M=Phaser.Physics.Matter.Matter;
+      const partsA=a.body.parts?.length>1?a.body.parts.slice(1):[a.body];
+      const partsB=b.body.parts?.length>1?b.body.parts.slice(1):[b.body];
+
+      for(const pa of partsA){
+        for(const pb of partsB){
+          if(!M.Bounds.overlaps(pa.bounds,pb.bounds)) continue;
+          const hit=M.Collision.collides(pa,pb);
+          if(hit?.collided) return true;
+        }
+      }
+
+      // Matter may resolve two resting polygons with a hairline separation.
+      // Treat only a sub-pixel / near-pixel gap as contact, and only when the
+      // pair is already moving slowly, so gems cannot merge across open space.
+      const A=a.body.bounds;
+      const B=b.body.bounds;
+      const gapX=Math.max(0,Math.max(A.min.x-B.max.x,B.min.x-A.max.x));
+      const gapY=Math.max(0,Math.max(A.min.y-B.max.y,B.min.y-A.max.y));
+      const rel=Math.hypot(
+        a.body.velocity.x-b.body.velocity.x,
+        a.body.velocity.y-b.body.velocity.y
+      );
+
+      return gapX<=1.25 && gapY<=1.25 && rel<.9;
+    }
+
+    scanForMatches() {
+      const now=this.time.now;
+
+      for(let i=0;i<this.gems.length;i++){
+        const a=this.gems[i];
+        if(!a?.active||a.merging||now-a.born<70) continue;
+
+        for(let j=i+1;j<this.gems.length;j++){
+          const b=this.gems[j];
+          if(!b?.active||b.merging||b.tier!==a.tier||now-b.born<70) continue;
+          if(!this.bodiesTouch(a,b)) continue;
+
+          a.merging=true;
+          b.merging=true;
+          this.pendingMerges.push([a,b]);
+          break;
+        }
+      }
+    }
+
     processMerges() {
       if(!this.pendingMerges.length) return;
       const queue=this.pendingMerges.splice(0);
@@ -937,6 +987,7 @@
       const dt=Math.min(delta,34)/1000;
 
       if(this.running&&!this.paused){
+        this.scanForMatches();
         this.processMerges();
 
         this.mergeWindow=Math.max(0,this.mergeWindow-dt);
