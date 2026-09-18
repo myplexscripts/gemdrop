@@ -736,34 +736,26 @@
     bodiesTouch(a,b) {
       if(!a?.body||!b?.body) return false;
 
-      const M=Phaser.Physics.Matter.Matter;
-      const direct=M.Query.collides(a.body,[b.body]);
-      if(direct?.length) return true;
-
-      const partsA=a.body.parts?.length>1?a.body.parts.slice(1):[a.body];
-      const partsB=b.body.parts?.length>1?b.body.parts.slice(1):[b.body];
-
-      for(const pa of partsA){
-        for(const pb of partsB){
-          if(!M.Bounds.overlaps(pa.bounds,pb.bounds)) continue;
-          const hit=M.Collision.collides(pa,pb);
-          if(hit) return true;
-        }
-      }
-
-      // Matter may resolve two resting polygons with a hairline separation.
-      // Treat only a sub-pixel / near-pixel gap as contact, and only when the
-      // pair is already moving slowly, so gems cannot merge across open space.
       const A=a.body.bounds;
       const B=b.body.bounds;
+
       const gapX=Math.max(0,Math.max(A.min.x-B.max.x,B.min.x-A.max.x));
       const gapY=Math.max(0,Math.max(A.min.y-B.max.y,B.min.y-A.max.y));
-      const rel=Math.hypot(
-        a.body.velocity.x-b.body.velocity.x,
-        a.body.velocity.y-b.body.velocity.y
-      );
+      const edgeGap=Math.hypot(gapX,gapY);
 
-      return gapX<=1.25 && gapY<=1.25 && rel<.9;
+      // Matter keeps a tiny solver separation between resting polygons.
+      // A 6px tolerance at the game's 640px physics resolution is visually
+      // indistinguishable from contact, but makes matching reliable.
+      if(edgeGap>6) return false;
+
+      const t=tiers[a.tier];
+      const dx=a.body.position.x-b.body.position.x;
+      const dy=a.body.position.y-b.body.position.y;
+      const centreDistance=Math.hypot(dx,dy);
+
+      // Prevent two large rotated AABBs from matching merely because their
+      // bounding boxes overlap while the visible gems are still far apart.
+      return centreDistance <= t.r*1.92;
     }
 
     scanForMatches() {
@@ -771,11 +763,11 @@
 
       for(let i=0;i<this.gems.length;i++){
         const a=this.gems[i];
-        if(!a?.active||a.merging||now-a.born<70) continue;
+        if(!a?.active||a.merging||now-a.born<35) continue;
 
         for(let j=i+1;j<this.gems.length;j++){
           const b=this.gems[j];
-          if(!b?.active||b.merging||b.tier!==a.tier||now-b.born<70) continue;
+          if(!b?.active||b.merging||b.tier!==a.tier||now-b.born<35) continue;
           if(!this.bodiesTouch(a,b)) continue;
 
           a.merging=true;
