@@ -1,6 +1,6 @@
 {
-  "name": "Gem Tide",
-  "short_name": "Gem Tide",
+  "name": "Gem Drop",
+  "short_name": "Gem Drop",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#21191D",
