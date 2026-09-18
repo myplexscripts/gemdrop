@@ -5,11 +5,13 @@
 
   const W = 640;
   const H = 864;
-  const WALL = 27;
-  const FLOOR = 833;
-  const DROP_Y = 74;
+  const WALL = 28;
+  const FLOOR = 824;
+  const DROP_Y = 72;
   const LIMIT_Y = 146;
-  const DROP_DELAY = 280;
+  const DROP_DELAY = 300;
+  const COLLIDER_SCALE = 0.945;
+  const ART_SCALE = 0.938;
 
   const $ = id => document.getElementById(id);
   const scoreEl = $('score');
@@ -25,17 +27,17 @@
   const bestMergeEl = $('bestMerge');
 
   const tiers = [
-    {name:'Quartz',     cut:'Brilliant',    r:34,  score:1,  color:'#D8E4EB', accent:'#FFFFFF', dark:'#83929C', profile:[.34,.58,.70,.86,.80,.00], facet:'brilliant'},
-    {name:'Citrine',    cut:'Rose',         r:42,  score:3,  color:'#E9B13D', accent:'#FFE29A', dark:'#A96A1E', profile:[.22,.54,.65,.86,.58,.12], facet:'rose'},
-    {name:'Peridot',    cut:'Cushion',      r:50,  score:6,  color:'#79BD5B', accent:'#C9E99E', dark:'#4A823B', profile:[.40,.57,.72,.87,.76,.05], facet:'mixed'},
-    {name:'Aquamarine', cut:'Emerald Step', r:60,  score:10, color:'#42AFC1', accent:'#B7E4EA', dark:'#27727F', profile:[.52,.48,.76,.88,.68,.14], facet:'step'},
-    {name:'Amethyst',   cut:'Princess',     r:72,  score:15, color:'#9569D3', accent:'#D4BCEC', dark:'#654493', profile:[.32,.60,.69,.86,.84,.00], facet:'kite'},
-    {name:'Topaz',      cut:'Marquise',     r:84,  score:21, color:'#E87945', accent:'#F5BC94', dark:'#A94D31', profile:[.45,.47,.80,.89,.65,.03], facet:'long'},
-    {name:'Sapphire',   cut:'Radiant',      r:98,  score:28, color:'#5276DD', accent:'#B6C7F2', dark:'#324E9C', profile:[.42,.54,.76,.88,.78,.07], facet:'radiant'},
-    {name:'Emerald',    cut:'Asscher',      r:112, score:36, color:'#3CAA7F', accent:'#A4DCC3', dark:'#236F54', profile:[.54,.48,.78,.88,.70,.14], facet:'step'},
-    {name:'Ruby',       cut:'Pear',         r:130, score:45, color:'#DA4B67', accent:'#F1A6B4', dark:'#9B3046', profile:[.30,.62,.72,.87,.86,.00], facet:'pear'},
-    {name:'Starstone',  cut:'Old Mine',     r:150, score:55, color:'#8062C8', accent:'#C1AFE9', dark:'#523B8C', profile:[.30,.65,.72,.86,.88,.04], facet:'oldmine'},
-    {name:'Crownstone', cut:'Royal',        r:172, score:66, color:'#E6A03A', accent:'#F7D884', dark:'#9E6122', profile:[.45,.56,.80,.90,.80,.09], facet:'royal'}
+    {name:'Quartz',     cut:'Brilliant', r:34,  score:1,  color:'#D9E8F0', accent:'#FFFFFF', dark:'#7D929F', sides:12, table:.38, twist:0.00},
+    {name:'Citrine',    cut:'Rose',      r:42,  score:3,  color:'#F0B63D', accent:'#FFE38D', dark:'#A86B22', sides:10, table:.32, twist:.14},
+    {name:'Peridot',    cut:'Cushion',   r:50,  score:6,  color:'#7BC45C', accent:'#CBEAA8', dark:'#4A843A', sides:12, table:.43, twist:.06},
+    {name:'Aquamarine', cut:'Step',      r:60,  score:10, color:'#44B7C7', accent:'#BCE8ED', dark:'#287784', sides:12, table:.50, twist:.00},
+    {name:'Amethyst',   cut:'Princess',  r:72,  score:15, color:'#986CD8', accent:'#D9C2F1', dark:'#684897', sides:10, table:.36, twist:.18},
+    {name:'Topaz',      cut:'Radiant',   r:84,  score:21, color:'#EF7F49', accent:'#F8C39B', dark:'#AA4E31', sides:12, table:.44, twist:.08},
+    {name:'Sapphire',   cut:'Star',      r:98,  score:28, color:'#5379E4', accent:'#BCCCF7', dark:'#324F9F', sides:14, table:.34, twist:.15},
+    {name:'Emerald',    cut:'Asscher',   r:112, score:36, color:'#3BB186', accent:'#A9DEC7', dark:'#247257', sides:12, table:.52, twist:.00},
+    {name:'Ruby',       cut:'Royal',     r:130, score:45, color:'#DF506D', accent:'#F4ADBA', dark:'#A33249', sides:14, table:.38, twist:.11},
+    {name:'Starstone',  cut:'Celestial', r:150, score:55, color:'#8264D0', accent:'#C9B6EE', dark:'#553E90', sides:16, table:.32, twist:.20},
+    {name:'Crownstone', cut:'Crown',     r:170, score:66, color:'#E8A43A', accent:'#F9D986', dark:'#A16623', sides:16, table:.46, twist:.08}
   ];
 
   let audioCtx = null;
@@ -47,7 +49,7 @@
     if (audioCtx?.state === 'suspended') audioCtx.resume();
   }
 
-  function tone(freq, duration=.055, volume=.023, type='sine') {
+  function tone(freq, duration=.055, volume=.022, type='sine') {
     if (!audioCtx) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -77,85 +79,20 @@
   }
 
   function mixHex(aHex,bHex,t) {
-    const a = Phaser.Display.Color.HexStringToColor(aHex);
-    const b = Phaser.Display.Color.HexStringToColor(bHex);
-    const u = clamp(t,0,1);
+    const a=Phaser.Display.Color.HexStringToColor(aHex);
+    const b=Phaser.Display.Color.HexStringToColor(bHex);
+    const u=clamp(t,0,1);
     return Phaser.Display.Color.GetColor(
-      Math.round(a.red + (b.red-a.red)*u),
-      Math.round(a.green + (b.green-a.green)*u),
-      Math.round(a.blue + (b.blue-a.blue)*u)
+      Math.round(a.red+(b.red-a.red)*u),
+      Math.round(a.green+(b.green-a.green)*u),
+      Math.round(a.blue+(b.blue-a.blue)*u)
     );
-  }
-
-  function geometryForTier(index,r) {
-    const t = tiers[index];
-    const p = t.profile;
-    const table = r*p[0];
-    const crown = r*p[1];
-    const shoulder = r*p[2];
-    const girdle = r*p[3];
-    const pavilion = r*p[4];
-    const culet = r*p[5];
-
-    if (t.facet === 'rose') {
-      return {
-        table,crown,shoulder,girdle,pavilion,culet,
-        outer:[
-          {x:0,y:-crown},
-          {x:girdle*.44,y:-crown*.55},
-          {x:girdle,y:-r*.02},
-          {x:girdle*.91,y:r*.10},
-          {x:culet,y:pavilion},
-          {x:-culet,y:pavilion},
-          {x:-girdle*.91,y:r*.10},
-          {x:-girdle,y:-r*.02},
-          {x:-girdle*.44,y:-crown*.55}
-        ]
-      };
-    }
-
-    return {
-      table,crown,shoulder,girdle,pavilion,culet,
-      outer:[
-        {x:-table,y:-crown},
-        {x:table,y:-crown},
-        {x:shoulder,y:-r*.18},
-        {x:girdle,y:-r*.04},
-        {x:girdle,y:r*.05},
-        {x:r*.36,y:pavilion*.62},
-        {x:culet,y:pavilion},
-        {x:-culet,y:pavilion},
-        {x:-r*.36,y:pavilion*.62},
-        {x:-girdle,y:r*.05},
-        {x:-girdle,y:-r*.04},
-        {x:-shoulder,y:-r*.18}
-      ]
-    };
-  }
-
-  function polygonCentroid(points) {
-    let twiceArea=0;
-    let cx=0;
-    let cy=0;
-
-    for(let i=0;i<points.length;i++){
-      const a=points[i];
-      const b=points[(i+1)%points.length];
-      const cross=a.x*b.y-b.x*a.y;
-      twiceArea+=cross;
-      cx+=(a.x+b.x)*cross;
-      cy+=(a.y+b.y)*cross;
-    }
-
-    if(Math.abs(twiceArea)<.00001) return {x:0,y:0};
-    const factor=1/(3*twiceArea);
-    return {x:cx*factor,y:cy*factor};
   }
 
   class GameScene extends Phaser.Scene {
     constructor() {
       super('GameScene');
-      this.gems = null;
+      this.gems = [];
       this.pendingMerges = [];
       this.score = 0;
       this.best = 0;
@@ -165,53 +102,44 @@
       this.ready = false;
       this.running = false;
       this.paused = false;
-      this.targetX = W/2;
       this.pointerHeld = false;
+      this.targetX = W/2;
+      this.preview = null;
+      this.lastDropAt = 0;
       this.dangerTime = 0;
       this.mergeWindow = 0;
       this.mergeChain = 0;
       this.discoveredCuts = new Set([0]);
-      this.preview = null;
-      this.glints = new Map();
-      this.dropper = null;
       this.limitLine = null;
-      this.lastDropAt = 0;
+      this.dropper = null;
+      this.limitJewels = [];
+      this.cutToastTimer = null;
       this.uiBound = false;
     }
 
     create() {
       this.cameras.main.setBackgroundColor('rgba(0,0,0,0)');
 
+      // Phaser's own fixed 60 Hz Matter stepping. No manual body movement or
+      // per-frame position correction anywhere in the game.
+      this.matter.set60Hz();
+
       const engine=this.matter.world.engine;
-      engine.positionIterations=12;
-      engine.velocityIterations=10;
-      engine.constraintIterations=4;
+      engine.positionIterations=8;
+      engine.velocityIterations=6;
+      engine.constraintIterations=2;
 
       this.makeTextures();
       this.drawVaultBackdrop();
+      this.createWorldWalls();
 
-      this.gems=this.add.group();
+      this.matter.world.on('collisionstart',event=>this.onCollisionStart(event));
 
-      const wallOptions={
-        isStatic:true,
-        friction:.34,
-        frictionStatic:.72,
-        restitution:.018,
-        label:'vault-wall'
-      };
-
-      this.floorBody=this.matter.add.rectangle(W/2,FLOOR+38,W+120,76,wallOptions);
-      this.leftWallBody=this.matter.add.rectangle(WALL-17,H/2,34,H*2,wallOptions);
-      this.rightWallBody=this.matter.add.rectangle(W-WALL+17,H/2,34,H*2,wallOptions);
-
-      this.matter.world.on('collisionstart',event=>this.handleMatterCollisions(event,false));
-      this.matter.world.on('collisionactive',event=>this.handleMatterCollisions(event,true));
-
-      this.limitLine = this.add.graphics().setDepth(5);
-      this.dropper = this.add.graphics().setDepth(20);
-      this.limitJewels = [
-        this.add.rectangle(WALL+18,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(6),
-        this.add.rectangle(W-WALL-18,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(6)
+      this.limitLine=this.add.graphics().setDepth(6);
+      this.dropper=this.add.graphics().setDepth(30);
+      this.limitJewels=[
+        this.add.rectangle(WALL+17,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7),
+        this.add.rectangle(W-WALL-17,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7)
       ];
 
       this.input.on('pointerdown',p=>this.onPointerDown(p));
@@ -219,15 +147,49 @@
       this.input.on('pointerup',p=>this.onPointerUp(p));
       this.input.on('pointerupoutside',p=>this.onPointerUp(p));
 
-      this.best = this.loadBest();
-      bestEl.textContent = fmt(this.best);
+      this.best=this.loadBest();
+      bestEl.textContent=fmt(this.best);
       this.bindUI();
       this.updateNextPreview();
     }
 
+    createWorldWalls() {
+      const wallOptions={
+        isStatic:true,
+        label:'vault-wall',
+        friction:.08,
+        frictionStatic:.24,
+        restitution:.02
+      };
+
+      // Every wall extends away from the playfield. The visible interior faces
+      // are exactly x=WALL, x=W-WALL and y=FLOOR.
+      this.floorBody=this.matter.add.rectangle(
+        W/2,
+        FLOOR+64,
+        W+180,
+        128,
+        wallOptions
+      );
+      this.leftWallBody=this.matter.add.rectangle(
+        WALL-48,
+        H/2,
+        96,
+        H*2,
+        wallOptions
+      );
+      this.rightWallBody=this.matter.add.rectangle(
+        W-WALL+48,
+        H/2,
+        96,
+        H*2,
+        wallOptions
+      );
+    }
+
     bindUI() {
       if (this.uiBound) return;
-      this.uiBound = true;
+      this.uiBound=true;
 
       $('startButton').addEventListener('click',()=>{
         unlockAudio();
@@ -249,22 +211,21 @@
       });
 
       document.addEventListener('visibilitychange',()=>{
-        if (document.hidden && this.running && !this.paused) this.setPaused(true);
+        if(document.hidden&&this.running&&!this.paused) this.setPaused(true);
       });
 
       window.addEventListener('keydown',e=>{
-        if (e.code==='Space') {
+        if(e.code==='Space'){
           e.preventDefault();
           this.dropCurrent();
         }
-        if (e.key==='Escape') this.setPaused(!this.paused);
+        if(e.key==='Escape') this.setPaused(!this.paused);
       });
     }
 
     loadBest() {
       try {
-        const v = localStorage.getItem('gemDropBest');
-        return Number(v || 0);
+        return Number(localStorage.getItem('gemDropBest')||0);
       } catch {
         return 0;
       }
@@ -275,127 +236,103 @@
     }
 
     makeTextures() {
-      for (let i=0;i<tiers.length;i++) this.makeGemTexture(i);
-      this.makeGlintTexture();
-    }
-
-    makeGlintTexture() {
-      if (this.textures.exists('glint')) return;
-      const g = this.make.graphics({x:0,y:0,add:false});
-      g.lineStyle(2,0xffffff,.95);
-      g.beginPath();
-      g.moveTo(0,8); g.lineTo(16,8);
-      g.moveTo(8,1); g.lineTo(8,15);
-      g.strokePath();
-      g.lineStyle(1,0xfff0c8,.75);
-      g.beginPath();
-      g.moveTo(3,3); g.lineTo(13,13);
-      g.moveTo(13,3); g.lineTo(3,13);
-      g.strokePath();
-      g.generateTexture('glint',16,16);
-      g.destroy();
+      for(let i=0;i<tiers.length;i++) this.makeGemTexture(i);
     }
 
     makeGemTexture(index) {
-      const t = tiers[index];
-      const r = t.r;
-      const size = Math.ceil(r*2.12);
-      const cx = size/2;
-      const cy = size/2;
-      const geo = geometryForTier(index,r*.94);
-      const center = polygonCentroid(geo.outer);
-      const pt = (p)=>new Phaser.Geom.Point(cx+p.x-center.x,cy+p.y-center.y);
-      const pts = geo.outer.map(pt);
-      const g = this.make.graphics({x:0,y:0,add:false});
+      const t=tiers[index];
+      const r=t.r;
+      const size=Math.ceil(r*2.12);
+      const cx=size/2;
+      const cy=size/2;
+      const R=r*ART_SCALE;
+      const outer=[];
+      const inner=[];
+      const n=t.sides;
 
-      const dark = hexToInt(t.dark);
-      const color = hexToInt(t.color);
-      const accent = hexToInt(t.accent);
-      const midLight = mixHex(t.color,t.accent,.34);
-      const deep = mixHex(t.dark,'#14081b',.25);
+      for(let i=0;i<n;i++){
+        const a=-Math.PI/2+(i/n)*Math.PI*2;
+        const wobble=1-(i%3===1?.018:0);
+        outer.push(new Phaser.Geom.Point(
+          cx+Math.cos(a)*R*wobble,
+          cy+Math.sin(a)*R*wobble
+        ));
 
-      g.fillStyle(0x08040b,.34);
-      g.fillPoints(geo.outer.map(p=>new Phaser.Geom.Point(cx+p.x-center.x+3,cy+p.y-center.y+5)),true);
+        const ia=a+t.twist;
+        inner.push(new Phaser.Geom.Point(
+          cx+Math.cos(ia)*R*t.table,
+          cy+Math.sin(ia)*R*t.table
+        ));
+      }
 
-      g.fillStyle(dark,1);
-      g.fillPoints(pts,true);
+      const g=this.make.graphics({x:0,y:0,add:false});
+      const dark=hexToInt(t.dark);
+      const color=hexToInt(t.color);
+      const accent=hexToInt(t.accent);
 
-      const P=(x,y)=>new Phaser.Geom.Point(cx+x-center.x,cy+y-center.y);
-      const tableL=P(-geo.table,-geo.crown);
-      const tableR=P(geo.table,-geo.crown);
-      const shoulderL=P(-geo.shoulder,-r*.17);
-      const shoulderR=P(geo.shoulder,-r*.17);
-      const girdleLT=P(-geo.girdle,-r*.04);
-      const girdleRT=P(geo.girdle,-r*.04);
-      const girdleLB=P(-geo.girdle,r*.05);
-      const girdleRB=P(geo.girdle,r*.05);
-      const lowerL=P(-r*.36,geo.pavilion*.62);
-      const lowerR=P(r*.36,geo.pavilion*.62);
-      const culetL=P(-geo.culet,geo.pavilion);
-      const culetR=P(geo.culet,geo.pavilion);
-      const coreTop=P(0,-r*.10);
-      const coreMid=P(0,r*.17);
+      // Soft shadow is baked into the art only. It never affects physics.
+      const shadow=outer.map(p=>new Phaser.Geom.Point(p.x+2.5,p.y+4));
+      g.fillStyle(0x07030a,.35);
+      g.fillPoints(shadow,true);
 
-      const fill=(arr,c,a=1)=>{ g.fillStyle(c,a); g.fillPoints(arr,true); };
+      // Each outer wedge receives lighting based on a fixed upper-left light.
+      for(let i=0;i<n;i++){
+        const j=(i+1)%n;
+        const angle=-Math.PI/2+((i+.5)/n)*Math.PI*2;
+        const light=Math.max(0,Math.cos(angle+2.35));
+        const face=light>.05
+          ? mixHex(t.color,t.accent,.12+light*.50)
+          : mixHex(t.color,t.dark,.16+Math.abs(Math.cos(angle-.8))*.18);
 
-      if (t.facet==='rose') {
-        const apex=P(0,-geo.crown);
-        const lm=P(-geo.girdle*.44,-geo.crown*.55);
-        const rm=P(geo.girdle*.44,-geo.crown*.55);
-        fill([apex,rm,coreMid],accent,.78);
-        fill([apex,coreMid,lm],midLight,.80);
-        fill([lm,coreMid,girdleLB],color,.92);
-        fill([rm,girdleRB,coreMid],mixHex(t.color,t.dark,.16),.94);
-        fill([girdleLB,girdleRB,culetR,culetL],deep,.96);
-      } else if (t.facet==='step') {
-        fill([tableL,tableR,P(geo.shoulder*.70,-r*.15),P(-geo.shoulder*.70,-r*.15)],accent,.78);
-        fill([P(-geo.shoulder*.70,-r*.15),P(geo.shoulder*.70,-r*.15),girdleRT,girdleLT],midLight,.92);
-        fill([girdleLB,girdleRB,P(r*.55,geo.pavilion*.45),P(-r*.55,geo.pavilion*.45)],color,.95);
-        fill([P(-r*.55,geo.pavilion*.45),P(r*.55,geo.pavilion*.45),culetR,culetL],deep,.96);
-        g.lineStyle(Math.max(1,r*.015),0xffffff,.18);
-        for (const yy of [r*.10,r*.26,r*.40]) {
+        g.fillStyle(face,1);
+        g.fillPoints([outer[i],outer[j],inner[j],inner[i]],true);
+      }
+
+      // Pavilion / centre facets.
+      const centre=new Phaser.Geom.Point(cx,cy+r*.03);
+      for(let i=0;i<n;i++){
+        const j=(i+1)%n;
+        const light=(i%2===0)?.18:.05;
+        g.fillStyle(mixHex(t.dark,t.color,.38+light),.96);
+        g.fillPoints([inner[i],inner[j],centre],true);
+      }
+
+      // Table.
+      g.fillStyle(mixHex(t.color,t.accent,.48),.86);
+      g.fillPoints(inner,true);
+
+      // Cut-specific detail. These are visual only so physics stays simple.
+      g.lineStyle(Math.max(1.2,r*.018),0xffffff,.16);
+      if(index%3===0){
+        for(let i=0;i<n;i+=2){
           g.beginPath();
-          g.moveTo(cx-geo.girdle*.68,cy+yy);
-          g.lineTo(cx+geo.girdle*.68,cy+yy);
+          g.moveTo(inner[i].x,inner[i].y);
+          g.lineTo(outer[(i+2)%n].x,outer[(i+2)%n].y);
           g.strokePath();
         }
-      } else {
-        fill([tableL,tableR,P(r*.34,-r*.16),P(-r*.34,-r*.16)],accent,.78);
-        fill([tableL,P(-r*.34,-r*.16),shoulderL],midLight,.90);
-        fill([tableR,shoulderR,P(r*.34,-r*.16)],mixHex(t.color,t.accent,.18),.92);
-        fill([shoulderL,P(-r*.34,-r*.16),coreTop,girdleLT],color,.95);
-        fill([shoulderR,girdleRT,coreTop,P(r*.34,-r*.16)],mixHex(t.color,t.dark,.12),.96);
-        fill([girdleLT,girdleRT,girdleRB,girdleLB],mixHex(t.color,t.accent,.17),.98);
-        fill([girdleLB,coreMid,lowerL],mixHex(t.color,t.dark,.10),.96);
-        fill([girdleRB,lowerR,coreMid],midLight,.88);
-        fill([lowerL,coreMid,culetL],dark,.96);
-        fill([coreMid,lowerR,culetR],mixHex(t.dark,t.color,.34),.96);
-        fill([culetL,coreMid,culetR],deep,.98);
-
-        if (['radiant','royal','oldmine'].includes(t.facet)) {
-          g.lineStyle(Math.max(1,r*.012),0xffffff,.16);
+      }else if(index%3===1){
+        const ring=inner.map(p=>new Phaser.Geom.Point(
+          cx+(p.x-cx)*.62,
+          cy+(p.y-cy)*.62
+        ));
+        g.strokePoints(ring,true);
+      }else{
+        for(let i=0;i<n;i+=3){
           g.beginPath();
-          g.moveTo(tableL.x,tableL.y); g.lineTo(lowerR.x,lowerR.y);
-          g.moveTo(tableR.x,tableR.y); g.lineTo(lowerL.x,lowerL.y);
-          g.strokePath();
-        }
-
-        if (['kite','pear','long'].includes(t.facet)) {
-          g.lineStyle(Math.max(1,r*.012),0xffffff,.18);
-          g.beginPath();
-          g.moveTo(coreTop.x,coreTop.y); g.lineTo(culetL.x,culetL.y);
-          g.moveTo(coreTop.x,coreTop.y); g.lineTo(culetR.x,culetR.y);
+          g.moveTo(cx,cy);
+          g.lineTo(outer[i].x,outer[i].y);
           g.strokePath();
         }
       }
 
-      g.lineStyle(Math.max(2,r*.025),0xffffff,.46);
-      g.strokePoints(pts,true);
+      g.lineStyle(Math.max(1.4,r*.020),0xffffff,.44);
+      g.strokePoints(outer,true);
 
-      g.lineStyle(Math.max(1,r*.012),accent,.32);
+      // Restrained highlight streak.
+      g.lineStyle(Math.max(1,r*.013),accent,.38);
       g.beginPath();
-      g.moveTo(cx-r*.30,cy-r*.42);
-      g.lineTo(cx+r*.22,cy-r*.20);
+      g.moveTo(cx-r*.28,cy-r*.48);
+      g.lineTo(cx+r*.18,cy-r*.32);
       g.strokePath();
 
       g.generateTexture('gem-'+index,size,size);
@@ -403,27 +340,33 @@
     }
 
     drawVaultBackdrop() {
-      const g = this.add.graphics().setDepth(0);
-      g.fillStyle(0x1a0825,.55);
-      g.fillRect(0,0,W,H);
+      const bg=this.add.graphics().setDepth(0);
+      bg.fillStyle(0x190722,.62);
+      bg.fillRect(0,0,W,H);
 
-      g.fillStyle(0xffc44a,.10);
-      g.fillRect(WALL,19,W-WALL*2,6);
-      g.fillRect(WALL,FLOOR-8,W-WALL*2,9);
+      bg.fillStyle(0x6a1b78,.055);
+      bg.fillEllipse(W*.5,H*.72,W*.82,H*.40);
 
-      g.lineStyle(2,0xffca54,.26);
-      g.strokeRect(WALL,19,W-WALL*2,FLOOR-19);
+      // Rails are outside the collision faces.
+      const rails=this.add.graphics().setDepth(18);
+      rails.fillGradientStyle(0xffdd7a,0xf2a433,0xb13f61,0x6f2253,1);
+      rails.fillRect(WALL-8,18,8,FLOOR-18);
+      rails.fillRect(W-WALL,18,8,FLOOR-18);
+      rails.fillGradientStyle(0xffed9e,0xffbd3f,0xb13f61,0x6a1f52,1);
+      rails.fillRect(WALL,FLOOR+2,W-WALL*2,10);
+      rails.lineStyle(2,0xffd666,.34);
+      rails.strokeRect(WALL,19,W-WALL*2,FLOOR-19);
 
       const sparkleColors=[0xffc65b,0xf36ac8,0xa46cff];
-      for(let i=0;i<30;i++){
+      for(let i=0;i<28;i++){
         const x=(i*173.7)%W;
         const y=(i*109.3)%H;
-        const s=this.add.circle(x,y,.8+(i%3)*.25,sparkleColors[i%3],.20).setDepth(1);
+        const s=this.add.circle(x,y,.75+(i%3)*.24,sparkleColors[i%3],.18).setDepth(1);
         this.tweens.add({
           targets:s,
-          alpha:{from:.08,to:.34},
+          alpha:{from:.06,to:.28},
           y:y-4-(i%4),
-          duration:1400+(i%5)*220,
+          duration:1500+(i%5)*220,
           yoyo:true,
           repeat:-1,
           ease:'Sine.inOut',
@@ -434,11 +377,12 @@
 
     randomSpawnTier() {
       const r=Math.random();
-      return r<.30?0:r<.56?1:r<.78?2:r<.93?3:4;
+      return r<.32?0:r<.59?1:r<.80?2:r<.94?3:4;
     }
 
     startRun() {
       this.clearRun();
+
       this.score=0;
       this.currentTier=this.randomSpawnTier();
       this.nextTier=this.randomSpawnTier();
@@ -448,35 +392,32 @@
       this.paused=false;
       this.pointerHeld=false;
       this.targetX=W/2;
+      this.lastDropAt=0;
       this.dangerTime=0;
       this.mergeWindow=0;
       this.mergeChain=0;
       this.discoveredCuts=new Set([0]);
-      this.lastDropAt=0;
 
       scoreEl.textContent='0';
       dangerHud.hidden=true;
       cutToast.classList.remove('show');
       gestureHint.classList.remove('hidden');
 
+      this.matter.world.resume();
       this.updateNextPreview();
       this.createDropPreview(true);
-      this.matter.world.resume();
     }
 
     clearRun() {
-      if (!this.gems) return;
-
-      for(const gem of [...this.gems.getChildren()]){
-        this.removeGem(gem);
-      }
-      this.gems.clear(false,false);
-
-      for(const glint of this.glints.values()) glint.destroy();
-      this.glints.clear();
-
-      if(this.preview){this.preview.destroy();this.preview=null;}
+      for(const gem of [...this.gems]) this.removeGem(gem);
+      this.gems.length=0;
       this.pendingMerges.length=0;
+
+      if(this.preview){
+        this.preview.destroy();
+        this.preview=null;
+      }
+
       this.time.removeAllEvents();
     }
 
@@ -486,102 +427,59 @@
 
       const t=tiers[this.currentTier];
       const x=clamp(this.targetX,WALL+t.r,W-WALL-t.r);
-      this.preview=this.add.image(x,DROP_Y,'gem-'+this.currentTier).setDepth(18);
-      this.preview.setAlpha(animate?0:1);
+      this.preview=this.add.image(x,DROP_Y,'gem-'+this.currentTier).setDepth(32);
 
       if(animate){
-        this.preview.setScale(.90);
+        this.preview.setAlpha(0);
         this.tweens.add({
           targets:this.preview,
           alpha:1,
-          scale:1,
-          duration:150,
-          ease:'Back.Out'
+          duration:130,
+          ease:'Quad.Out'
         });
       }
     }
 
-    createGem(x,y,tier,merged=false) {
+    createGem(x,y,tier) {
       const t=tiers[tier];
-      const renderGeo=geometryForTier(tier,t.r*.94);
-      const center=polygonCentroid(renderGeo.outer);
+      const gem=this.matter.add.image(x,y,'gem-'+tier,null,{
+        label:'gem',
+        restitution:.05,
+        friction:.008,
+        frictionStatic:.10,
+        frictionAir:.001,
+        density:.00115,
+        sleepThreshold:60
+      });
 
-      // The collider is only ~1.5% larger than the art. This closes the visible
-      // gaps from the old circular bodies while still guaranteeing that gems
-      // never visually overlap.
-      const bodyGeo=geometryForTier(tier,t.r*.955);
-      const bodyCenter=polygonCentroid(bodyGeo.outer);
-      const verts=bodyGeo.outer.map(p=>({
-        x:p.x-bodyCenter.x,
-        y:p.y-bodyCenter.y
-      }));
+      // Suika-style physics: simple circles. The artwork is slightly smaller
+      // than the collider so visible gems never overlap, while the difference
+      // is small enough that pieces still look snug.
+      gem.setCircle(t.r*COLLIDER_SCALE);
+      gem.setBounce(.05);
+      gem.setFriction(.008,.001,.10);
+      gem.setDensity(.00115);
+      gem.setSleepThreshold(60);
+      gem.setAngle(Phaser.Math.FloatBetween(-4,4));
+      gem.setAngularVelocity(Phaser.Math.FloatBetween(-.008,.008));
 
-      const body=this.matter.add.fromVertices(
-        x,
-        y,
-        verts,
-        {
-          label:'gem',
-          friction:.22,
-          frictionStatic:.52,
-          frictionAir:.008,
-          restitution:.035,
-          density:.00135,
-          slop:.012,
-          sleepThreshold:45
-        },
-        true,
-        .01,
-        5
-      );
-
-      const gem=this.add.image(x,y,'gem-'+tier).setDepth(10+tier*.01);
-      this.matter.add.gameObject(gem,body,false);
-
+      gem.isGem=true;
       gem.tier=tier;
       gem.merging=false;
       gem.born=this.time.now;
+      gem.setDepth(10+tier*.01);
 
-      const M=Phaser.Physics.Matter.Matter;
-      M.Body.setAngle(gem.body,Phaser.Math.FloatBetween(-.035,.035));
-      M.Body.setAngularVelocity(gem.body,Phaser.Math.FloatBetween(-.004,.004));
-      M.Body.setInertia(gem.body,gem.body.inertia*2.15);
-
-      if(merged){
-        gem.setAlpha(.72);
-        gem.setScale(.88);
-        this.tweens.add({
-          targets:gem,
-          alpha:1,
-          scale:1,
-          duration:150,
-          ease:'Back.Out'
-        });
-      }
-
-      this.gems.add(gem);
-
-      const glint=this.add.image(x,y,'glint').setDepth(13).setAlpha(0);
-      glint.setScale(clamp(t.r/58,.65,2.2));
-      this.glints.set(gem,glint);
-
+      this.gems.push(gem);
       return gem;
     }
 
     removeGem(gem) {
-      const glint=this.glints.get(gem);
-      if(glint){
-        glint.destroy();
-        this.glints.delete(gem);
-      }
+      if(!gem||!gem.active) return;
+      const i=this.gems.indexOf(gem);
+      if(i>=0) this.gems.splice(i,1);
 
-      if(gem?.body){
-        this.matter.world.remove(gem.body);
-      }
-      if(gem?.active){
-        this.gems.remove(gem,false,false);
-        gem.destroy();
-      }
+      if(gem.body) this.matter.world.remove(gem.body);
+      gem.destroy();
     }
 
     onPointerDown(pointer) {
@@ -613,16 +511,20 @@
       if(this.time.now-this.lastDropAt<DROP_DELAY) return;
 
       const t=tiers[this.currentTier];
-      const x=clamp(this.preview?.x ?? this.targetX,WALL+t.r,W-WALL-t.r);
+      const x=clamp(this.preview?.x??this.targetX,WALL+t.r,W-WALL-t.r);
 
-      if(this.preview){this.preview.destroy();this.preview=null;}
+      if(this.preview){
+        this.preview.destroy();
+        this.preview=null;
+      }
 
-      const gem=this.createGem(x,DROP_Y,this.currentTier,false);
-      gem.setVelocity(0,.35);
+      const gem=this.createGem(x,DROP_Y,this.currentTier);
+      gem.setVelocity(0,.15);
+
       this.lastDropAt=this.time.now;
       this.ready=false;
 
-      tone(178,.045,.016,'triangle');
+      tone(180,.04,.015,'triangle');
       haptic(5);
 
       this.currentTier=this.nextTier;
@@ -637,86 +539,31 @@
       });
     }
 
-    handleMatterCollisions(event,isActive) {
+    onCollisionStart(event) {
       for(const pair of event.pairs){
         const a=pair.bodyA?.gameObject;
         const b=pair.bodyB?.gameObject;
 
-        if(a?.tier!==undefined && b?.tier!==undefined){
-          this.onGemContact(a,b,!isActive);
+        if(!a?.isGem||!b?.isGem||!a.active||!b.active) continue;
+
+        const av=a.body.velocity;
+        const bv=b.body.velocity;
+        const speed=Math.hypot(bv.x-av.x,bv.y-av.y);
+
+        if(speed>2.0){
+          this.contactSpark(
+            (a.x+b.x)/2,
+            (a.y+b.y)/2,
+            tiers[Math.max(a.tier,b.tier)].accent,
+            speed
+          );
         }
-      }
-    }
 
-    onGemContact(a,b,isNewContact=true) {
-      if(!a?.active||!b?.active||!a.body||!b.body) return;
+        if(a.tier!==b.tier||a.merging||b.merging) continue;
 
-      const av=a.body.velocity;
-      const bv=b.body.velocity;
-      const speed=Math.hypot(bv.x-av.x,bv.y-av.y);
-
-      if(isNewContact && speed>2.0){
-        this.contactSpark(
-          (a.x+b.x)/2,
-          (a.y+b.y)/2,
-          tiers[Math.max(a.tier,b.tier)].accent,
-          speed*55
-        );
-      }
-
-      if(
-        a.tier===b.tier &&
-        !a.merging &&
-        !b.merging &&
-        this.time.now-a.born>80 &&
-        this.time.now-b.born>80
-      ){
         a.merging=true;
         b.merging=true;
         this.pendingMerges.push([a,b]);
-      }
-    }
-
-    gemsAreTouching(a,b) {
-      if(!a?.body||!b?.body) return false;
-
-      const A=a.body.bounds;
-      const B=b.body.bounds;
-      const gapX=Math.max(0,Math.max(A.min.x-B.max.x,B.min.x-A.max.x));
-      const gapY=Math.max(0,Math.max(A.min.y-B.max.y,B.min.y-A.max.y));
-
-      // Matter can keep resting bodies a fraction apart. This is small enough
-      // to read as contact on-screen, while avoiding merges across real gaps.
-      if(gapX>3.5 || gapY>3.5) return false;
-
-      const dx=a.x-b.x;
-      const dy=a.y-b.y;
-      const distance=Math.hypot(dx,dy);
-      const t=tiers[a.tier];
-
-      // Same-tier gems have identical size. This rejects rotated AABB overlap
-      // when the visible cuts are still clearly separated.
-      return distance <= t.r*1.78;
-    }
-
-    scanForMatches() {
-      const now=this.time.now;
-      const gems=this.gems.getChildren();
-
-      for(let i=0;i<gems.length;i++){
-        const a=gems[i];
-        if(!a?.active||a.merging||!a.body||now-a.born<80) continue;
-
-        for(let j=i+1;j<gems.length;j++){
-          const b=gems[j];
-          if(!b?.active||b.merging||!b.body||b.tier!==a.tier||now-b.born<80) continue;
-          if(!this.gemsAreTouching(a,b)) continue;
-
-          a.merging=true;
-          b.merging=true;
-          this.pendingMerges.push([a,b]);
-          break;
-        }
       }
     }
 
@@ -725,36 +572,35 @@
       const queue=this.pendingMerges.splice(0);
 
       for(const [a,b] of queue){
-        if(!a?.active||!b?.active) continue;
-        if(a.tier!==b.tier) continue;
+        if(!a?.active||!b?.active||a.tier!==b.tier) continue;
 
         const tier=a.tier;
         const next=tier+1;
         const x=(a.x+b.x)/2;
         const y=(a.y+b.y)/2;
-        const vx=(a.body.velocity.x+b.body.velocity.x)*.22;
-        const vy=Math.min(-1.15,(a.body.velocity.y+b.body.velocity.y)*.10-.55);
-        const av=(a.body.angularVelocity+b.body.angularVelocity)*.16;
+        const vx=(a.body.velocity.x+b.body.velocity.x)*.32;
+        const vy=(a.body.velocity.y+b.body.velocity.y)*.18;
+        const av=(a.body.angularVelocity+b.body.angularVelocity)*.22;
 
         this.removeGem(a);
         this.removeGem(b);
 
         this.mergeChain=this.mergeWindow>0?this.mergeChain+1:1;
-        this.mergeWindow=.68;
+        this.mergeWindow=.70;
 
         if(next>=tiers.length){
           this.addScore(100);
           this.mergeBurst(x,y,tiers[tier],true);
           this.floatText(x,y-8,'MASTER CUT +100','#ffe0a0',21);
-          this.cameras.main.shake(100,.004);
-          tone(770,.16,.045,'sine');
+          this.cameras.main.shake(90,.0035);
+          tone(760,.15,.042,'sine');
           haptic([14,17,22]);
           continue;
         }
 
-        const gem=this.createGem(x,y,next,true);
+        const gem=this.createGem(x,y,next);
         gem.setVelocity(vx,vy);
-        gem.setAngularVelocity(clamp(av,-.018,.018));
+        gem.setAngularVelocity(clamp(av,-.025,.025));
 
         this.bestTierReached=Math.max(this.bestTierReached,next);
         this.addScore(tiers[next].score);
@@ -765,8 +611,8 @@
           : '+'+tiers[next].score;
         this.floatText(x,y-8,label,'#ffe7c5',this.mergeChain>=2?20:17);
 
-        this.cameras.main.shake(75,next>=7?.0034:.0018);
-        tone(270+next*43,.07+next*.004,.024+Math.min(.018,next*.002),'sine');
+        this.cameras.main.shake(70,next>=7?.0028:.0015);
+        tone(270+next*43,.07+next*.004,.022+Math.min(.017,next*.0018),'sine');
         haptic(next>=8?15:8);
 
         if(!this.discoveredCuts.has(next)){
@@ -782,15 +628,15 @@
 
       for(let i=0;i<count;i++){
         const angle=Math.random()*Math.PI*2;
-        const dist=Phaser.Math.Between(big?45:28,big?100:72);
+        const dist=Phaser.Math.Between(big?45:28,big?96:68);
         const shard=this.add.triangle(
           x,y,
           0,-3,
-          2.8,2.6,
-          -2.8,2.6,
+          2.7,2.5,
+          -2.7,2.5,
           i%3===0?0xffffff:color,
-          .92
-        ).setDepth(25).setRotation(angle);
+          .90
+        ).setDepth(40).setRotation(angle);
 
         this.tweens.add({
           targets:shard,
@@ -798,38 +644,39 @@
           y:y+Math.sin(angle)*dist,
           alpha:0,
           scale:.35,
-          rotation:angle+Phaser.Math.FloatBetween(-1.5,1.5),
-          duration:Phaser.Math.Between(260,430),
+          rotation:angle+Phaser.Math.FloatBetween(-1.4,1.4),
+          duration:Phaser.Math.Between(250,410),
           ease:'Cubic.Out',
           onComplete:()=>shard.destroy()
         });
       }
 
-      const ring=this.add.circle(x,y,14,color,.10).setStrokeStyle(2,color,.70).setDepth(24);
+      const ring=this.add.circle(x,y,14,color,.08).setStrokeStyle(2,color,.68).setDepth(39);
       this.tweens.add({
         targets:ring,
-        scale:big?4.5:3.3,
+        scale:big?4.4:3.1,
         alpha:0,
-        duration:big?420:310,
+        duration:big?400:300,
         ease:'Quad.Out',
         onComplete:()=>ring.destroy()
       });
     }
 
     contactSpark(x,y,colorHex,speed) {
-      const count=Math.min(4,1+Math.floor(speed/80));
+      const count=Math.min(4,1+Math.floor(speed/2));
       const color=hexToInt(colorHex);
+
       for(let i=0;i<count;i++){
-        const p=this.add.circle(x,y,Phaser.Math.FloatBetween(1.2,2.3),i===0?0xffffff:color,.82).setDepth(22);
+        const p=this.add.circle(x,y,Phaser.Math.FloatBetween(1.1,2.0),i===0?0xffffff:color,.80).setDepth(38);
         const a=Phaser.Math.FloatBetween(-2.8,-.35);
-        const d=Phaser.Math.Between(18,38);
+        const d=Phaser.Math.Between(15,32);
         this.tweens.add({
           targets:p,
           x:x+Math.cos(a)*d,
           y:y+Math.sin(a)*d,
           alpha:0,
           scale:.35,
-          duration:170,
+          duration:160,
           ease:'Quad.Out',
           onComplete:()=>p.destroy()
         });
@@ -844,13 +691,13 @@
         color,
         stroke:'#270b33',
         strokeThickness:3
-      }).setOrigin(.5).setDepth(30);
+      }).setOrigin(.5).setDepth(45);
 
       this.tweens.add({
         targets:label,
-        y:y-34,
+        y:y-32,
         alpha:0,
-        duration:620,
+        duration:600,
         ease:'Cubic.Out',
         onComplete:()=>label.destroy()
       });
@@ -865,10 +712,12 @@
 
     addScore(points) {
       this.score+=points;
+
       if(this.score>this.best){
         this.best=this.score;
         this.saveBest();
       }
+
       scoreEl.textContent=fmt(this.score);
       bestEl.textContent=fmt(this.best);
       scoreEl.classList.remove('bump');
@@ -892,6 +741,7 @@
 
     endGame() {
       if(!this.running) return;
+
       this.running=false;
       this.ready=false;
       this.pointerHeld=false;
@@ -910,12 +760,14 @@
       c.clearRect(0,0,nextPreview.width,nextPreview.height);
 
       if(!this.textures.exists('gem-'+this.nextTier)) return;
+
       const source=this.textures.get('gem-'+this.nextTier).getSourceImage();
-      const maxW=52;
-      const maxH=46;
+      const maxW=50;
+      const maxH=44;
       const scale=Math.min(maxW/source.width,maxH/source.height);
       const w=source.width*scale;
       const h=source.height*scale;
+
       c.drawImage(source,(88-w)/2,(64-h)/2,w,h);
     }
 
@@ -923,7 +775,6 @@
       const dt=Math.min(delta,34)/1000;
 
       if(this.running&&!this.paused){
-        this.scanForMatches();
         this.processMerges();
 
         this.mergeWindow=Math.max(0,this.mergeWindow-dt);
@@ -932,42 +783,18 @@
         if(this.preview){
           const t=tiers[this.currentTier];
           const target=clamp(this.targetX,WALL+t.r,W-WALL-t.r);
-          this.preview.x=Phaser.Math.Linear(this.preview.x,target,this.pointerHeld?.46:.28);
+          this.preview.x=Phaser.Math.Linear(this.preview.x,target,this.pointerHeld?.48:.30);
         }
 
         let high=false;
 
-        for(const gem of this.gems.getChildren()){
-          if(!gem.active||!gem.body) continue;
+        for(const gem of this.gems){
+          if(!gem?.active||!gem.body) continue;
 
           const body=gem.body;
-          const M=Phaser.Physics.Matter.Matter;
-
-          // Prevent unrealistic pinwheeling while preserving real contact-driven
-          // rotation. The rest of the angle is entirely produced by Matter.
-          if(Math.abs(body.angularVelocity)>.045){
-            M.Body.setAngularVelocity(body,Math.sign(body.angularVelocity)*.045);
-          }
-
-          const glint=this.glints.get(gem);
-          if(glint){
-            const r=tiers[gem.tier].r;
-            const ox=-r*.22;
-            const oy=-r*.28;
-            const ca=Math.cos(gem.rotation);
-            const sa=Math.sin(gem.rotation);
-            glint.x=gem.x+ox*ca-oy*sa;
-            glint.y=gem.y+ox*sa+oy*ca;
-            glint.rotation=-gem.rotation*.35;
-
-            const phase=Math.cos(gem.rotation+.65);
-            glint.alpha=clamp((phase-.91)/.09,0,.55);
-          }
-
-          const speed=body.speed;
           if(
-            time-gem.born>720 &&
-            speed<.75 &&
+            time-gem.born>800 &&
+            body.speed<.70 &&
             body.bounds.min.y<LIMIT_Y
           ){
             high=true;
@@ -977,8 +804,8 @@
         if(high) this.dangerTime+=dt;
         else this.dangerTime=Math.max(0,this.dangerTime-dt*3.8);
 
-        dangerHud.hidden=this.dangerTime<.16;
-        if(this.dangerTime>=1.7) this.endGame();
+        dangerHud.hidden=this.dangerTime<.18;
+        if(this.dangerTime>=1.75) this.endGame();
       }
 
       this.drawLimitLine(time);
@@ -1037,33 +864,38 @@
     }
   }
 
-  const config = {
-    type: Phaser.CANVAS,
-    parent: 'game',
-    width: W,
-    height: H,
-    transparent: true,
-    antialias: true,
-    roundPixels: false,
-    banner: false,
-    fps: {
-      target: 60,
-      smoothStep: true
+  const config={
+    type:Phaser.CANVAS,
+    parent:'game',
+    width:W,
+    height:H,
+    transparent:true,
+    antialias:true,
+    roundPixels:false,
+    banner:false,
+    fps:{
+      target:60,
+      smoothStep:true
     },
-    physics: {
-      default: 'matter',
-      matter: {
-        gravity: { x: 0, y: 1.02 },
-        enableSleeping: true,
-        debug: false
+    physics:{
+      default:'matter',
+      matter:{
+        gravity:{x:0,y:1},
+        enableSleeping:true,
+        runner:{
+          fps:60,
+          maxUpdates:5,
+          maxFrameTime:33.333
+        },
+        debug:false
       }
     },
-    render: {
-      antialias: true,
-      pixelArt: false,
-      roundPixels: false
+    render:{
+      antialias:true,
+      pixelArt:false,
+      roundPixels:false
     },
-    scene: GameScene
+    scene:GameScene
   };
 
   new Phaser.Game(config);
