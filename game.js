@@ -53,10 +53,10 @@
   engine.gravity.scale = .00105;
 
   const physics = {
-    friction:.018,
-    frictionStatic:.035,
-    frictionAir:0,
-    restitution:.08,
+    friction:.055,
+    frictionStatic:.10,
+    frictionAir:.002,
+    restitution:.055,
     density:.001
   };
 
@@ -153,13 +153,16 @@
 
   function createGem(x,y,tier,merged=false){
     const t=tiers[tier];
-    const body=Bodies.circle(x,y,t.r*.965,{
+    const collision=sideGeometry(tier,t.r*.88);
+    const verts=collision.outer.map(p=>({x:p.x,y:p.y}));
+    const body=Bodies.fromVertices(x,y,[verts],{
       ...physics,
       collisionFilter:{category:CAT_GEM,mask:CAT_WORLD|CAT_GEM}
-    });
+    },true,.01,4,.01);
 
-    Body.setAngle(body,(Math.random()-.5)*.06);
-    Body.setAngularVelocity(body,(Math.random()-.5)*.002);
+    Body.setAngle(body,(Math.random()-.5)*.08);
+    Body.setAngularVelocity(body,(Math.random()-.5)*.0012);
+    Body.setInertia(body,body.inertia*2.8);
 
     body.gem={
       tier,alive:true,merging:false,born:performance.now(),
@@ -316,16 +319,12 @@
       const t=tiers[b.gem.tier];
       b.gem.hit=Math.max(0,b.gem.hit-dt*3.7);
 
-      const maxAV=.024;
+      const maxAV=.014;
       if(Math.abs(b.angularVelocity)>maxAV){
         Body.setAngularVelocity(b,Math.sign(b.angularVelocity)*maxAV);
       }
 
-      const dx=b.position.x-b.gem.lastX;
-      const roll=clamp(dx/Math.max(20,t.r*.965),-.055,.055);
-      const bodyTurn=clamp(b.angularVelocity*.24,-.006,.006);
-      b.gem.renderAngle+=roll*.78+bodyTurn;
-
+      b.gem.renderAngle=b.angle;
       b.gem.lastX=b.position.x;
       b.gem.lastY=b.position.y;
     }
@@ -403,27 +402,27 @@
 
   function drawBackground(){
     const g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#FFF9F4');
-    g.addColorStop(.55,'#F8EEF0');
-    g.addColorStop(1,'#F2E7E9');
+    g.addColorStop(0,'#34232B');
+    g.addColorStop(.55,'#2C1D25');
+    g.addColorStop(1,'#24181F');
     ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 
     const glow=ctx.createRadialGradient(W*.45,H*.72,20,W*.45,H*.72,H*.62);
-    glow.addColorStop(0,'rgba(105,201,175,.105)');
-    glow.addColorStop(.52,'rgba(168,148,223,.055)');
-    glow.addColorStop(1,'rgba(255,255,255,0)');
+    glow.addColorStop(0,'rgba(92,145,127,.10)');
+    glow.addColorStop(.52,'rgba(137,97,143,.06)');
+    glow.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
 
     ctx.save();
     for(let i=0;i<18;i++){
-      ctx.globalAlpha=.055+(i%3)*.018;
-      ctx.fillStyle=i%4===0?'#E7A5A0':'#9BCFC1';
+      ctx.globalAlpha=.045+(i%3)*.014;
+      ctx.fillStyle=i%4===0?'#C07A70':'#7EAA9A';
       const x=(i*187.3)%W,y=(i*121.7)%H;
       ctx.beginPath();ctx.arc(x,y,.75+(i%2)*.3,0,Math.PI*2);ctx.fill();
     }
     ctx.restore();
 
-    ctx.fillStyle='rgba(86,62,91,.055)';
+    ctx.fillStyle='rgba(241,222,212,.045)';
     ctx.fillRect(WALL-2,0,2,H);ctx.fillRect(W-WALL,0,2,H);
   }
 
@@ -431,11 +430,11 @@
     ctx.save();
     ctx.setLineDash([10,12]);
     ctx.lineWidth=dangerTime>.1?2:1.2;
-    ctx.strokeStyle=dangerTime>.1?'rgba(211,79,99,.72)':'rgba(91,63,95,.12)';
+    ctx.strokeStyle=dangerTime>.1?'rgba(214,86,103,.82)':'rgba(238,218,208,.11)';
     ctx.beginPath();ctx.moveTo(WALL+6,LOSE_Y);ctx.lineTo(W-WALL-6,LOSE_Y);ctx.stroke();
     ctx.setLineDash([]);
     ctx.textAlign='center';ctx.font='800 14px Manrope, sans-serif';
-    ctx.fillStyle=dangerTime>.1?'rgba(185,59,79,.80)':'rgba(91,63,95,.32)';
+    ctx.fillStyle=dangerTime>.1?'rgba(245,173,182,.92)':'rgba(220,201,194,.28)';
     ctx.fillText('LIMIT',W/2,LOSE_Y-10);
     ctx.restore();
   }
@@ -446,11 +445,11 @@
     const x=clamp(aimX,WALL+t.r,W-WALL-t.r);
 
     ctx.save();
-    ctx.strokeStyle='rgba(90,61,97,.10)';
+    ctx.strokeStyle='rgba(238,218,208,.10)';
     ctx.lineWidth=2;
     ctx.beginPath();ctx.moveTo(WALL+84,36);ctx.lineTo(W-WALL-84,36);ctx.stroke();
 
-    ctx.strokeStyle='rgba(244,125,107,.78)';
+    ctx.strokeStyle='rgba(215,131,108,.82)';
     ctx.lineWidth=2.5;ctx.lineCap='round';
     ctx.beginPath();
     ctx.moveTo(x-15,38);ctx.lineTo(x-7,50);
