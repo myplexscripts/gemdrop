@@ -18,108 +18,88 @@
 </head>
 <body>
   <main class="game-app" id="gameApp">
-    <header class="hud" aria-label="Game status">
-      <button class="hud-icon" id="pauseButton" type="button" aria-label="Pause game">
+    <header class="hud">
+      <button class="hud-button" id="pauseButton" type="button" aria-label="Pause game">
         <i data-lucide="pause" aria-hidden="true"></i>
       </button>
 
       <div class="brand" aria-label="Gem Tide">
         <span class="brand-mark" aria-hidden="true"></span>
-        <div>
-          <strong>GEM TIDE</strong>
-          <span>VAULT RUN</span>
-        </div>
+        <div><strong>GEM TIDE</strong><span>MERGE THE VAULT</span></div>
       </div>
 
-      <div class="score-block">
+      <div class="score">
         <span>SCORE</span>
         <strong id="score">0</strong>
         <small>BEST <b id="best">0</b></small>
       </div>
     </header>
 
-    <section class="game-stage" id="stage">
-      <canvas id="game" width="720" height="1120" aria-label="Gem Tide playfield"></canvas>
-
-      <div class="queue-panel hold-panel">
-        <span class="queue-label">HOLD</span>
-        <button id="holdButton" class="gem-slot" type="button" aria-label="Hold or swap current gem">
-          <canvas id="holdPreview" width="92" height="92"></canvas>
-        </button>
+    <section class="play-shell">
+      <div class="next-card">
+        <span>NEXT</span>
+        <canvas id="nextPreview" width="96" height="96" aria-hidden="true"></canvas>
       </div>
 
-      <div class="queue-panel next-panel">
-        <span class="queue-label">NEXT</span>
-        <div class="gem-slot preview-only" aria-hidden="true">
-          <canvas id="nextPreview" width="92" height="92"></canvas>
-        </div>
-      </div>
+      <canvas id="game" width="640" height="800" aria-label="Gem Tide playfield"></canvas>
 
       <div id="dangerHud" class="danger-hud" hidden>
-        <span>PRESSURE</span>
-        <strong id="dangerTime">8.0</strong>
+        <i data-lucide="triangle-alert" aria-hidden="true"></i>
+        <span>TOO HIGH</span>
       </div>
 
-      <div id="comboBadge" class="combo-badge" aria-live="polite"></div>
       <div id="toast" class="toast" aria-live="polite"></div>
-      <div class="gesture-hint" id="gestureHint">
+
+      <div id="gestureHint" class="gesture-hint">
         <i data-lucide="move-horizontal" aria-hidden="true"></i>
         <span>Tap to drop · drag to aim</span>
       </div>
     </section>
 
-    <section class="power-dock" aria-label="Abilities">
-      <button class="power-button" id="hammerButton" type="button" disabled>
-        <span class="power-ring"><i data-lucide="hammer" aria-hidden="true"></i><b id="hammerCharge"></b></span>
-        <span>SHATTER</span>
-      </button>
-      <button class="power-button hero-power" id="vortexButton" type="button" disabled>
-        <span class="power-ring"><i data-lucide="waves" aria-hidden="true"></i><b id="vortexCharge"></b></span>
-        <span>CASCADE</span>
-      </button>
-      <button class="power-button" id="prismButton" type="button" disabled>
-        <span class="power-ring"><i data-lucide="sparkles" aria-hidden="true"></i><b id="prismCharge"></b></span>
-        <span>PRISM</span>
-      </button>
+    <section class="merge-path" aria-label="Gem evolution">
+      <span>MERGE PATH</span>
+      <div id="mergePath" class="merge-path-gems" aria-hidden="true"></div>
     </section>
   </main>
 
   <section id="startOverlay" class="overlay visible" aria-modal="true" role="dialog" aria-labelledby="startTitle">
     <div class="start-card">
-      <div class="logo-gem" aria-hidden="true"><span></span></div>
-      <p class="kicker">A FALLING GEM MERGE GAME</p>
+      <div class="hero-gem" aria-hidden="true"><span></span></div>
+      <p class="eyebrow">A PHYSICS MERGE GAME</p>
       <h1 id="startTitle">GEM TIDE</h1>
-      <p class="tagline">Drop. Merge. Shine.</p>
-      <div class="start-visual" aria-hidden="true">
-        <span class="mini-gem g1"></span><span class="mini-gem g2"></span><span class="mini-gem g3"></span><span class="mini-gem g4"></span>
-      </div>
-      <p class="start-copy">Match identical jewels to forge rarer cuts. Keep the pile below the pressure line and build the legendary Crownstone.</p>
+      <p class="tagline">Drop small. Build brilliant.</p>
+      <p class="start-copy">Drop matching gems into the vault. Two of the same cut merge into the next. Keep the pile below the line and forge the Crownstone.</p>
       <button id="startButton" class="primary-button" type="button">
-        <i data-lucide="play" aria-hidden="true"></i><span>PLAY</span>
+        <i data-lucide="play" aria-hidden="true"></i>
+        <span>PLAY</span>
       </button>
-      <span class="microcopy">Designed for portrait play</span>
     </div>
   </section>
 
   <section id="pauseOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="pauseTitle">
-    <div class="sheet-card compact-card">
+    <div class="sheet-card">
       <div class="sheet-icon"><i data-lucide="pause" aria-hidden="true"></i></div>
-      <p class="kicker">VAULT PAUSED</p>
-      <h2 id="pauseTitle">Take your time.</h2>
-      <button id="resumeButton" class="primary-button" type="button"><i data-lucide="play" aria-hidden="true"></i><span>RESUME</span></button>
-      <button id="restartFromPause" class="secondary-button" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Restart run</span></button>
+      <p class="eyebrow">PAUSED</p>
+      <h2 id="pauseTitle">Vault suspended</h2>
+      <button id="resumeButton" class="primary-button" type="button">
+        <i data-lucide="play" aria-hidden="true"></i><span>RESUME</span>
+      </button>
+      <button id="restartFromPause" class="secondary-button" type="button">
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Restart run</span>
+      </button>
     </div>
   </section>
 
   <section id="gameOverOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="gameOverTitle">
     <div class="sheet-card result-card">
       <div class="sheet-icon"><i data-lucide="gem" aria-hidden="true"></i></div>
-      <p class="kicker">VAULT OVERLOADED</p>
+      <p class="eyebrow">VAULT FULL</p>
       <h2 id="gameOverTitle">Run complete</h2>
       <div class="final-score"><span>SCORE</span><strong id="finalScore">0</strong></div>
-      <div class="result-row"><span>Best jewel</span><strong id="bestMerge">Quartz</strong></div>
-      <div class="result-row"><span>Best combo</span><strong id="bestChain">0×</strong></div>
-      <button id="restartButton" class="primary-button" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>PLAY AGAIN</span></button>
+      <div class="result-row"><span>Best gem</span><strong id="bestMerge">Quartz</strong></div>
+      <button id="restartButton" class="primary-button" type="button">
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>PLAY AGAIN</span>
+      </button>
     </div>
   </section>
 
