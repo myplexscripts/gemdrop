@@ -1,16 +1,18 @@
 # Gem Drop
 
-A mobile-first physics merge game set inside a jeweller's lapidary workshop.
+A mobile-first physics merge game set in a magical jewel vault.
 
-Drop rough stones into the polishing chamber. Matching gems tumble together and refine into larger stones with new silhouettes and facet styles, building toward the Crownstone.
+Drop matching gems into the basin. Each pair becomes a larger, rarer cut, building toward the Crownstone while the pile climbs toward the glowing limit.
 
 ## Controls
 
 - Tap a horizontal position to drop.
-- Drag across the chamber to position the current stone, then release.
-- Match two identical stones to refine the next tier.
-- Keep settled stones below the jam line.
+- Drag across the basin to aim, then release.
+- Match two identical gems to create the next tier.
+- Keep the settled pile below the glowing limit.
 
-## Build
+## Runtime
 
-Gem Drop is a lightweight HTML, CSS and JavaScript game using Matter.js for rigid-body physics. Open `index.html` in a modern browser, or install it as a portrait PWA.
+Gem Drop uses Phaser 3 with Arcade Physics. The visible gem art is decoupled from stable circular physics bodies so pieces can pack and tumble without clipping through one another or the vault walls.
+
+Open `index.html` in a modern browser or install it as a portrait PWA.
