@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#21191D" />
+  <meta name="theme-color" content="#16091d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Gem Drop" />
@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -24,14 +24,14 @@
       </button>
 
       <div class="brand" aria-label="Gem Drop">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <div>
+        <span class="brand-gem" aria-hidden="true"></span>
+        <div class="brand-copy">
+          <i data-lucide="crown" aria-hidden="true"></i>
           <strong>GEM DROP</strong>
-          <span>THE LAPIDARY</span>
         </div>
       </div>
 
-      <div class="next-hud" aria-label="Next rough stone">
+      <div class="next-hud" aria-label="Next gem">
         <span>NEXT</span>
         <canvas id="nextPreview" width="88" height="64" aria-hidden="true"></canvas>
       </div>
@@ -39,41 +39,45 @@
       <div class="score">
         <span>VALUE</span>
         <strong id="score">0</strong>
-        <small>BEST <b id="best">0</b></small>
+        <small><i data-lucide="crown" aria-hidden="true"></i> BEST <b id="best">0</b></small>
       </div>
     </header>
 
     <section class="play-shell">
-      <div class="chamber-plaque" aria-hidden="true">
-        <span>POLISHING CHAMBER</span>
-        <b>GT-01</b>
-      </div>
+      <span class="frame-jewel frame-jewel--tl" aria-hidden="true"></span>
+      <span class="frame-jewel frame-jewel--tr" aria-hidden="true"></span>
+      <span class="frame-jewel frame-jewel--bl" aria-hidden="true"></span>
+      <span class="frame-jewel frame-jewel--br" aria-hidden="true"></span>
 
-      <canvas id="game" width="640" height="864" aria-label="Gem Drop polishing chamber"></canvas>
+      <canvas id="game" width="640" height="864" aria-label="Gem Drop jewel vault"></canvas>
 
       <div id="dangerHud" class="danger-hud" hidden>
         <i data-lucide="triangle-alert" aria-hidden="true"></i>
-        <span>CHAMBER JAM</span>
+        <span>TOO HIGH</span>
       </div>
 
       <div id="cutToast" class="cut-toast" aria-live="polite"></div>
+
       <div id="gestureHint" class="gesture-hint">
         <i data-lucide="move-horizontal" aria-hidden="true"></i>
-        <span>Tap to drop · drag to position</span>
+        <span>Tap to drop · drag to aim</span>
       </div>
     </section>
   </main>
 
   <section id="startOverlay" class="overlay visible" aria-modal="true" role="dialog" aria-labelledby="startTitle">
     <div class="start-card">
-      <div class="hero-gem" aria-hidden="true"><span></span></div>
-      <p class="eyebrow">THE LAPIDARY TUMBLER</p>
+      <div class="hero-crown" aria-hidden="true">
+        <i data-lucide="crown"></i>
+        <span></span>
+      </div>
+      <p class="eyebrow">THE CROWN VAULT</p>
       <h1 id="startTitle">GEM DROP</h1>
-      <p class="tagline">Cut. Tumble. Refine.</p>
-      <p class="start-copy">Feed rough stones into the jeweller’s polishing chamber. Matching stones fuse into rarer cuts as they tumble together. Refine a Crownstone before the chamber jams.</p>
+      <p class="tagline">Merge the vault’s jewels into the legendary Crownstone.</p>
+      <p class="start-copy">Drop matching gems into the enchanted basin. Each pair transforms into a rarer cut. Build higher and brighter, but keep the pile below the glowing seal.</p>
       <button id="startButton" class="primary-button" type="button">
         <i data-lucide="play" aria-hidden="true"></i>
-        <span>START POLISHING</span>
+        <span>ENTER THE VAULT</span>
       </button>
     </div>
   </section>
@@ -81,13 +85,13 @@
   <section id="pauseOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="pauseTitle">
     <div class="sheet-card">
       <div class="sheet-icon"><i data-lucide="pause" aria-hidden="true"></i></div>
-      <p class="eyebrow">WORKBENCH PAUSED</p>
-      <h2 id="pauseTitle">Tumbler stopped</h2>
+      <p class="eyebrow">VAULT PAUSED</p>
+      <h2 id="pauseTitle">The jewels are waiting</h2>
       <button id="resumeButton" class="primary-button" type="button">
         <i data-lucide="play" aria-hidden="true"></i><span>RESUME</span>
       </button>
       <button id="restartFromPause" class="secondary-button" type="button">
-        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Restart batch</span>
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Restart run</span>
       </button>
     </div>
   </section>
@@ -95,12 +99,12 @@
   <section id="gameOverOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="gameOverTitle">
     <div class="sheet-card result-card">
       <div class="sheet-icon"><i data-lucide="gem" aria-hidden="true"></i></div>
-      <p class="eyebrow">CHAMBER JAMMED</p>
-      <h2 id="gameOverTitle">Batch complete</h2>
+      <p class="eyebrow">THE VAULT IS FULL</p>
+      <h2 id="gameOverTitle">Run complete</h2>
       <div class="final-score"><span>VALUE</span><strong id="finalScore">0</strong></div>
-      <div class="result-row"><span>Finest cut</span><strong id="bestMerge">Quartz Brilliant</strong></div>
+      <div class="result-row"><span>Finest jewel</span><strong id="bestMerge">Quartz Brilliant</strong></div>
       <button id="restartButton" class="primary-button" type="button">
-        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>NEW BATCH</span>
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>PLAY AGAIN</span>
       </button>
     </div>
   </section>
