@@ -49,7 +49,7 @@
       <span class="frame-jewel frame-jewel--bl" aria-hidden="true"></span>
       <span class="frame-jewel frame-jewel--br" aria-hidden="true"></span>
 
-      <canvas id="game" width="640" height="864" aria-label="Gem Drop jewel vault"></canvas>
+      <div id="game" role="application" aria-label="Gem Drop jewel vault"></div>
 
       <div id="dangerHud" class="danger-hud" hidden>
         <i data-lucide="triangle-alert" aria-hidden="true"></i>
@@ -109,7 +109,7 @@
     </div>
   </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
   <script src="game.js"></script>
