@@ -737,6 +737,9 @@
       if(!a?.body||!b?.body) return false;
 
       const M=Phaser.Physics.Matter.Matter;
+      const direct=M.Query.collides(a.body,[b.body]);
+      if(direct?.length) return true;
+
       const partsA=a.body.parts?.length>1?a.body.parts.slice(1):[a.body];
       const partsB=b.body.parts?.length>1?b.body.parts.slice(1):[b.body];
 
@@ -744,7 +747,7 @@
         for(const pb of partsB){
           if(!M.Bounds.overlaps(pa.bounds,pb.bounds)) continue;
           const hit=M.Collision.collides(pa,pb);
-          if(hit?.collided) return true;
+          if(hit) return true;
         }
       }
 
