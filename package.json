@@ -1,8 +1,8 @@
 {
   "name": "gem-drop",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "A mobile-first lapidary-themed physics merge game.",
+  "description": "A mobile-first Phaser physics merge game.",
   "scripts": {},
   "license": "ISC"
 }
