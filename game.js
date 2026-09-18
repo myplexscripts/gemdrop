@@ -133,6 +133,25 @@
     };
   }
 
+  function polygonCentroid(points) {
+    let twiceArea=0;
+    let cx=0;
+    let cy=0;
+
+    for(let i=0;i<points.length;i++){
+      const a=points[i];
+      const b=points[(i+1)%points.length];
+      const cross=a.x*b.y-b.x*a.y;
+      twiceArea+=cross;
+      cx+=(a.x+b.x)*cross;
+      cy+=(a.y+b.y)*cross;
+    }
+
+    if(Math.abs(twiceArea)<.00001) return {x:0,y:0};
+    const factor=1/(3*twiceArea);
+    return {x:cx*factor,y:cy*factor};
+  }
+
   class GameScene extends Phaser.Scene {
     constructor() {
       super('GameScene');
@@ -162,17 +181,31 @@
 
     create() {
       this.cameras.main.setBackgroundColor('rgba(0,0,0,0)');
-      this.physics.world.setBounds(WALL, 15, W-WALL*2, FLOOR-15, true, true, false, true);
+
+      const engine=this.matter.world.engine;
+      engine.positionIterations=12;
+      engine.velocityIterations=10;
+      engine.constraintIterations=4;
 
       this.makeTextures();
       this.drawVaultBackdrop();
 
-      this.gems = this.physics.add.group({
-        collideWorldBounds:true,
-        allowGravity:true
-      });
+      this.gems=this.add.group();
 
-      this.physics.add.collider(this.gems,this.gems,(a,b)=>this.onGemContact(a,b),undefined,this);
+      const wallOptions={
+        isStatic:true,
+        friction:.34,
+        frictionStatic:.72,
+        restitution:.018,
+        label:'vault-wall'
+      };
+
+      this.floorBody=this.matter.add.rectangle(W/2,FLOOR+38,W+120,76,wallOptions);
+      this.leftWallBody=this.matter.add.rectangle(WALL-17,H/2,34,H*2,wallOptions);
+      this.rightWallBody=this.matter.add.rectangle(W-WALL+17,H/2,34,H*2,wallOptions);
+
+      this.matter.world.on('collisionstart',event=>this.handleMatterCollisions(event,false));
+      this.matter.world.on('collisionactive',event=>this.handleMatterCollisions(event,true));
 
       this.limitLine = this.add.graphics().setDepth(5);
       this.dropper = this.add.graphics().setDepth(20);
@@ -270,7 +303,8 @@
       const cx = size/2;
       const cy = size/2;
       const geo = geometryForTier(index,r*.94);
-      const pt = (p)=>new Phaser.Geom.Point(cx+p.x,cy+p.y);
+      const center = polygonCentroid(geo.outer);
+      const pt = (p)=>new Phaser.Geom.Point(cx+p.x-center.x,cy+p.y-center.y);
       const pts = geo.outer.map(pt);
       const g = this.make.graphics({x:0,y:0,add:false});
 
@@ -281,12 +315,12 @@
       const deep = mixHex(t.dark,'#14081b',.25);
 
       g.fillStyle(0x08040b,.34);
-      g.fillPoints(geo.outer.map(p=>new Phaser.Geom.Point(cx+p.x+3,cy+p.y+5)),true);
+      g.fillPoints(geo.outer.map(p=>new Phaser.Geom.Point(cx+p.x-center.x+3,cy+p.y-center.y+5)),true);
 
       g.fillStyle(dark,1);
       g.fillPoints(pts,true);
 
-      const P=(x,y)=>new Phaser.Geom.Point(cx+x,cy+y);
+      const P=(x,y)=>new Phaser.Geom.Point(cx+x-center.x,cy+y-center.y);
       const tableL=P(-geo.table,-geo.crown);
       const tableR=P(geo.table,-geo.crown);
       const shoulderL=P(-geo.shoulder,-r*.17);
@@ -427,14 +461,20 @@
 
       this.updateNextPreview();
       this.createDropPreview(true);
-      this.physics.world.resume();
+      this.matter.world.resume();
     }
 
     clearRun() {
       if (!this.gems) return;
-      this.gems.clear(true,true);
+
+      for(const gem of [...this.gems.getChildren()]){
+        this.removeGem(gem);
+      }
+      this.gems.clear(false,false);
+
       for(const glint of this.glints.values()) glint.destroy();
       this.glints.clear();
+
       if(this.preview){this.preview.destroy();this.preview=null;}
       this.pendingMerges.length=0;
       this.time.removeAllEvents();
@@ -463,27 +503,60 @@
 
     createGem(x,y,tier,merged=false) {
       const t=tiers[tier];
-      const gem=this.physics.add.image(x,y,'gem-'+tier);
+      const renderGeo=geometryForTier(tier,t.r*.94);
+      const center=polygonCentroid(renderGeo.outer);
+
+      // The collider is only ~1.5% larger than the art. This closes the visible
+      // gaps from the old circular bodies while still guaranteeing that gems
+      // never visually overlap.
+      const bodyGeo=geometryForTier(tier,t.r*.955);
+      const bodyCenter=polygonCentroid(bodyGeo.outer);
+      const verts=bodyGeo.outer.map(p=>({
+        x:p.x-bodyCenter.x,
+        y:p.y-bodyCenter.y
+      }));
+
+      const body=this.matter.add.fromVertices(
+        x,
+        y,
+        verts,
+        {
+          label:'gem',
+          friction:.22,
+          frictionStatic:.52,
+          frictionAir:.008,
+          restitution:.035,
+          density:.00135,
+          slop:.012,
+          sleepThreshold:45
+        },
+        true,
+        .01,
+        5
+      );
+
+      const gem=this.add.image(x,y,'gem-'+tier).setDepth(10+tier*.01);
+      this.matter.add.gameObject(gem,body,false);
+
       gem.tier=tier;
       gem.merging=false;
       gem.born=this.time.now;
-      gem.spin=Phaser.Math.FloatBetween(-5,5);
-      gem.lastX=x;
-      gem.setDepth(10+tier*.01);
-      gem.setBounce(.055);
-      gem.setDrag(36,0);
-      gem.setMaxVelocity(260,620);
-      gem.setCollideWorldBounds(true,.05,.03);
 
-      const radius=t.r*.945;
-      const frame=gem.frame;
-      const ox=(frame.realWidth/2)-radius;
-      const oy=(frame.realHeight/2)-radius;
-      gem.body.setCircle(radius,ox,oy);
+      const M=Phaser.Physics.Matter.Matter;
+      M.Body.setAngle(gem.body,Phaser.Math.FloatBetween(-.035,.035));
+      M.Body.setAngularVelocity(gem.body,Phaser.Math.FloatBetween(-.004,.004));
+      M.Body.setInertia(gem.body,gem.body.inertia*2.15);
 
       if(merged){
-        gem.setAlpha(.70);
-        this.tweens.add({targets:gem,alpha:1,duration:120,ease:'Quad.Out'});
+        gem.setAlpha(.72);
+        gem.setScale(.88);
+        this.tweens.add({
+          targets:gem,
+          alpha:1,
+          scale:1,
+          duration:150,
+          ease:'Back.Out'
+        });
       }
 
       this.gems.add(gem);
@@ -497,8 +570,18 @@
 
     removeGem(gem) {
       const glint=this.glints.get(gem);
-      if(glint){glint.destroy();this.glints.delete(gem);}
-      if(gem?.active) gem.destroy();
+      if(glint){
+        glint.destroy();
+        this.glints.delete(gem);
+      }
+
+      if(gem?.body){
+        this.matter.world.remove(gem.body);
+      }
+      if(gem?.active){
+        this.gems.remove(gem,false,false);
+        gem.destroy();
+      }
     }
 
     onPointerDown(pointer) {
@@ -535,7 +618,7 @@
       if(this.preview){this.preview.destroy();this.preview=null;}
 
       const gem=this.createGem(x,DROP_Y,this.currentTier,false);
-      gem.body.setVelocity(0,10);
+      gem.setVelocity(0,.35);
       this.lastDropAt=this.time.now;
       this.ready=false;
 
@@ -554,21 +637,40 @@
       });
     }
 
-    onGemContact(a,b) {
-      if(!a?.active||!b?.active) return;
+    handleMatterCollisions(event,isActive) {
+      for(const pair of event.pairs){
+        const a=pair.bodyA?.gameObject;
+        const b=pair.bodyB?.gameObject;
 
-      const relX=b.body.velocity.x-a.body.velocity.x;
-      const relY=b.body.velocity.y-a.body.velocity.y;
-      const speed=Math.hypot(relX,relY);
+        if(a?.tier!==undefined && b?.tier!==undefined){
+          this.onGemContact(a,b,!isActive);
+        }
+      }
+    }
 
-      a.spin=clamp(a.spin-relX*.055,-42,42);
-      b.spin=clamp(b.spin+relX*.055,-42,42);
+    onGemContact(a,b,isNewContact=true) {
+      if(!a?.active||!b?.active||!a.body||!b.body) return;
 
-      if(speed>95){
-        this.contactSpark((a.x+b.x)/2,(a.y+b.y)/2,tiers[Math.max(a.tier,b.tier)].accent,speed);
+      const av=a.body.velocity;
+      const bv=b.body.velocity;
+      const speed=Math.hypot(bv.x-av.x,bv.y-av.y);
+
+      if(isNewContact && speed>2.0){
+        this.contactSpark(
+          (a.x+b.x)/2,
+          (a.y+b.y)/2,
+          tiers[Math.max(a.tier,b.tier)].accent,
+          speed*55
+        );
       }
 
-      if(a.tier===b.tier&&!a.merging&&!b.merging&&this.time.now-a.born>90&&this.time.now-b.born>90){
+      if(
+        a.tier===b.tier &&
+        !a.merging &&
+        !b.merging &&
+        this.time.now-a.born>110 &&
+        this.time.now-b.born>110
+      ){
         a.merging=true;
         b.merging=true;
         this.pendingMerges.push([a,b]);
@@ -587,8 +689,9 @@
         const next=tier+1;
         const x=(a.x+b.x)/2;
         const y=(a.y+b.y)/2;
-        const vx=(a.body.velocity.x+b.body.velocity.x)*.16;
-        const vy=Math.min(-24,(a.body.velocity.y+b.body.velocity.y)*.08-16);
+        const vx=(a.body.velocity.x+b.body.velocity.x)*.22;
+        const vy=Math.min(-1.15,(a.body.velocity.y+b.body.velocity.y)*.10-.55);
+        const av=(a.body.angularVelocity+b.body.angularVelocity)*.16;
 
         this.removeGem(a);
         this.removeGem(b);
@@ -607,8 +710,8 @@
         }
 
         const gem=this.createGem(x,y,next,true);
-        gem.body.setVelocity(vx,vy);
-        gem.spin=clamp((a.spin+b.spin)*.16,-10,10);
+        gem.setVelocity(vx,vy);
+        gem.setAngularVelocity(clamp(av,-.018,.018));
 
         this.bestTierReached=Math.max(this.bestTierReached,next);
         this.addScore(tiers[next].score);
@@ -736,10 +839,10 @@
       pauseOverlay.classList.toggle('visible',value);
 
       if(value){
-        this.physics.world.pause();
+        this.matter.world.pause();
         this.tweens.pauseAll();
       }else{
-        this.physics.world.resume();
+        this.matter.world.resume();
         this.tweens.resumeAll();
       }
     }
@@ -750,7 +853,7 @@
       this.ready=false;
       this.pointerHeld=false;
       dangerHud.hidden=true;
-      this.physics.world.pause();
+      this.matter.world.pause();
 
       finalScoreEl.textContent=fmt(this.score);
       const finest=tiers[this.bestTierReached];
@@ -791,28 +894,40 @@
         let high=false;
 
         for(const gem of this.gems.getChildren()){
-          if(!gem.active) continue;
+          if(!gem.active||!gem.body) continue;
 
           const body=gem.body;
-          if(Math.abs(body.velocity.x)<1.0) body.velocity.x=0;
-          if(body.blocked.down&&Math.abs(body.velocity.y)<8) body.velocity.y=0;
+          const M=Phaser.Physics.Matter.Matter;
 
-          const rolling=(body.velocity.x/Math.max(28,tiers[gem.tier].r))*36;
-          gem.spin=Phaser.Math.Linear(gem.spin,rolling,.045);
-          gem.angle+=gem.spin*dt;
-          gem.spin*=Math.pow(.985,delta/16.67);
+          // Prevent unrealistic pinwheeling while preserving real contact-driven
+          // rotation. The rest of the angle is entirely produced by Matter.
+          if(Math.abs(body.angularVelocity)>.045){
+            M.Body.setAngularVelocity(body,Math.sign(body.angularVelocity)*.045);
+          }
 
           const glint=this.glints.get(gem);
           if(glint){
-            glint.x=gem.x-tiers[gem.tier].r*.22;
-            glint.y=gem.y-tiers[gem.tier].r*.28;
-            const phase=Math.cos(Phaser.Math.DegToRad(gem.angle)+.65);
-            glint.alpha=clamp((phase-.90)/.10,0,.58);
+            const r=tiers[gem.tier].r;
+            const ox=-r*.22;
+            const oy=-r*.28;
+            const ca=Math.cos(gem.rotation);
+            const sa=Math.sin(gem.rotation);
+            glint.x=gem.x+ox*ca-oy*sa;
+            glint.y=gem.y+ox*sa+oy*ca;
+            glint.rotation=-gem.rotation*.35;
+
+            const phase=Math.cos(gem.rotation+.65);
+            glint.alpha=clamp((phase-.91)/.09,0,.55);
           }
 
-          const speed=Math.hypot(body.velocity.x,body.velocity.y);
-          const radius=tiers[gem.tier].r*.945;
-          if(time-gem.born>700 && speed<28 && gem.y-radius<LIMIT_Y) high=true;
+          const speed=body.speed;
+          if(
+            time-gem.born>720 &&
+            speed<.75 &&
+            body.bounds.min.y<LIMIT_Y
+          ){
+            high=true;
+          }
         }
 
         if(high) this.dangerTime+=dt;
@@ -892,12 +1007,10 @@
       smoothStep: true
     },
     physics: {
-      default: 'arcade',
-      arcade: {
-        gravity: { y: 930 },
-        fps: 60,
-        fixedStep: true,
-        overlapBias: 8,
+      default: 'matter',
+      matter: {
+        gravity: { x: 0, y: 1.02 },
+        enableSleeping: true,
         debug: false
       }
     },
