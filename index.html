@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#21191D" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Gem Tide" />
+  <meta name="apple-mobile-web-app-title" content="Gem Drop" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="format-detection" content="telephone=no" />
-  <title>Gem Tide</title>
+  <title>Gem Drop</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,36 +23,43 @@
         <i data-lucide="pause" aria-hidden="true"></i>
       </button>
 
-      <div class="brand" aria-label="Gem Tide">
+      <div class="brand" aria-label="Gem Drop">
         <span class="brand-mark" aria-hidden="true"></span>
-        <div><strong>GEM TIDE</strong><span>THE LAPIDARY</span></div>
+        <div>
+          <strong>GEM DROP</strong>
+          <span>THE LAPIDARY</span>
+        </div>
       </div>
 
-      <div class="next-hud" aria-label="Next gem">
+      <div class="next-hud" aria-label="Next rough stone">
         <span>NEXT</span>
         <canvas id="nextPreview" width="88" height="64" aria-hidden="true"></canvas>
       </div>
 
       <div class="score">
-        <span>SCORE</span>
+        <span>VALUE</span>
         <strong id="score">0</strong>
         <small>BEST <b id="best">0</b></small>
       </div>
     </header>
 
     <section class="play-shell">
-      <canvas id="game" width="640" height="864" aria-label="Gem Tide playfield"></canvas>
+      <div class="chamber-plaque" aria-hidden="true">
+        <span>POLISHING CHAMBER</span>
+        <b>GT-01</b>
+      </div>
+
+      <canvas id="game" width="640" height="864" aria-label="Gem Drop polishing chamber"></canvas>
 
       <div id="dangerHud" class="danger-hud" hidden>
         <i data-lucide="triangle-alert" aria-hidden="true"></i>
-        <span>TOO HIGH</span>
+        <span>CHAMBER JAM</span>
       </div>
 
-      <div id="toast" class="toast" aria-live="polite"></div>
-
+      <div id="cutToast" class="cut-toast" aria-live="polite"></div>
       <div id="gestureHint" class="gesture-hint">
         <i data-lucide="move-horizontal" aria-hidden="true"></i>
-        <span>Tap to drop · drag to aim</span>
+        <span>Tap to drop · drag to position</span>
       </div>
     </section>
   </main>
@@ -61,12 +68,12 @@
     <div class="start-card">
       <div class="hero-gem" aria-hidden="true"><span></span></div>
       <p class="eyebrow">THE LAPIDARY TUMBLER</p>
-      <h1 id="startTitle">GEM TIDE</h1>
+      <h1 id="startTitle">GEM DROP</h1>
       <p class="tagline">Cut. Tumble. Refine.</p>
-      <p class="start-copy">Feed rough stones into the jeweller’s polishing chamber. Matching cuts fuse into rarer gems as they tumble together. Refine a Crownstone before the chamber jams.</p>
+      <p class="start-copy">Feed rough stones into the jeweller’s polishing chamber. Matching stones fuse into rarer cuts as they tumble together. Refine a Crownstone before the chamber jams.</p>
       <button id="startButton" class="primary-button" type="button">
         <i data-lucide="play" aria-hidden="true"></i>
-        <span>PLAY</span>
+        <span>START POLISHING</span>
       </button>
     </div>
   </section>
@@ -74,13 +81,13 @@
   <section id="pauseOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="pauseTitle">
     <div class="sheet-card">
       <div class="sheet-icon"><i data-lucide="pause" aria-hidden="true"></i></div>
-      <p class="eyebrow">PAUSED</p>
-      <h2 id="pauseTitle">Vault suspended</h2>
+      <p class="eyebrow">WORKBENCH PAUSED</p>
+      <h2 id="pauseTitle">Tumbler stopped</h2>
       <button id="resumeButton" class="primary-button" type="button">
         <i data-lucide="play" aria-hidden="true"></i><span>RESUME</span>
       </button>
       <button id="restartFromPause" class="secondary-button" type="button">
-        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Restart run</span>
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Restart batch</span>
       </button>
     </div>
   </section>
@@ -89,11 +96,11 @@
     <div class="sheet-card result-card">
       <div class="sheet-icon"><i data-lucide="gem" aria-hidden="true"></i></div>
       <p class="eyebrow">CHAMBER JAMMED</p>
-      <h2 id="gameOverTitle">Polishing complete</h2>
-      <div class="final-score"><span>SCORE</span><strong id="finalScore">0</strong></div>
-      <div class="result-row"><span>Best gem</span><strong id="bestMerge">Quartz</strong></div>
+      <h2 id="gameOverTitle">Batch complete</h2>
+      <div class="final-score"><span>VALUE</span><strong id="finalScore">0</strong></div>
+      <div class="result-row"><span>Finest cut</span><strong id="bestMerge">Quartz Brilliant</strong></div>
       <button id="restartButton" class="primary-button" type="button">
-        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>PLAY AGAIN</span>
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>NEW BATCH</span>
       </button>
     </div>
   </section>
