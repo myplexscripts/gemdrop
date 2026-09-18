@@ -27,17 +27,17 @@
   const bestMergeEl = $('bestMerge');
 
   const tiers = [
-    {name:'Quartz',     cut:'Brilliant', r:34,  score:1,  color:'#D9E8F0', accent:'#FFFFFF', dark:'#7D929F', sides:12, table:.38, twist:0.00},
-    {name:'Citrine',    cut:'Rose',      r:42,  score:3,  color:'#F0B63D', accent:'#FFE38D', dark:'#A86B22', sides:10, table:.32, twist:.14},
-    {name:'Peridot',    cut:'Cushion',   r:50,  score:6,  color:'#7BC45C', accent:'#CBEAA8', dark:'#4A843A', sides:12, table:.43, twist:.06},
-    {name:'Aquamarine', cut:'Step',      r:60,  score:10, color:'#44B7C7', accent:'#BCE8ED', dark:'#287784', sides:12, table:.50, twist:.00},
-    {name:'Amethyst',   cut:'Princess',  r:72,  score:15, color:'#986CD8', accent:'#D9C2F1', dark:'#684897', sides:10, table:.36, twist:.18},
-    {name:'Topaz',      cut:'Radiant',   r:84,  score:21, color:'#EF7F49', accent:'#F8C39B', dark:'#AA4E31', sides:12, table:.44, twist:.08},
-    {name:'Sapphire',   cut:'Star',      r:98,  score:28, color:'#5379E4', accent:'#BCCCF7', dark:'#324F9F', sides:14, table:.34, twist:.15},
-    {name:'Emerald',    cut:'Asscher',   r:112, score:36, color:'#3BB186', accent:'#A9DEC7', dark:'#247257', sides:12, table:.52, twist:.00},
-    {name:'Ruby',       cut:'Royal',     r:130, score:45, color:'#DF506D', accent:'#F4ADBA', dark:'#A33249', sides:14, table:.38, twist:.11},
-    {name:'Starstone',  cut:'Celestial', r:150, score:55, color:'#8264D0', accent:'#C9B6EE', dark:'#553E90', sides:16, table:.32, twist:.20},
-    {name:'Crownstone', cut:'Crown',     r:170, score:66, color:'#E8A43A', accent:'#F9D986', dark:'#A16623', sides:16, table:.46, twist:.08}
+    {name:'Quartz',     cut:'Brilliant', r:34,  score:1,  color:'#D9E8F0', accent:'#FFFFFF', dark:'#7D929F', sides:6,  physicsSides:6,  table:.38, twist:0.00},
+    {name:'Citrine',    cut:'Rose',      r:42,  score:3,  color:'#F0B63D', accent:'#FFE38D', dark:'#A86B22', sides:5,  physicsSides:5,  table:.32, twist:.14},
+    {name:'Peridot',    cut:'Cushion',   r:50,  score:6,  color:'#7BC45C', accent:'#CBEAA8', dark:'#4A843A', sides:7,  physicsSides:7,  table:.43, twist:.06},
+    {name:'Aquamarine', cut:'Step',      r:60,  score:10, color:'#44B7C7', accent:'#BCE8ED', dark:'#287784', sides:8,  physicsSides:8,  table:.50, twist:.00},
+    {name:'Amethyst',   cut:'Princess',  r:72,  score:15, color:'#986CD8', accent:'#D9C2F1', dark:'#684897', sides:4,  physicsSides:4,  table:.36, twist:.18},
+    {name:'Topaz',      cut:'Radiant',   r:84,  score:21, color:'#EF7F49', accent:'#F8C39B', dark:'#AA4E31', sides:6,  physicsSides:6,  table:.44, twist:.08},
+    {name:'Sapphire',   cut:'Star',      r:98,  score:28, color:'#5379E4', accent:'#BCCCF7', dark:'#324F9F', sides:7,  physicsSides:7,  table:.34, twist:.15},
+    {name:'Emerald',    cut:'Asscher',   r:112, score:36, color:'#3BB186', accent:'#A9DEC7', dark:'#247257', sides:8,  physicsSides:8,  table:.52, twist:.00},
+    {name:'Ruby',       cut:'Royal',     r:130, score:45, color:'#DF506D', accent:'#F4ADBA', dark:'#A33249', sides:9,  physicsSides:9,  table:.38, twist:.11},
+    {name:'Starstone',  cut:'Celestial', r:150, score:55, color:'#8264D0', accent:'#C9B6EE', dark:'#553E90', sides:10, physicsSides:10, table:.32, twist:.20},
+    {name:'Crownstone', cut:'Crown',     r:170, score:66, color:'#E8A43A', accent:'#F9D986', dark:'#A16623', sides:12, physicsSides:12, table:.46, twist:.08}
   ];
 
   let audioCtx = null;
@@ -142,10 +142,10 @@
         this.add.rectangle(W-WALL-17,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7)
       ];
 
-      this.input.on('pointerdown',p=>this.onPointerDown(p));
-      this.input.on('pointermove',p=>this.onPointerMove(p));
-      this.input.on('pointerup',p=>this.onPointerUp(p));
-      this.input.on('pointerupoutside',p=>this.onPointerUp(p));
+      // A dedicated swipe deck sits below the jewel basin. Keeping aiming
+      // outside the board means the player's hand never covers the pile.
+      this.aimStrip=$('aimStrip');
+      this.aimHandle=$('aimHandle');
 
       this.best=this.loadBest();
       bestEl.textContent=fmt(this.best);
@@ -221,6 +221,41 @@
         }
         if(e.key==='Escape') this.setPaused(!this.paused);
       });
+
+      const aimFromEvent=e=>{
+        const rect=this.aimStrip.getBoundingClientRect();
+        const u=clamp((e.clientX-rect.left)/rect.width,0,1);
+        const t=tiers[this.currentTier];
+        this.targetX=Phaser.Math.Linear(WALL+t.r*COLLIDER_SCALE,W-WALL-t.r*COLLIDER_SCALE,u);
+        this.updateAimHandle();
+      };
+
+      this.aimStrip.addEventListener('pointerdown',e=>{
+        if(!this.running||this.paused||!this.ready) return;
+        unlockAudio();
+        e.preventDefault();
+        this.pointerHeld=true;
+        aimFromEvent(e);
+        try{this.aimStrip.setPointerCapture(e.pointerId)}catch{}
+      });
+
+      this.aimStrip.addEventListener('pointermove',e=>{
+        if(!this.pointerHeld||!this.running||this.paused||!this.ready) return;
+        e.preventDefault();
+        aimFromEvent(e);
+      });
+
+      const finishAim=e=>{
+        if(!this.pointerHeld||!this.running||this.paused||!this.ready) return;
+        e.preventDefault();
+        aimFromEvent(e);
+        this.pointerHeld=false;
+        this.dropCurrent();
+        try{this.aimStrip.releasePointerCapture(e.pointerId)}catch{}
+      };
+
+      this.aimStrip.addEventListener('pointerup',finishAim);
+      this.aimStrip.addEventListener('pointercancel',()=>{this.pointerHeld=false;});
     }
 
     loadBest() {
@@ -405,6 +440,7 @@
 
       this.matter.world.resume();
       this.updateNextPreview();
+      this.updateAimHandle();
       this.createDropPreview(true);
     }
 
@@ -426,7 +462,7 @@
       if(this.preview) this.preview.destroy();
 
       const t=tiers[this.currentTier];
-      const x=clamp(this.targetX,WALL+t.r,W-WALL-t.r);
+      const x=clamp(this.targetX,WALL+t.r*COLLIDER_SCALE,W-WALL-t.r*COLLIDER_SCALE);
       this.preview=this.add.image(x,DROP_Y,'gem-'+this.currentTier).setDepth(32);
 
       if(animate){
@@ -452,16 +488,30 @@
         sleepThreshold:60
       });
 
-      // Suika-style physics: simple circles. The artwork is slightly smaller
-      // than the collider so visible gems never overlap, while the difference
-      // is small enough that pieces still look snug.
-      gem.setCircle(t.r*COLLIDER_SCALE);
-      gem.setBounce(.05);
-      gem.setFriction(.008,.001,.10);
+      // Real geometric pieces. Phaser Matter supports polygon bodies directly.
+      // A small chamfer softens razor-sharp corners enough for stable stacking,
+      // while preserving flats and vertices so the pieces genuinely tumble,
+      // wedge and fit together differently by tier.
+      gem.setPolygon(
+        t.r*COLLIDER_SCALE,
+        t.physicsSides,
+        {
+          chamfer:{radius:Math.max(2,Math.min(8,t.r*.055)),quality:2},
+          restitution:.045,
+          friction:.035,
+          frictionStatic:.28,
+          frictionAir:.002,
+          density:.00115,
+          sleepThreshold:70,
+          slop:.05
+        }
+      );
+      gem.setBounce(.045);
+      gem.setFriction(.035,.002,.28);
       gem.setDensity(.00115);
-      gem.setSleepThreshold(60);
-      gem.setAngle(Phaser.Math.FloatBetween(-4,4));
-      gem.setAngularVelocity(Phaser.Math.FloatBetween(-.008,.008));
+      gem.setSleepThreshold(70);
+      gem.setAngle(Phaser.Math.FloatBetween(-6,6));
+      gem.setAngularVelocity(Phaser.Math.FloatBetween(-.006,.006));
 
       gem.isGem=true;
       gem.tier=tier;
@@ -503,7 +553,16 @@
 
     pointerToWorldX(pointer) {
       const t=tiers[this.currentTier];
-      return clamp(pointer.x,WALL+t.r,W-WALL-t.r);
+      return clamp(pointer.x,WALL+t.r*COLLIDER_SCALE,W-WALL-t.r*COLLIDER_SCALE);
+    }
+
+    updateAimHandle() {
+      if(!this.aimHandle) return;
+      const t=tiers[this.currentTier];
+      const min=WALL+t.r;
+      const max=W-WALL-t.r;
+      const u=clamp((this.targetX-min)/Math.max(1,max-min),0,1);
+      this.aimHandle.style.left=(u*100)+'%';
     }
 
     dropCurrent() {
@@ -511,7 +570,7 @@
       if(this.time.now-this.lastDropAt<DROP_DELAY) return;
 
       const t=tiers[this.currentTier];
-      const x=clamp(this.preview?.x??this.targetX,WALL+t.r,W-WALL-t.r);
+      const x=clamp(this.preview?.x??this.targetX,WALL+t.r*COLLIDER_SCALE,W-WALL-t.r*COLLIDER_SCALE);
 
       if(this.preview){
         this.preview.destroy();
@@ -530,6 +589,7 @@
       this.currentTier=this.nextTier;
       this.nextTier=this.randomSpawnTier();
       this.updateNextPreview();
+      this.updateAimHandle();
       gestureHint.classList.add('hidden');
 
       this.time.delayedCall(DROP_DELAY,()=>{
@@ -782,7 +842,7 @@
 
         if(this.preview){
           const t=tiers[this.currentTier];
-          const target=clamp(this.targetX,WALL+t.r,W-WALL-t.r);
+          const target=clamp(this.targetX,WALL+t.r*COLLIDER_SCALE,W-WALL-t.r*COLLIDER_SCALE);
           this.preview.x=Phaser.Math.Linear(this.preview.x,target,this.pointerHeld?.48:.30);
         }
 
