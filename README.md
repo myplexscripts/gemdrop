@@ -1,18 +1,16 @@
-# Gem Tide
+# Gem Drop
 
-A mobile-first falling gem merge game built with HTML, CSS and JavaScript.
+A mobile-first physics merge game set inside a jeweller's lapidary workshop.
 
-## Play
-Open `index.html` in a modern browser. For a more native mobile feel, add it to your home screen. The included web app manifest launches it in standalone portrait mode when supported.
+Drop rough stones into the polishing chamber. Matching gems tumble together and refine into larger stones with new silhouettes and facet styles, building toward the Crownstone.
 
 ## Controls
-- Drag left or right on the playfield to aim, then release to drop.
-- Tap Hold to store or swap the current gem.
-- Merge identical gems into larger tiers.
-- Keep settled gems below the pressure line.
-- Charge Shatter, Cascade and Prism by making merges.
 
-## Special gems
-- Bomb: explosive rare gem.
-- Prism: wildcard merge gem.
-- Phase: temporarily passes through other gems.
+- Tap a horizontal position to drop.
+- Drag across the chamber to position the current stone, then release.
+- Match two identical stones to refine the next tier.
+- Keep settled stones below the jam line.
+
+## Build
+
+Gem Drop is a lightweight HTML, CSS and JavaScript game using Matter.js for rigid-body physics. Open `index.html` in a modern browser, or install it as a portrait PWA.
