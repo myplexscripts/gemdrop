@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#F4EEE8" />
+  <meta name="theme-color" content="#21191D" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Gem Tide" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="format-detection" content="telephone=no" />
@@ -25,7 +25,7 @@
 
       <div class="brand" aria-label="Gem Tide">
         <span class="brand-mark" aria-hidden="true"></span>
-        <strong>GEM TIDE</strong>
+        <div><strong>GEM TIDE</strong><span>THE LAPIDARY</span></div>
       </div>
 
       <div class="next-hud" aria-label="Next gem">
@@ -60,10 +60,10 @@
   <section id="startOverlay" class="overlay visible" aria-modal="true" role="dialog" aria-labelledby="startTitle">
     <div class="start-card">
       <div class="hero-gem" aria-hidden="true"><span></span></div>
-      <p class="eyebrow">A PHYSICS MERGE GAME</p>
+      <p class="eyebrow">THE LAPIDARY TUMBLER</p>
       <h1 id="startTitle">GEM TIDE</h1>
-      <p class="tagline">Drop small. Build brilliant.</p>
-      <p class="start-copy">Drop matching gems into the vault. Two of the same cut merge into the next. Keep the pile below the line and forge the Crownstone.</p>
+      <p class="tagline">Cut. Tumble. Refine.</p>
+      <p class="start-copy">Feed rough stones into the jeweller’s polishing chamber. Matching cuts fuse into rarer gems as they tumble together. Refine a Crownstone before the chamber jams.</p>
       <button id="startButton" class="primary-button" type="button">
         <i data-lucide="play" aria-hidden="true"></i>
         <span>PLAY</span>
@@ -88,8 +88,8 @@
   <section id="gameOverOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="gameOverTitle">
     <div class="sheet-card result-card">
       <div class="sheet-icon"><i data-lucide="gem" aria-hidden="true"></i></div>
-      <p class="eyebrow">VAULT FULL</p>
-      <h2 id="gameOverTitle">Run complete</h2>
+      <p class="eyebrow">CHAMBER JAMMED</p>
+      <h2 id="gameOverTitle">Polishing complete</h2>
       <div class="final-score"><span>SCORE</span><strong id="finalScore">0</strong></div>
       <div class="result-row"><span>Best gem</span><strong id="bestMerge">Quartz</strong></div>
       <button id="restartButton" class="primary-button" type="button">
