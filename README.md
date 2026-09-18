@@ -13,6 +13,6 @@ Drop matching gems into the basin. Each pair becomes a larger, rarer cut, buildi
 
 ## Runtime
 
-Gem Drop uses Phaser 3 with Arcade Physics. The visible gem art is decoupled from stable circular physics bodies so pieces can pack and tumble without clipping through one another or the vault walls.
+Gem Drop uses Phaser 3 with Matter Physics. Each gem uses a centred convex body that closely matches its visible side-cut silhouette, giving the pile real rotation, friction and angular collisions while keeping the artwork aligned with the physical shape.
 
 Open `index.html` in a modern browser or install it as a portrait PWA.
