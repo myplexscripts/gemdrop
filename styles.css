@@ -402,7 +402,6 @@ button.gem-slot:active { transform: scale(.97); }
   .brand strong { font-size: 16px; }
   .score-block { min-width: 88px; }
   .score-block > strong { font-size: 23px; }
-  .control-hint { font-size: 14px; }
 }
 
 @media (min-width: 561px) {
