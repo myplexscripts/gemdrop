@@ -101,7 +101,7 @@ button, .gem-slot { min-width: 44px; min-height: 44px; }
   position: relative;
   z-index: 2;
   width: calc(100% - 12px);
-  max-height: calc(100dvh - 224px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-height: calc(100dvh - 194px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   aspect-ratio: 720 / 1120;
   margin: 0 6px;
   border-radius: 22px 22px 28px 28px;
@@ -210,26 +210,38 @@ button.gem-slot:active { transform: scale(.97); }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-.control-hint {
-  position: relative;
-  z-index: 5;
-  min-height: 32px;
+.gesture-hint {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  bottom: 15px;
+  transform: translateX(-50%);
+  min-height: 40px;
+  max-width: calc(100% - 40px);
+  padding: 9px 14px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 5px 12px 0;
-  color: #A1A5B2;
+  color: #D3D6E0;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 700;
+  white-space: nowrap;
+  background: rgba(8, 10, 20, .76);
+  border: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  transition: opacity .25s ease, transform .25s ease;
 }
-.control-hint svg { width: 19px; height: 19px; stroke: #B7BCD0; }
+.gesture-hint svg { width: 19px; height: 19px; stroke: #D9C28E; }
+.gesture-hint.hidden { opacity: 0; transform: translate(-50%, 8px); pointer-events: none; }
 
 .power-dock {
   position: relative;
   z-index: 5;
-  height: calc(94px + env(safe-area-inset-bottom));
-  padding: 4px 14px calc(8px + env(safe-area-inset-bottom));
+  height: calc(96px + env(safe-area-inset-bottom));
+  padding: 5px 14px calc(9px + env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
@@ -396,13 +408,12 @@ button.gem-slot:active { transform: scale(.97); }
 @media (min-width: 561px) {
   body { display: grid; place-items: center; background: radial-gradient(circle at center,#17182A,#05060A 58%); }
   .game-app { height: min(100dvh, 930px); border-radius: 34px; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 34px 100px rgba(0,0,0,.56); }
-  .game-stage { max-height: calc(100% - 224px); }
+  .game-stage { max-height: calc(100% - 194px); }
 }
 
 @media (max-height: 720px) {
   .hud { min-height: calc(76px + env(safe-area-inset-top)); padding-top: calc(8px + env(safe-area-inset-top)); }
-  .game-stage { max-height: calc(100dvh - 198px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
-  .control-hint { min-height: 27px; padding-top: 2px; }
+  .game-stage { max-height: calc(100dvh - 174px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
   .power-dock { height: calc(82px + env(safe-area-inset-bottom)); padding-top: 0; }
   .power-button { height: 72px; }
   .power-ring { width: 48px; height: 48px; border-radius: 16px; }
