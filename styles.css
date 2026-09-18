@@ -27,22 +27,22 @@ button:focus-visible{outline:3px solid rgba(230,154,130,.42);outline-offset:3px}
   margin:0 auto;
   overflow:hidden;
   background:
-    radial-gradient(circle at 12% 4%,rgba(159,102,112,.15),transparent 28%),
-    radial-gradient(circle at 88% 17%,rgba(93,132,121,.12),transparent 24%),
+    radial-gradient(circle at 12% 4%,rgba(159,102,112,.14),transparent 28%),
+    radial-gradient(circle at 88% 17%,rgba(93,132,121,.11),transparent 24%),
     linear-gradient(180deg,#2B2226 0%,#21191D 52%,#191316 100%);
 }
 .game-app::before{
   content:"";
-  position:absolute;inset:0;pointer-events:none;opacity:.28;
+  position:absolute;inset:0;pointer-events:none;opacity:.23;
   background-image:
     radial-gradient(circle at 15% 20%,rgba(255,255,255,.22) 0 1px,transparent 1.15px),
-    radial-gradient(circle at 78% 13%,rgba(255,255,255,.16) 0 1px,transparent 1.1px);
+    radial-gradient(circle at 78% 13%,rgba(255,255,255,.15) 0 1px,transparent 1.1px);
   background-size:180px 220px,240px 290px;
 }
 
 .hud{
   position:relative;z-index:6;
-  min-height:calc(94px + env(safe-area-inset-top));
+  min-height:calc(96px + env(safe-area-inset-top));
   padding:calc(12px + env(safe-area-inset-top)) 13px 11px;
   display:grid;
   grid-template-columns:46px minmax(0,1fr) 52px auto;
@@ -86,12 +86,12 @@ button:focus-visible{outline:3px solid rgba(230,154,130,.42);outline-offset:3px}
 
 .play-shell{
   position:relative;z-index:2;
-  width:min(calc(100% - 16px),calc((100dvh - 114px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .741));
+  width:min(calc(100% - 16px),calc((100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .741));
   aspect-ratio:640/864;
   margin:0 auto;
   overflow:hidden;
   border-radius:28px;
-  border:1px solid rgba(222,164,145,.20);
+  border:1px solid rgba(222,164,145,.22);
   background:#2B1D24;
   box-shadow:
     0 20px 42px rgba(0,0,0,.25),
@@ -104,7 +104,27 @@ button:focus-visible{outline:3px solid rgba(230,154,130,.42);outline-offset:3px}
     inset 0 0 0 4px rgba(255,255,255,.016),
     inset 0 0 50px rgba(95,38,60,.10);
 }
+.play-shell::after{
+  content:"";position:absolute;left:10px;right:10px;bottom:7px;height:10px;z-index:4;pointer-events:none;
+  border-radius:0 0 18px 18px;
+  background:linear-gradient(180deg,#7F493E,#A76554 45%,#59312B 100%);
+  opacity:.72;
+  box-shadow:0 -1px 0 rgba(255,255,255,.10),0 -5px 12px rgba(0,0,0,.16);
+}
 #game{width:100%;height:100%;display:block;touch-action:none}
+
+.chamber-plaque{
+  position:absolute;z-index:6;left:18px;top:14px;
+  min-height:36px;padding:7px 10px;border-radius:10px;
+  display:grid;align-content:center;gap:1px;
+  border:1px solid rgba(232,174,151,.16);
+  background:rgba(31,21,26,.65);
+  backdrop-filter:blur(8px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+.chamber-plaque span,.chamber-plaque b{font-size:14px;line-height:1}
+.chamber-plaque span{font-weight:700;letter-spacing:.065em;color:#BCA9A8}
+.chamber-plaque b{font-weight:800;letter-spacing:.07em;color:#D58D78}
 
 .danger-hud{
   position:absolute;z-index:8;left:50%;top:104px;transform:translateX(-50%);
@@ -117,18 +137,18 @@ button:focus-visible{outline:3px solid rgba(230,154,130,.42);outline-offset:3px}
 .danger-hud[hidden]{display:none!important}
 .danger-hud svg{width:18px;height:18px}
 
-.toast{
+.cut-toast{
   position:absolute;z-index:8;left:50%;top:92px;transform:translate(-50%,-6px);
-  opacity:0;padding:8px 12px;border-radius:999px;
+  opacity:0;padding:9px 13px;border-radius:999px;
   background:rgba(26,18,22,.92);color:#F5E8DF;
   border:1px solid rgba(255,255,255,.08);
   box-shadow:0 8px 18px rgba(0,0,0,.22);
   font-size:14px;font-weight:700;white-space:nowrap;transition:.18s ease;
 }
-.toast.show{opacity:1;transform:translate(-50%,0)}
+.cut-toast.show{opacity:1;transform:translate(-50%,0)}
 
 .gesture-hint{
-  position:absolute;z-index:7;left:50%;bottom:15px;transform:translateX(-50%);
+  position:absolute;z-index:7;left:50%;bottom:18px;transform:translateX(-50%);
   min-height:42px;max-width:calc(100% - 34px);padding:9px 14px;border-radius:999px;
   display:flex;align-items:center;justify-content:center;gap:8px;
   color:#E7D8CF;font-size:14px;font-weight:700;white-space:nowrap;
@@ -153,7 +173,7 @@ button:focus-visible{outline:3px solid rgba(230,154,130,.42);outline-offset:3px}
   box-shadow:0 24px 64px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.04);
 }
 .hero-gem{
-  width:88px;height:68px;margin:0 auto 18px;position:relative;
+  width:92px;height:72px;margin:0 auto 18px;position:relative;
   transform:rotate(-7deg);
   filter:drop-shadow(0 10px 12px rgba(0,0,0,.30));
 }
@@ -164,12 +184,12 @@ button:focus-visible{outline:3px solid rgba(230,154,130,.42);outline-offset:3px}
   background:linear-gradient(155deg,#B7DFD2,#60AAB3 34%,#8D6CA8 68%,#CE806B);
 }
 .hero-gem::after{
-  left:25px;right:25px;top:13px;height:18px;
+  left:26px;right:26px;top:13px;height:19px;
   clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);
   background:rgba(255,255,255,.24);
 }
 .hero-gem span{
-  left:12px;right:12px;top:35px;height:4px;border-radius:3px;background:rgba(255,255,255,.27);
+  left:12px;right:12px;top:37px;height:4px;border-radius:3px;background:rgba(255,255,255,.27);
 }
 .eyebrow{margin:0;color:#D28B77;font-size:14px;font-weight:800;letter-spacing:.09em}
 .start-card h1{margin:8px 0 0;font-size:clamp(43px,13vw,62px);line-height:1;font-weight:800;letter-spacing:-.045em;color:#F3E5DB}
@@ -228,8 +248,8 @@ button:focus-visible{outline:3px solid rgba(230,154,130,.42);outline-offset:3px}
   .game-app{height:min(100dvh,930px);border-radius:34px;box-shadow:0 30px 90px rgba(0,0,0,.38)}
 }
 @media(max-height:720px){
-  .hud{min-height:calc(80px + env(safe-area-inset-top));padding-top:calc(8px + env(safe-area-inset-top))}
-  .play-shell{width:min(calc(100% - 16px),calc((100dvh - 98px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .741))}
+  .hud{min-height:calc(82px + env(safe-area-inset-top));padding-top:calc(8px + env(safe-area-inset-top))}
+  .play-shell{width:min(calc(100% - 16px),calc((100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .741))}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition-duration:.001ms!important}
