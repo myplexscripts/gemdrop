@@ -62,12 +62,11 @@
 
       <div id="comboBadge" class="combo-badge" aria-live="polite"></div>
       <div id="toast" class="toast" aria-live="polite"></div>
+      <div class="gesture-hint" id="gestureHint">
+        <i data-lucide="move-horizontal" aria-hidden="true"></i>
+        <span>Tap to drop · drag to aim</span>
+      </div>
     </section>
-
-    <div class="control-hint" id="hintBar" aria-label="Drop controls">
-      <i data-lucide="move-horizontal" aria-hidden="true"></i>
-      <span>Drag anywhere to aim, release to drop</span>
-    </div>
 
     <section class="power-dock" aria-label="Abilities">
       <button class="power-button" id="hammerButton" type="button" disabled>
@@ -124,6 +123,7 @@
     </div>
   </section>
 
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.8}});</script>
   <script src="game.js"></script>
