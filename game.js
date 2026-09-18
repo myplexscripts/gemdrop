@@ -51,6 +51,9 @@
   engine.gravity.x = 0;
   engine.gravity.y = 1;
   engine.gravity.scale = .00108;
+  engine.positionIterations = 12;
+  engine.velocityIterations = 10;
+  engine.constraintIterations = 4;
 
   const physics = {
     friction:.085,
@@ -96,9 +99,30 @@
     Composite.clear(engine.world,false,true);
     gems = [];
     walls = [
-      Bodies.rectangle(W/2,FLOOR+32,W,64,{...physics,isStatic:true,collisionFilter:{category:CAT_WORLD,mask:CAT_GEM}}),
-      Bodies.rectangle(-12,H/2,64,H*2,{...physics,isStatic:true,collisionFilter:{category:CAT_WORLD,mask:CAT_GEM}}),
-      Bodies.rectangle(W+12,H/2,64,H*2,{...physics,isStatic:true,collisionFilter:{category:CAT_WORLD,mask:CAT_GEM}})
+      Bodies.rectangle(W/2,FLOOR+120,W+160,240,{
+        ...physics,
+        isStatic:true,
+        friction:.14,
+        frictionStatic:.24,
+        restitution:.02,
+        collisionFilter:{category:CAT_WORLD,mask:CAT_GEM}
+      }),
+      Bodies.rectangle(-28,H/2,96,H*2,{
+        ...physics,
+        isStatic:true,
+        friction:.11,
+        frictionStatic:.20,
+        restitution:.03,
+        collisionFilter:{category:CAT_WORLD,mask:CAT_GEM}
+      }),
+      Bodies.rectangle(W+28,H/2,96,H*2,{
+        ...physics,
+        isStatic:true,
+        friction:.11,
+        frictionStatic:.20,
+        restitution:.03,
+        collisionFilter:{category:CAT_WORLD,mask:CAT_GEM}
+      })
     ];
     World.add(engine.world,walls);
   }
@@ -226,6 +250,7 @@
     const verts=geo.outer.map(v=>({x:v.x,y:v.y}));
     const body=Bodies.fromVertices(x,y,[verts],{
       ...physics,
+      slop:.02,
       collisionFilter:{category:CAT_GEM,mask:CAT_WORLD|CAT_GEM}
     },true,.005,2,.005);
 
@@ -462,6 +487,29 @@
       if(Math.abs(b.angularVelocity)>maxAV){
         Body.setAngularVelocity(b,Math.sign(b.angularVelocity)*maxAV);
       }
+
+      // Matter.js uses discrete timesteps. Dense piles can briefly squeeze a
+      // sharp gem deeply into the floor, so cap extreme fall speed and keep
+      // the entire collision body above the basin floor.
+      if(b.velocity.y>11){
+        Body.setVelocity(b,{x:b.velocity.x,y:11});
+      }
+      if(b.bounds.max.y>FLOOR+1){
+        const correction=(FLOOR-1)-b.bounds.max.y;
+        Body.translate(b,{x:0,y:correction});
+        if(b.velocity.y>0){
+          Body.setVelocity(b,{x:b.velocity.x*.92,y:-Math.min(.35,b.velocity.y*.06)});
+        }
+      }
+
+      if(b.bounds.min.x<WALL-1){
+        Body.translate(b,{x:(WALL+1)-b.bounds.min.x,y:0});
+        if(b.velocity.x<0)Body.setVelocity(b,{x:Math.abs(b.velocity.x)*.05,y:b.velocity.y});
+      }else if(b.bounds.max.x>W-WALL+1){
+        Body.translate(b,{x:(W-WALL-1)-b.bounds.max.x,y:0});
+        if(b.velocity.x>0)Body.setVelocity(b,{x:-Math.abs(b.velocity.x)*.05,y:b.velocity.y});
+      }
+
       b.gem.renderAngle=b.angle;
     }
 
