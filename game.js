@@ -173,6 +173,7 @@
       this.discoveredCuts = new Set([0]);
       this.preview = null;
       this.glints = new Map();
+      this.bodyToGem = new Map();
       this.dropper = null;
       this.limitLine = null;
       this.lastDropAt = 0;
@@ -487,6 +488,7 @@
 
       for(const gem of [...this.gems]) this.removeGem(gem);
       this.gems.length=0;
+      this.bodyToGem.clear();
 
       for(const glint of this.glints.values()) glint.destroy();
       this.glints.clear();
@@ -577,6 +579,15 @@
       };
 
       body.gameObject=gem;
+      this.bodyToGem.set(body.id,gem);
+
+      if(Array.isArray(body.parts)){
+        for(const part of body.parts){
+          part.gameObject=gem;
+          this.bodyToGem.set(part.id,gem);
+        }
+      }
+
       this.matter.world.add(body);
       this.gems.push(gem);
 
@@ -598,6 +609,13 @@
       }
 
       if(gem.body){
+        if(Array.isArray(gem.body.parts)){
+          for(const part of gem.body.parts){
+            this.bodyToGem.delete(part.id);
+            part.gameObject=null;
+          }
+        }
+        this.bodyToGem.delete(gem.body.id);
         this.matter.world.remove(gem.body);
         gem.body.gameObject=null;
       }
@@ -661,14 +679,28 @@
       });
     }
 
+    gemFromBody(body) {
+      if(!body) return null;
+
+      let gem=this.bodyToGem.get(body.id) || body.gameObject || null;
+      if(gem?.active) return gem;
+
+      const parent=body.parent;
+      if(parent && parent!==body){
+        gem=this.bodyToGem.get(parent.id) || parent.gameObject || null;
+        if(gem?.active) return gem;
+      }
+
+      return null;
+    }
+
     handleMatterCollisions(event,isActive) {
       for(const pair of event.pairs){
-        const a=pair.bodyA?.gameObject;
-        const b=pair.bodyB?.gameObject;
+        const a=this.gemFromBody(pair.bodyA);
+        const b=this.gemFromBody(pair.bodyB);
 
-        if(a?.active && b?.active && a.tier!==undefined && b.tier!==undefined){
-          this.onGemContact(a,b,!isActive);
-        }
+        if(!a || !b || a===b) continue;
+        this.onGemContact(a,b,!isActive);
       }
     }
 
@@ -692,8 +724,8 @@
         a.tier===b.tier &&
         !a.merging &&
         !b.merging &&
-        this.time.now-a.born>110 &&
-        this.time.now-b.born>110
+        this.time.now-a.born>70 &&
+        this.time.now-b.born>70
       ){
         a.merging=true;
         b.merging=true;
