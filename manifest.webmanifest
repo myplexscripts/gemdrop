@@ -3,8 +3,8 @@
   "short_name": "Gem Tide",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#F4EEE8",
-  "theme_color": "#F4EEE8",
+  "background_color": "#21191D",
+  "theme_color": "#21191D",
   "orientation": "portrait-primary",
   "icons": [
     {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
