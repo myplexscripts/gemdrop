@@ -3,8 +3,8 @@
   "short_name": "Gem Drop",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#21191D",
-  "theme_color": "#21191D",
+  "background_color": "#16091d",
+  "theme_color": "#16091d",
   "orientation": "portrait-primary",
   "icons": [
     {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
