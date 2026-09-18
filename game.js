@@ -249,7 +249,7 @@
     currentSpecial = maybeSpecial();
     nextTier = randomTier();
     canHold = true;
-    shotCooldown = .19;
+    shotCooldown = .14;
     dropCount++;
     if (dropCount >= 2) gestureHint.classList.add('hidden');
     drawPreviews();
@@ -275,6 +275,18 @@
     haptic(7);
   }
 
+  function queueMergeIfEligible(a, b, now) {
+    const ag = a.gem;
+    const bg = b.gem;
+    if (!ag || !bg || !ag.alive || !bg.alive) return;
+    const prismMatch = ag.special === 'prism' || bg.special === 'prism';
+    const bombContact = ag.special === 'bomb' || bg.special === 'bomb';
+    const sameTier = ag.tier === bg.tier;
+    if (!bombContact && now >= ag.mergeLockUntil && now >= bg.mergeLockUntil && (sameTier || prismMatch)) {
+      mergeQueue.push([a, b]);
+    }
+  }
+
   Events.on(engine, 'collisionStart', event => {
     const now = performance.now();
     for (const pair of event.pairs) {
@@ -290,13 +302,7 @@
 
         if (ag.special === 'bomb' && now - ag.born > 260) bombQueue.add(a);
         if (bg.special === 'bomb' && now - bg.born > 260) bombQueue.add(b);
-
-        const prismMatch = ag.special === 'prism' || bg.special === 'prism';
-        const bombContact = ag.special === 'bomb' || bg.special === 'bomb';
-        const sameTier = ag.tier === bg.tier;
-        if (!bombContact && now >= ag.mergeLockUntil && now >= bg.mergeLockUntil && (sameTier || prismMatch)) {
-          mergeQueue.push([a, b]);
-        }
+        queueMergeIfEligible(a, b, now);
       } else {
         const gemBody = ag ? a : bg ? b : null;
         if (gemBody && gemBody.gem.alive) {
@@ -304,6 +310,13 @@
           if (gemBody.gem.special === 'bomb' && now - gemBody.gem.born > 260) bombQueue.add(gemBody);
         }
       }
+    }
+  });
+
+  Events.on(engine, 'collisionActive', event => {
+    const now = performance.now();
+    for (const pair of event.pairs) {
+      if (pair.bodyA.gem && pair.bodyB.gem) queueMergeIfEligible(pair.bodyA, pair.bodyB, now);
     }
   });
 
@@ -780,8 +793,7 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      ctx.globalAlpha = .16;
-      drawGem(ctx, x, landingY, currentTier, t.r, 0, currentSpecial, 0, 0, 1, .3);
+      drawGem(ctx, x, landingY, currentTier, t.r, 0, currentSpecial, 0, 0, .16, .3);
       ctx.globalAlpha = .55;
       ctx.strokeStyle = t.accent;
       ctx.lineWidth = 1.5;
