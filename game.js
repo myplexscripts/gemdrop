@@ -183,26 +183,33 @@
       this.cameras.main.setBackgroundColor('rgba(0,0,0,0)');
 
       const engine=this.matter.world.engine;
-      engine.positionIterations=12;
-      engine.velocityIterations=10;
+      engine.positionIterations=14;
+      engine.velocityIterations=12;
       engine.constraintIterations=4;
+      engine.gravity.x=0;
+      engine.gravity.y=1.28;
+      engine.gravity.scale=.001;
+      engine.timing.timeScale=1;
 
       this.makeTextures();
       this.drawVaultBackdrop();
 
-      this.gems=this.add.group();
+      this.gems=[];
 
       const wallOptions={
         isStatic:true,
-        friction:.34,
-        frictionStatic:.72,
-        restitution:.018,
+        friction:.30,
+        frictionStatic:.65,
+        restitution:.025,
         label:'vault-wall'
       };
 
-      this.floorBody=this.matter.add.rectangle(W/2,FLOOR+38,W+120,76,wallOptions);
-      this.leftWallBody=this.matter.add.rectangle(WALL-17,H/2,34,H*2,wallOptions);
-      this.rightWallBody=this.matter.add.rectangle(W-WALL+17,H/2,34,H*2,wallOptions);
+      // The exposed collision faces are exactly x=WALL, x=W-WALL and y=FLOOR.
+      // All wall mass extends outside the playable area, so a gem can never end
+      // up visually behind the decorative rails.
+      this.floorBody=this.matter.add.rectangle(W/2,FLOOR+90,W+180,180,wallOptions);
+      this.leftWallBody=this.matter.add.rectangle(WALL-50,H/2,100,H*2,wallOptions);
+      this.rightWallBody=this.matter.add.rectangle(W-WALL+50,H/2,100,H*2,wallOptions);
 
       this.matter.world.on('collisionstart',event=>this.handleMatterCollisions(event,false));
       this.matter.world.on('collisionactive',event=>this.handleMatterCollisions(event,true));
@@ -403,16 +410,27 @@
     }
 
     drawVaultBackdrop() {
-      const g = this.add.graphics().setDepth(0);
-      g.fillStyle(0x1a0825,.55);
-      g.fillRect(0,0,W,H);
+      const bg=this.add.graphics().setDepth(0);
+      bg.fillStyle(0x1a0825,.56);
+      bg.fillRect(0,0,W,H);
 
-      g.fillStyle(0xffc44a,.10);
-      g.fillRect(WALL,19,W-WALL*2,6);
-      g.fillRect(WALL,FLOOR-8,W-WALL*2,9);
+      // Interior glow.
+      bg.fillStyle(0x6a1b78,.055);
+      bg.fillEllipse(W*.5,H*.72,W*.78,H*.36);
 
-      g.lineStyle(2,0xffca54,.26);
-      g.strokeRect(WALL,19,W-WALL*2,FLOOR-19);
+      // Rails are drawn exactly outside the collision faces.
+      const rails=this.add.graphics().setDepth(15);
+      rails.fillStyle(0x7d2557,1);
+      rails.fillRect(0,0,W,20);
+
+      rails.fillGradientStyle(0xffdd7a,0xf2a433,0xb13f61,0x6f2253,1);
+      rails.fillRect(WALL-8,18,8,FLOOR-18);
+      rails.fillRect(W-WALL,18,8,FLOOR-18);
+      rails.fillGradientStyle(0xffed9e,0xffbd3f,0xb13f61,0x6a1f52,1);
+      rails.fillRect(WALL,FLOOR,W-WALL*2,11);
+
+      rails.lineStyle(2,0xffd666,.34);
+      rails.strokeRect(WALL,19,W-WALL*2,FLOOR-19);
 
       const sparkleColors=[0xffc65b,0xf36ac8,0xa46cff];
       for(let i=0;i<30;i++){
@@ -467,10 +485,8 @@
     clearRun() {
       if (!this.gems) return;
 
-      for(const gem of [...this.gems.getChildren()]){
-        this.removeGem(gem);
-      }
-      this.gems.clear(false,false);
+      for(const gem of [...this.gems]) this.removeGem(gem);
+      this.gems.length=0;
 
       for(const glint of this.glints.values()) glint.destroy();
       this.glints.clear();
@@ -503,63 +519,66 @@
 
     createGem(x,y,tier,merged=false) {
       const t=tiers[tier];
-      const renderGeo=geometryForTier(tier,t.r*.94);
-      const center=polygonCentroid(renderGeo.outer);
+      const M=Phaser.Physics.Matter.Matter;
 
-      // The collider is only ~1.5% larger than the art. This closes the visible
-      // gaps from the old circular bodies while still guaranteeing that gems
-      // never visually overlap.
-      const bodyGeo=geometryForTier(tier,t.r*.955);
+      // Art and collider use the same centred silhouette. The collider is only
+      // 0.8% larger, enough to prevent anti-aliased edges from appearing to overlap.
+      const bodyGeo=geometryForTier(tier,t.r*.948);
       const bodyCenter=polygonCentroid(bodyGeo.outer);
       const verts=bodyGeo.outer.map(p=>({
         x:p.x-bodyCenter.x,
         y:p.y-bodyCenter.y
       }));
 
-      const body=this.matter.add.fromVertices(
+      const body=M.Bodies.fromVertices(
         x,
         y,
-        verts,
+        [verts],
         {
           label:'gem',
-          friction:.22,
-          frictionStatic:.52,
-          frictionAir:.008,
-          restitution:.035,
-          density:.00135,
-          slop:.012,
-          sleepThreshold:45
+          friction:.16,
+          frictionStatic:.34,
+          frictionAir:.004,
+          restitution:.045,
+          density:.00125,
+          slop:.006,
+          sleepThreshold:60
         },
         true,
         .01,
-        5
+        3,
+        .01
       );
 
-      const gem=this.add.image(x,y,'gem-'+tier).setDepth(10+tier*.01);
-      this.matter.add.gameObject(gem,body,false);
+      M.Body.setAngle(body,Phaser.Math.FloatBetween(-.025,.025));
+      M.Body.setAngularVelocity(body,Phaser.Math.FloatBetween(-.0025,.0025));
+      M.Body.setInertia(body,body.inertia*1.75);
 
-      gem.tier=tier;
-      gem.merging=false;
-      gem.born=this.time.now;
-
-      const M=Phaser.Physics.Matter.Matter;
-      M.Body.setAngle(gem.body,Phaser.Math.FloatBetween(-.035,.035));
-      M.Body.setAngularVelocity(gem.body,Phaser.Math.FloatBetween(-.004,.004));
-      M.Body.setInertia(gem.body,gem.body.inertia*2.15);
-
+      const sprite=this.add.image(x,y,'gem-'+tier).setDepth(10+tier*.01);
       if(merged){
-        gem.setAlpha(.72);
-        gem.setScale(.88);
+        sprite.setAlpha(.74);
+        sprite.setScale(.90);
         this.tweens.add({
-          targets:gem,
+          targets:sprite,
           alpha:1,
           scale:1,
-          duration:150,
+          duration:135,
           ease:'Back.Out'
         });
       }
 
-      this.gems.add(gem);
+      const gem={
+        tier,
+        body,
+        sprite,
+        merging:false,
+        born:this.time.now,
+        active:true
+      };
+
+      body.gameObject=gem;
+      this.matter.world.add(body);
+      this.gems.push(gem);
 
       const glint=this.add.image(x,y,'glint').setDepth(13).setAlpha(0);
       glint.setScale(clamp(t.r/58,.65,2.2));
@@ -569,19 +588,24 @@
     }
 
     removeGem(gem) {
+      if(!gem||!gem.active) return;
+      gem.active=false;
+
       const glint=this.glints.get(gem);
       if(glint){
         glint.destroy();
         this.glints.delete(gem);
       }
 
-      if(gem?.body){
+      if(gem.body){
         this.matter.world.remove(gem.body);
+        gem.body.gameObject=null;
       }
-      if(gem?.active){
-        this.gems.remove(gem,false,false);
-        gem.destroy();
-      }
+
+      if(gem.sprite?.active) gem.sprite.destroy();
+
+      const i=this.gems.indexOf(gem);
+      if(i>=0) this.gems.splice(i,1);
     }
 
     onPointerDown(pointer) {
@@ -618,7 +642,7 @@
       if(this.preview){this.preview.destroy();this.preview=null;}
 
       const gem=this.createGem(x,DROP_Y,this.currentTier,false);
-      gem.setVelocity(0,.35);
+      Phaser.Physics.Matter.Matter.Body.setVelocity(gem.body,{x:0,y:.10});
       this.lastDropAt=this.time.now;
       this.ready=false;
 
@@ -642,7 +666,7 @@
         const a=pair.bodyA?.gameObject;
         const b=pair.bodyB?.gameObject;
 
-        if(a?.tier!==undefined && b?.tier!==undefined){
+        if(a?.active && b?.active && a.tier!==undefined && b.tier!==undefined){
           this.onGemContact(a,b,!isActive);
         }
       }
@@ -657,8 +681,8 @@
 
       if(isNewContact && speed>2.0){
         this.contactSpark(
-          (a.x+b.x)/2,
-          (a.y+b.y)/2,
+          (a.body.position.x+b.body.position.x)/2,
+          (a.body.position.y+b.body.position.y)/2,
           tiers[Math.max(a.tier,b.tier)].accent,
           speed*55
         );
@@ -687,8 +711,8 @@
 
         const tier=a.tier;
         const next=tier+1;
-        const x=(a.x+b.x)/2;
-        const y=(a.y+b.y)/2;
+        const x=(a.body.position.x+b.body.position.x)/2;
+        const y=(a.body.position.y+b.body.position.y)/2;
         const vx=(a.body.velocity.x+b.body.velocity.x)*.22;
         const vy=Math.min(-1.15,(a.body.velocity.y+b.body.velocity.y)*.10-.55);
         const av=(a.body.angularVelocity+b.body.angularVelocity)*.16;
@@ -710,8 +734,9 @@
         }
 
         const gem=this.createGem(x,y,next,true);
-        gem.setVelocity(vx,vy);
-        gem.setAngularVelocity(clamp(av,-.018,.018));
+        const M=Phaser.Physics.Matter.Matter;
+        M.Body.setVelocity(gem.body,{x:vx,y:vy});
+        M.Body.setAngularVelocity(gem.body,clamp(av,-.018,.018));
 
         this.bestTierReached=Math.max(this.bestTierReached,next);
         this.addScore(tiers[next].score);
@@ -893,37 +918,46 @@
 
         let high=false;
 
-        for(const gem of this.gems.getChildren()){
-          if(!gem.active||!gem.body) continue;
+        for(const gem of this.gems){
+          if(!gem.active||!gem.body||!gem.sprite?.active) continue;
 
           const body=gem.body;
           const M=Phaser.Physics.Matter.Matter;
 
-          // Prevent unrealistic pinwheeling while preserving real contact-driven
-          // rotation. The rest of the angle is entirely produced by Matter.
-          if(Math.abs(body.angularVelocity)>.045){
-            M.Body.setAngularVelocity(body,Math.sign(body.angularVelocity)*.045);
+          // Matter has no continuous collision detection. Keeping the maximum
+          // displacement comfortably below the thinnest gem dimension prevents
+          // tunnelling without making the fall feel floaty.
+          if(body.velocity.y>9.5){
+            M.Body.setVelocity(body,{x:body.velocity.x,y:9.5});
           }
+          if(Math.abs(body.velocity.x)>7.0){
+            M.Body.setVelocity(body,{x:Math.sign(body.velocity.x)*7.0,y:body.velocity.y});
+          }
+          if(Math.abs(body.angularVelocity)>.042){
+            M.Body.setAngularVelocity(body,Math.sign(body.angularVelocity)*.042);
+          }
+
+          gem.sprite.setPosition(body.position.x,body.position.y);
+          gem.sprite.setRotation(body.angle);
 
           const glint=this.glints.get(gem);
           if(glint){
             const r=tiers[gem.tier].r;
             const ox=-r*.22;
             const oy=-r*.28;
-            const ca=Math.cos(gem.rotation);
-            const sa=Math.sin(gem.rotation);
-            glint.x=gem.x+ox*ca-oy*sa;
-            glint.y=gem.y+ox*sa+oy*ca;
-            glint.rotation=-gem.rotation*.35;
+            const ca=Math.cos(body.angle);
+            const sa=Math.sin(body.angle);
+            glint.x=body.position.x+ox*ca-oy*sa;
+            glint.y=body.position.y+ox*sa+oy*ca;
+            glint.rotation=-body.angle*.35;
 
-            const phase=Math.cos(gem.rotation+.65);
+            const phase=Math.cos(body.angle+.65);
             glint.alpha=clamp((phase-.91)/.09,0,.55);
           }
 
-          const speed=body.speed;
           if(
             time-gem.born>720 &&
-            speed<.75 &&
+            body.speed<.75 &&
             body.bounds.min.y<LIMIT_Y
           ){
             high=true;
@@ -1009,7 +1043,7 @@
     physics: {
       default: 'matter',
       matter: {
-        gravity: { x: 0, y: 1.02 },
+        gravity: { x: 0, y: 1.28, scale: .001 },
         enableSleeping: true,
         debug: false
       }
