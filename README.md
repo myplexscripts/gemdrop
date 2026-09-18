@@ -1,8 +1,8 @@
 # Gem Drop
 
-A mobile-first physics merge game set in a magical jewel vault.
+Gem Drop is a mobile-first Suika-style physics merge game built with Phaser 3.
 
-Drop matching gems into the basin. Each pair becomes a larger, rarer cut, building toward the Crownstone while the pile climbs toward the glowing limit.
+The gameplay uses Phaser Matter Physics with a fixed 60 Hz timestep, simple circular rigid bodies, low restitution, density-based mass, sleeping, and a very small visual-to-collider offset. The visible gems remain faceted, but the physics is intentionally simple and stable so gems roll, settle, pack tightly, and create reliable chain merges.
 
 ## Controls
 
@@ -13,6 +13,8 @@ Drop matching gems into the basin. Each pair becomes a larger, rarer cut, buildi
 
 ## Runtime
 
-Gem Drop uses Phaser 3 with Matter Physics. Each gem uses a centred convex body that closely matches its visible side-cut silhouette, giving the pile real rotation, friction and angular collisions while keeping the artwork aligned with the physical shape.
-
-Open `index.html` in a modern browser or install it as a portrait PWA.
+- Phaser 3.90.0
+- Matter Physics
+- Fixed 60 Hz simulation
+- Circle colliders for merge pieces
+- Static walls outside the visible playfield
