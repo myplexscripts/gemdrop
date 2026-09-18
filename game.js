@@ -638,8 +638,7 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.globalAlpha = pointerActive ? .24 : .14;
-    drawGem(ctx, x, landingY, currentTier, t.r, 0, currentSpecial, 0, 0, 1, .34);
+    drawGem(ctx, x, landingY, currentTier, t.r, 0, currentSpecial, 0, 0, pointerActive ? .22 : .12, .34);
 
     ctx.globalAlpha = pointerActive ? .72 : .42;
     ctx.strokeStyle = t.accent;
