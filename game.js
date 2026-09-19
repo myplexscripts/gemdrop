@@ -127,9 +127,11 @@
       this.matter.set60Hz();
 
       const engine=this.matter.world.engine;
-      engine.positionIterations=8;
-      engine.velocityIterations=6;
+      engine.positionIterations=10;
+      engine.velocityIterations=8;
       engine.constraintIterations=2;
+      engine.gravity.y=1.14;
+      engine.gravity.scale=.001;
 
       this.makeTextures();
       this.drawVaultBackdrop();
@@ -499,12 +501,12 @@
 
       const gem=this.matter.add.image(x,y,'gem-'+tier,null,{
         label:'gem',
-        restitution:.045,
-        friction:.035,
-        frictionStatic:.28,
-        frictionAir:.002,
+        restitution:.012,
+        friction:.018,
+        frictionStatic:.075,
+        frictionAir:.004,
         density:.00115,
-        sleepThreshold:70
+        sleepThreshold:0
       });
 
       gem.setPolygon(
@@ -515,22 +517,22 @@
             radius:Math.max(2,Math.min(8,t.r*.055)),
             quality:2
           },
-          restitution:.045,
-          friction:.035,
-          frictionStatic:.28,
-          frictionAir:.002,
+          restitution:.012,
+          friction:.018,
+          frictionStatic:.075,
+          frictionAir:.004,
           density:.00115,
-          sleepThreshold:70,
-          slop:.05
+          sleepThreshold:0,
+          slop:.035
         }
       );
 
-      gem.setBounce(.045);
-      gem.setFriction(.035,.002,.28);
+      gem.setBounce(.012);
+      gem.setFriction(.018,.004,.075);
       gem.setDensity(.00115);
-      gem.setSleepThreshold(70);
-      gem.setAngle(Phaser.Math.FloatBetween(-6,6));
-      gem.setAngularVelocity(Phaser.Math.FloatBetween(-.006,.006));
+      gem.setSleepThreshold(0);
+      gem.setAngle(Phaser.Math.FloatBetween(-5,5));
+      gem.setAngularVelocity(Phaser.Math.FloatBetween(-.0035,.0035));
 
       gem.isGem=true;
       gem.tier=tier;
@@ -837,75 +839,104 @@
       statusHud.className='status-hud';
     }
 
+    matchingPairs() {
+      const pairs=[];
+      const used=new Set();
+
+      for(let tier=0;tier<tiers.length;tier++){
+        const same=this.gems
+          .filter(g=>g&&g.active&&!g.merging&&g.tier===tier)
+          .sort((a,b)=>b.y-a.y);
+
+        for(let i=0;i+1<same.length;i+=2){
+          const a=same[i];
+          const b=same[i+1];
+          if(used.has(a)||used.has(b)) continue;
+          pairs.push([a,b]);
+          used.add(a);
+          used.add(b);
+        }
+      }
+
+      return pairs;
+    }
+
     updatePowerButtons() {
       const active=this.running&&!this.paused;
+      const canCascade=this.matchingPairs().length>0;
 
       $('powerShatter').disabled=!active||this.powerUsed.shatter||this.gems.length===0;
-      $('powerCascade').disabled=!active||this.powerUsed.cascade||this.gems.length<2;
-      $('powerPrism').disabled=!active||this.powerUsed.prism;
+      $('powerCascade').disabled=!active||this.powerUsed.cascade||!canCascade;
+      $('powerPrism').disabled=!active||this.powerUsed.prism||!this.ready||this.currentTier>=tiers.length-1;
     }
 
     useShatter() {
       if(!this.running||this.paused||this.powerUsed.shatter||!this.gems.length) return;
 
-      const target=[...this.gems].sort((a,b)=>a.tier-b.tier||b.y-a.y)[0];
+      const target=[...this.gems]
+        .filter(g=>g&&g.active)
+        .sort((a,b)=>a.y-b.y||b.tier-a.tier)[0];
       if(!target) return;
 
       this.powerUsed.shatter=true;
       const t=tiers[target.tier];
 
-      this.mergeBurst(target.x,target.y,t,false);
+      this.mergeBurst(target.x,target.y,t,true);
+      this.cameras.main.shake(90,.003);
       this.removeGem(target);
       this.showStatus('SHATTERED '+t.name.toUpperCase(),'reward',1100);
       tone(190,.08,.03,'square');
-      haptic(10);
+      haptic([10,18,10]);
       this.updatePowerButtons();
     }
 
     useCascade() {
       if(!this.running||this.paused||this.powerUsed.cascade) return;
 
-      let bestPair=null;
-      let bestDistance=Infinity;
-
-      for(let i=0;i<this.gems.length;i++){
-        const a=this.gems[i];
-        if(!a||!a.active||a.merging) continue;
-
-        for(let j=i+1;j<this.gems.length;j++){
-          const b=this.gems[j];
-          if(!b||!b.active||b.merging||a.tier!==b.tier) continue;
-
-          const d=Phaser.Math.Distance.Between(a.x,a.y,b.x,b.y);
-          if(d<bestDistance){
-            bestDistance=d;
-            bestPair=[a,b];
-          }
-        }
-      }
-
-      if(!bestPair){
-        this.showStatus('NO MATCHING PAIR','info',900);
+      const pairs=this.matchingPairs();
+      if(!pairs.length){
+        this.showStatus('NO MATCHES TO CASCADE','info',900);
+        this.updatePowerButtons();
         return;
       }
 
       this.powerUsed.cascade=true;
-      this.queueMerge(bestPair[0],bestPair[1]);
-      this.showStatus('CASCADE!','reward',900);
-      tone(520,.10,.028,'sine');
-      haptic([8,25,8]);
+
+      for(const pair of pairs){
+        this.queueMerge(pair[0],pair[1]);
+      }
+
+      this.showStatus('CASCADE ×'+pairs.length,'reward',1050);
+      this.cameras.main.shake(75,.002);
+      tone(520,.11,.03,'sine');
+      haptic([8,20,8]);
       this.updatePowerButtons();
     }
 
     usePrism() {
-      if(!this.running||this.paused||this.powerUsed.prism) return;
+      if(
+        !this.running||
+        this.paused||
+        this.powerUsed.prism||
+        !this.ready||
+        this.currentTier>=tiers.length-1
+      ) return;
 
       this.powerUsed.prism=true;
-      this.nextTier=Math.min(this.nextTier+1,tiers.length-1);
-      this.updateNextPreview();
-      this.showStatus('NEXT GEM UPGRADED','reward',1100);
+      this.currentTier=Math.min(this.currentTier+1,tiers.length-1);
+
+      if(this.preview){
+        const x=this.preview.x;
+        this.preview.destroy();
+        this.preview=null;
+        this.createDropPreview(false);
+        if(this.preview) this.preview.x=x;
+      }
+
+      this.updateAimHandle();
+      this.showStatus('PRISM UPGRADE','reward',1100);
       tone(680,.11,.03,'sine');
-      haptic(9);
+      haptic([7,13,7]);
       this.updatePowerButtons();
     }
 
@@ -1009,6 +1040,10 @@
         for(const gem of this.gems){
           if(!gem||!gem.active||!gem.body) continue;
 
+          if(gem.body.isSleeping){
+            Phaser.Physics.Matter.Matter.Sleeping.set(gem.body,false);
+          }
+
           if(
             time-gem.born>800 &&
             gem.body.speed<.70 &&
@@ -1105,7 +1140,7 @@
       default:'matter',
       matter:{
         gravity:{x:0,y:1},
-        enableSleeping:true,
+        enableSleeping:false,
         runner:{
           fps:60,
           maxUpdates:5,
