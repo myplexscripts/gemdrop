@@ -68,6 +68,18 @@
       rings:[.68,.42],
       pattern:'radiant'
     },
+    square: {
+      label:'Square',
+      verts:[[-.86,-.86],[.86,-.86],[.86,.86],[-.86,.86]],
+      rings:[.62,.36],
+      pattern:'princess'
+    },
+    french: {
+      label:'French',
+      verts:[[-.64,-.90],[.64,-.90],[.90,-.64],[.90,.64],[.64,.90],[-.64,.90],[-.90,.64],[-.90,-.64]],
+      rings:[.58,.34],
+      pattern:'brilliant'
+    },
     oval: {
       label:'Oval',
       verts:[[0,-1],[.42,-.92],[.74,-.70],[.92,-.34],[.98,0],[.92,.34],[.74,.70],[.42,.92],[0,1],[-.42,.92],[-.74,.70],[-.92,.34],[-.98,0],[-.92,-.34],[-.74,-.70],[-.42,-.92]],
@@ -86,6 +98,48 @@
       rings:[.45],
       pattern:'pear'
     },
+    octagon: {
+      label:'Octagon',
+      verts:[[0,-1],[.70,-.70],[1,0],[.70,.70],[0,1],[-.70,.70],[-1,0],[-.70,-.70]],
+      rings:[.64,.39],
+      pattern:'brilliant'
+    },
+    hexagon: {
+      label:'Hexagon',
+      verts:[[0,-1],[.86,-.50],[.86,.50],[0,1],[-.86,.50],[-.86,-.50]],
+      rings:[.55,.31],
+      pattern:'brilliant'
+    },
+    rectangle: {
+      label:'Rectangular',
+      verts:[[-.62,-.95],[.62,-.95],[.84,-.73],[.84,.73],[.62,.95],[-.62,.95],[-.84,.73],[-.84,-.73]],
+      rings:[.70,.44],
+      pattern:'step'
+    },
+    step: {
+      label:'Step',
+      verts:[[-.48,-.98],[.48,-.98],[.76,-.72],[.76,.72],[.48,.98],[-.48,.98],[-.76,.72],[-.76,-.72]],
+      rings:[.76,.58,.40],
+      pattern:'step'
+    },
+    scissor: {
+      label:'Scissor',
+      verts:[[-.42,-1],[.42,-1],[.72,-.66],[.72,.66],[.42,1],[-.42,1],[-.72,.66],[-.72,-.66]],
+      rings:[.66,.38],
+      pattern:'radiant'
+    },
+    pendeloque: {
+      label:'Pendeloque',
+      verts:[[0,-1],[.24,-.78],[.48,-.40],[.62,.08],[.58,.52],[.38,.82],[0,1],[-.38,.82],[-.58,.52],[-.62,.08],[-.48,-.40],[-.24,-.78]],
+      rings:[.50,.30],
+      pattern:'pear'
+    },
+    trapeze: {
+      label:'Trapeze',
+      verts:[[-.46,-.88],[.46,-.88],[.88,.82],[-.88,.82]],
+      rings:[.58,.34],
+      pattern:'radiant'
+    },
     navette: {
       label:'Navette',
       verts:[[0,-1],[.34,-.64],[.56,-.18],[.56,.18],[.34,.64],[0,1],[-.34,.64],[-.56,.18],[-.56,-.18],[-.34,-.64]],
@@ -101,18 +155,27 @@
   };
 
   const tiers = [
-    {name:'Quartz',     cut:'Rose',      cutKey:'rose',      r:34,  score:1,  color:'#E7F0F4', accent:'#FFFFFF', dark:'#A7B4BC'},
-    {name:'Citrine',    cut:'Trillion',  cutKey:'trillion',  r:42,  score:3,  color:'#F2BC32', accent:'#FFF0A1', dark:'#B97718'},
-    {name:'Peridot',    cut:'Cushion',   cutKey:'cushion',   r:50,  score:6,  color:'#99D64D', accent:'#DFF5A0', dark:'#619A31'},
-    {name:'Aquamarine', cut:'Emerald',   cutKey:'emerald',   r:60,  score:10, color:'#6BD5E2', accent:'#D8FAFF', dark:'#3094A5'},
-    {name:'Amethyst',   cut:'Princess',  cutKey:'princess',  r:72,  score:15, color:'#A968E5', accent:'#EFD7FF', dark:'#7141A3'},
-    {name:'Topaz',      cut:'Radiant',   cutKey:'radiant',   r:84,  score:21, color:'#F07945', accent:'#FFD1A6', dark:'#B4492F'},
-    {name:'Sapphire',   cut:'Oval',      cutKey:'oval',      r:98,  score:28, color:'#3A6FE0', accent:'#C0D6FF', dark:'#2549A1'},
-    {name:'Emerald',    cut:'Asscher',   cutKey:'asscher',   r:112, score:36, color:'#22BC82', accent:'#AAF0D1', dark:'#137956'},
-    {name:'Ruby',       cut:'Pear',      cutKey:'pear',      r:130, score:45, color:'#E94063', accent:'#FFC1CF', dark:'#9B2944'},
-    {name:'Starstone',  cut:'Navette',   cutKey:'navette',   r:150, score:55, color:'#756CF0', accent:'#DED8FF', dark:'#493BA3'},
-    {name:'Crownstone', cut:'Brilliant', cutKey:'brilliant', r:170, score:66, color:'#F3AF37', accent:'#FFF1A8', dark:'#AA6C16'}
-  ];
+    {name:'Quartz',      cut:'Rose',        cutKey:'rose',       r:26,  score:1,   color:'#E7F0F4', accent:'#FFFFFF', dark:'#A7B4BC'},
+    {name:'Citrine',     cut:'Trillion',    cutKey:'trillion',   r:29,  score:3,   color:'#F2BC32', accent:'#FFF0A1', dark:'#B97718'},
+    {name:'Peridot',     cut:'Cushion',     cutKey:'cushion',    r:32,  score:6,   color:'#99D64D', accent:'#DFF5A0', dark:'#619A31'},
+    {name:'Aquamarine',  cut:'Emerald',     cutKey:'emerald',    r:35,  score:10,  color:'#6BD5E2', accent:'#D8FAFF', dark:'#3094A5'},
+    {name:'Amethyst',    cut:'Princess',    cutKey:'princess',   r:39,  score:15,  color:'#A968E5', accent:'#EFD7FF', dark:'#7141A3'},
+    {name:'Topaz',       cut:'Radiant',     cutKey:'radiant',    r:43,  score:22,  color:'#F07945', accent:'#FFD1A6', dark:'#B4492F'},
+    {name:'Garnet',      cut:'Square',      cutKey:'square',     r:47,  score:30,  color:'#C83E58', accent:'#FFB8C5', dark:'#7E2035'},
+    {name:'Tourmaline',  cut:'French',      cutKey:'french',     r:52,  score:40,  color:'#E85A9B', accent:'#FFD0E4', dark:'#9D2E67'},
+    {name:'Sapphire',    cut:'Oval',        cutKey:'oval',       r:57,  score:52,  color:'#3A6FE0', accent:'#C0D6FF', dark:'#2549A1'},
+    {name:'Emerald',     cut:'Asscher',     cutKey:'asscher',    r:62,  score:66,  color:'#22BC82', accent:'#AAF0D1', dark:'#137956'},
+    {name:'Ruby',        cut:'Pear',        cutKey:'pear',       r:68,  score:82,  color:'#E94063', accent:'#FFC1CF', dark:'#9B2944'},
+    {name:'Spinel',      cut:'Octagon',     cutKey:'octagon',    r:74,  score:100, color:'#EA4D91', accent:'#FFD0E7', dark:'#9E2A64'},
+    {name:'Tanzanite',   cut:'Hexagon',     cutKey:'hexagon',    r:81,  score:122, color:'#665DDF', accent:'#D4D0FF', dark:'#3D3697'},
+    {name:'Morganite',   cut:'Rectangular', cutKey:'rectangle',  r:88,  score:148, color:'#F19A8E', accent:'#FFE0D8', dark:'#B95A55'},
+    {name:'Zircon',      cut:'Step',        cutKey:'step',       r:96,  score:178, color:'#55CFE2', accent:'#D9FBFF', dark:'#2D8EA3'},
+    {name:'Alexandrite', cut:'Scissor',     cutKey:'scissor',    r:105, score:212, color:'#4FC6A8', accent:'#D5F7E9', dark:'#327D75'},
+    {name:'Moonstone',   cut:'Pendeloque',  cutKey:'pendeloque', r:114, score:250, color:'#B9C9F2', accent:'#FFFFFF', dark:'#7788BA'},
+    {name:'Sunstone',    cut:'Trapeze',     cutKey:'trapeze',    r:124, score:292, color:'#EF7659', accent:'#FFD0A6', dark:'#AA4938'},
+    {name:'Starstone',   cut:'Navette',     cutKey:'navette',    r:135, score:340, color:'#756CF0', accent:'#DED8FF', dark:'#493BA3'},
+    {name:'Crownstone',  cut:'Brilliant',   cutKey:'brilliant',  r:147, score:400, color:'#F3AF37', accent:'#FFF1A8', dark:'#AA6C16'}
+  ];;
 
   let audioCtx = null;
 
@@ -453,21 +516,107 @@
 
     drawCollectionGem(canvas,tier,locked) {
       const ctx=canvas.getContext('2d');
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const t=tiers[tier];
+      const cut=CUTS[t.cutKey];
+      const w=canvas.width;
+      const h=canvas.height;
+      const cx=w/2;
+      const cy=h/2;
+
+      ctx.clearRect(0,0,w,h);
+
+      const firstR=tiers[0].r;
+      const lastR=tiers[tiers.length-1].r;
+      const sizeT=clamp((t.r-firstR)/(lastR-firstR),0,1);
+      const cavityScale=31+sizeT*14;
+
+      const cavity=cut.verts.map(v=>({
+        x:cx+v[0]*cavityScale,
+        y:cy+v[1]*cavityScale
+      }));
+      const inner=cut.verts.map(v=>({
+        x:cx+v[0]*cavityScale*.90,
+        y:cy+v[1]*cavityScale*.90
+      }));
+
+      // Raised velvet lip around the made-to-measure recess.
+      ctx.save();
+      ctx.shadowColor='rgba(0,0,0,.62)';
+      ctx.shadowBlur=11;
+      ctx.shadowOffsetY=6;
+      polygonPath(ctx,cavity);
+      const lip=ctx.createLinearGradient(0,cy-cavityScale,0,cy+cavityScale);
+      lip.addColorStop(0,'rgba(91,51,96,.72)');
+      lip.addColorStop(.48,'rgba(39,20,44,.92)');
+      lip.addColorStop(1,'rgba(17,9,21,.98)');
+      ctx.fillStyle=lip;
+      ctx.fill();
+      ctx.restore();
+
+      // Inner depression. The top edge catches light while the lower edge falls
+      // away, making it read like a fitted jewellery presentation box.
+      polygonPath(ctx,inner);
+      const well=ctx.createLinearGradient(0,cy-cavityScale,0,cy+cavityScale);
+      well.addColorStop(0,'rgba(17,9,20,.90)');
+      well.addColorStop(.42,'rgba(25,13,29,.98)');
+      well.addColorStop(1,'rgba(7,4,10,1)');
+      ctx.fillStyle=well;
+      ctx.fill();
+
+      ctx.lineWidth=2.2;
+      ctx.strokeStyle='rgba(255,231,187,.12)';
+      polygonPath(ctx,cavity);
+      ctx.stroke();
+
+      ctx.lineWidth=1.5;
+      ctx.strokeStyle='rgba(0,0,0,.74)';
+      polygonPath(ctx,inner);
+      ctx.stroke();
+
+      // A locked entry is literally just the empty impression of that gem.
+      if(locked){
+        ctx.save();
+        polygonPath(ctx,inner);
+        ctx.clip();
+        const impression=ctx.createRadialGradient(
+          cx-cavityScale*.18,
+          cy-cavityScale*.22,
+          1,
+          cx,
+          cy,
+          cavityScale
+        );
+        impression.addColorStop(0,'rgba(88,72,91,.14)');
+        impression.addColorStop(.55,'rgba(42,34,46,.08)');
+        impression.addColorStop(1,'rgba(0,0,0,.18)');
+        ctx.fillStyle=impression;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+        return;
+      }
 
       if(this.textures.exists('gem-'+tier)){
         const source=this.textures.get('gem-'+tier).getSourceImage();
-        const max=locked?72:88;
+        const max=cavityScale*1.74;
         const scale=Math.min(max/source.width,max/source.height);
-        const w=source.width*scale;
-        const h=source.height*scale;
+        const gw=source.width*scale;
+        const gh=source.height*scale;
 
         ctx.save();
-        if(locked){
-          ctx.globalAlpha=.78;
-          ctx.filter='grayscale(1) brightness(.34)';
-        }
-        ctx.drawImage(source,(canvas.width-w)/2,(canvas.height-h)/2,w,h);
+        ctx.shadowColor='rgba(0,0,0,.62)';
+        ctx.shadowBlur=9;
+        ctx.shadowOffsetY=5;
+        ctx.drawImage(source,cx-gw/2,cy-gh/2-1,gw,gh);
+        ctx.restore();
+
+        // Tiny velvet reflection around a seated gem.
+        ctx.save();
+        ctx.globalCompositeOperation='screen';
+        ctx.globalAlpha=.22;
+        ctx.strokeStyle=rgba(t.accent,.44);
+        ctx.lineWidth=1.3;
+        polygonPath(ctx,inner);
+        ctx.stroke();
         ctx.restore();
       }
     }
@@ -481,27 +630,40 @@
         const unlocked=this.unlockedTiers.has(tier);
         const card=document.createElement('article');
         card.className='gem-card'+(unlocked?'':' locked');
+        card.setAttribute(
+          'aria-label',
+          unlocked
+            ? t.name+', '+t.cut+' cut, value $'+fmt(t.score)
+            : 'Undiscovered gem'
+        );
 
         const art=document.createElement('div');
         art.className='gem-card__art';
 
         const canvas=document.createElement('canvas');
-        canvas.width=112;
-        canvas.height=112;
+        canvas.width=128;
+        canvas.height=128;
         canvas.setAttribute('aria-hidden','true');
         art.appendChild(canvas);
 
-        const name=document.createElement('strong');
-        name.textContent=unlocked?t.name:'???';
+        const meta=document.createElement('div');
+        meta.className='gem-card__meta';
 
-        const cut=document.createElement('small');
-        cut.textContent=unlocked?t.cut+' cut':'Locked';
+        if(unlocked){
+          const name=document.createElement('strong');
+          name.textContent=t.name;
 
-        const value=document.createElement('div');
-        value.className='gem-card__value';
-        value.textContent=unlocked?'$'+fmt(t.score):'';
+          const cut=document.createElement('small');
+          cut.textContent=t.cut+' cut';
 
-        card.append(art,name,cut,value);
+          const value=document.createElement('div');
+          value.className='gem-card__value';
+          value.textContent='$'+fmt(t.score);
+
+          meta.append(name,cut,value);
+        }
+
+        card.append(art,meta);
         gemCollection.appendChild(card);
         this.drawCollectionGem(canvas,tier,!unlocked);
       });
@@ -1178,10 +1340,12 @@
         this.mergeWindow=.70;
 
         if(next>=tiers.length){
-          this.addScore(100);
+          const masterValue=tiers[tier].score*2;
+          this.addScore(masterValue);
           this.mergeBurst(x,y,tiers[tier],true);
-          this.floatText(x,y-8,'MASTER CUT +$100','#ffe0a0',21);
-          this.cameras.main.shake(90,.0035);
+          this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',21);
+          this.showStatus('MASTER CUT +$'+masterValue,'reward',1450,'gem',tier);
+          this.cameras.main.shake(100,.0038);
           tone(760,.15,.042,'sine');
           haptic([14,17,22]);
           continue;
