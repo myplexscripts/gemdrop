@@ -492,11 +492,7 @@
     createGemMask() {
       this.gemMaskShape=this.make.graphics({x:0,y:0,add:false});
       this.gemMaskShape.fillStyle(0xffffff,1);
-      // Let the rendered jewel extend a few pixels below the physics floor.
-      // This prevents the lowest facets from being visibly shaved off while
-      // the decorative bottom rail still hides anything that should be behind it.
-      const visualMaskBottom=FRAME_FLOOR-10;
-      this.gemMaskShape.fillRect(WALL,20,W-WALL*2,visualMaskBottom-20);
+      this.gemMaskShape.fillRect(WALL,20,W-WALL*2,FLOOR-20);
       this.gemMask=this.gemMaskShape.createGeometryMask();
     }
 
@@ -862,6 +858,12 @@
     sizeGemSprite(gameObject,tier) {
       const scale=this.gemSpriteScale(tier);
       gameObject.setScale(scale);
+
+      // SVG art has soft anti-aliased pixels right at the silhouette edge.
+      // A tiny origin bias keeps the lowest visible facet inside the basin
+      // without changing the physics floor, collision body, or board mask.
+      if(gameObject.setOrigin) gameObject.setOrigin(.5,.504);
+
       return scale;
     }
 
