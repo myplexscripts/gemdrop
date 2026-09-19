@@ -180,8 +180,6 @@
     {name:'Crownstone',  cut:'Brilliant',     cutKey:'brilliant',  asset:'gems/06_brilliant.svg',     r:147, score:400, color:'#F3AF37', accent:'#FFF1A8', dark:'#AA6C16'}
   ];;;;
 
-  let svgGemUrls = [];
-
   function hueFromHex(hex) {
     const value=parseInt(hex.slice(1),16);
     const r=((value>>16)&255)/255;
@@ -200,28 +198,6 @@
     h*=60;
     if(h<0) h+=360;
     return Math.round(h);
-  }
-
-  async function prepareSvgGemAssets() {
-    svgGemUrls=await Promise.all(
-      tiers.map(async tier=>{
-        try {
-          const response=await fetch(tier.asset,{cache:'force-cache'});
-          if(!response.ok) throw new Error('SVG load failed');
-          let svg=await response.text();
-          const hue=hueFromHex(tier.color);
-
-          svg=svg.replace(
-            /var\(--gem-hue\s*,\s*210\)/g,
-            String(hue)
-          );
-
-          return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-        } catch {
-          return tier.asset;
-        }
-      })
-    );
   }
 
   let audioCtx = null;
@@ -409,7 +385,7 @@
       tiers.forEach((tier,index)=>{
         this.load.svg(
           'gem-'+index,
-          svgGemUrls[index]||tier.asset,
+          tier.asset,
           {width:384,height:384}
         );
       });
@@ -791,7 +767,11 @@
 
     makeTextures() {
       this.makeSparkleTexture();
-      for(let i=0;i<tiers.length;i++) this.attachSvgNormalMap(i);
+
+      for(let i=0;i<tiers.length;i++){
+        this.recolourSvgTexture(i);
+        this.attachSvgNormalMap(i);
+      }
     }
 
     makeSparkleTexture() {
@@ -859,12 +839,52 @@
       const scale=this.gemSpriteScale(tier);
       gameObject.setScale(scale);
 
-      // SVG art has soft anti-aliased pixels right at the silhouette edge.
-      // A tiny origin bias keeps the lowest visible facet inside the basin
-      // without changing the physics floor, collision body, or board mask.
-      if(gameObject.setOrigin) gameObject.setOrigin(.5,.504);
-
       return scale;
+    }
+
+    recolourSvgTexture(index) {
+      const key='gem-'+index;
+      const texture=this.textures.get(key);
+      if(!texture||!texture.getSourceImage) return;
+
+      const source=texture.getSourceImage();
+      if(!source) return;
+
+      const w=source.width||384;
+      const h=source.height||384;
+      const canvas=document.createElement('canvas');
+      canvas.width=w;
+      canvas.height=h;
+      const ctx=canvas.getContext('2d');
+
+      try {
+        // Keep every facet, highlight and transparency from the supplied SVG.
+        ctx.drawImage(source,0,0,w,h);
+
+        // Canvas "color" blend mode replaces hue/saturation while preserving
+        // the original luminance, so all of the SVG's detailed facet shading
+        // survives without the fragile data-URI loader path.
+        ctx.save();
+        ctx.globalCompositeOperation='color';
+        ctx.fillStyle=tiers[index].color;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
+        // Restore the exact transparent silhouette after the blend pass.
+        ctx.save();
+        ctx.globalCompositeOperation='destination-in';
+        ctx.drawImage(source,0,0,w,h);
+        ctx.restore();
+
+        this.textures.remove(key);
+        const coloured=this.textures.addCanvas(key,canvas);
+
+        if(coloured){
+          coloured.setFilter(Phaser.Textures.FilterMode.LINEAR);
+        }
+      } catch {
+        // If recolouring is unavailable, leave the already-loaded SVG usable.
+      }
     }
 
     attachSvgNormalMap(index) {
@@ -1970,7 +1990,5 @@
     scene:GameScene
   };
 
-  prepareSvgGemAssets()
-    .catch(()=>{})
-    .finally(()=>new Phaser.Game(config));
+  new Phaser.Game(config);
 })();
