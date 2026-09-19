@@ -1003,16 +1003,14 @@
               continue;
             }
 
-            // SVG facet brightness becomes micro-surface direction, while a
-            // gentle radial crown prevents the stone from reading flat.
-            const dx=readLum(x+1,y)-readLum(x-1,y);
-            const dy=readLum(x,y+1)-readLum(x,y-1);
+            const dx=readLum(x+2,y)-readLum(x-2,y);
+            const dy=readLum(x,y+2)-readLum(x,y-2);
             const rx=(x-w*.5)/(w*.5);
             const ry=(y-h*.5)/(h*.5);
 
-            let nx=-dx*2.75+rx*.13;
-            let ny=dy*2.75-ry*.13;
-            let nz=.88;
+            let nx=-dx*.62+rx*.16;
+            let ny=dy*.62-ry*.16;
+            let nz=.965;
 
             const len=Math.hypot(nx,ny,nz)||1;
             nx/=len;
@@ -1030,10 +1028,8 @@
         texture.setDataSource(normal);
         texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
       } catch {
-        // The SVG itself still works if a browser blocks canvas pixel access.
       }
     }
-
     setupGemLighting() {
       this.webglLighting=(this.game.renderer.type===Phaser.WEBGL);
 
@@ -1042,14 +1038,11 @@
       this.lights.enable();
       // Keep every stone readable even when no facet directly faces a lamp.
       // Gemstone shadows should stay richly coloured, not collapse to black.
-      this.lights.setAmbientColor(0x927f99);
+      this.lights.setAmbientColor(0x76657f);
 
-      // Large-radius lights create a jewellery-display feel across the whole
-      // basin. Direction still matters to the normal maps, but brightness no
-      // longer falls off dramatically just because a gem reaches the floor.
-      this.keyLight=this.lights.addLight(70,-30,1460,0xffefd0,1.72);
-      this.fillLight=this.lights.addLight(650,280,1260,0xb19aff,.62);
-      this.rimLight=this.lights.addLight(320,910,920,0xff77b6,.34);
+      this.keyLight=this.lights.addLight(70,-30,1460,0xfff1d6,1.28);
+      this.fillLight=this.lights.addLight(650,280,1260,0xbfa7ff,.46);
+      this.rimLight=this.lights.addLight(320,910,920,0xff7dbe,.24);
     }
 
     applyGemLighting(gameObject) {
