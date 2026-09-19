@@ -407,10 +407,10 @@
 
       // Material body: saturated gem colour with a clearer core and deeper edges.
       const body=ctx.createRadialGradient(cx,cy,R*.08,cx,cy,R*1.02);
-      body.addColorStop(0,rgba(t.accent,.90));
-      body.addColorStop(.22,rgba(t.color,.94));
-      body.addColorStop(.68,rgba(t.color,.91));
-      body.addColorStop(1,rgba(t.dark,.96));
+      body.addColorStop(0,rgba(t.accent,.96));
+      body.addColorStop(.22,rgba(t.color,.98));
+      body.addColorStop(.70,rgba(t.color,.96));
+      body.addColorStop(1,mixCss(t.dark,t.color,.42,.94));
       ctx.fillStyle=body;
       ctx.fillRect(0,0,size,size);
 
@@ -458,8 +458,8 @@
       for(let i=0;i<n;i++){
         const j=(i+1)%n;
         ctx.fillStyle=(i%2===0)
-          ? mixCss(t.dark,t.color,.38,.31)
-          : mixCss(t.color,t.accent,.28,.20);
+          ? mixCss(t.dark,t.color,.64,.18)
+          : mixCss(t.color,t.accent,.38,.16);
         ctx.beginPath();
         ctx.moveTo(inner[i].x,inner[i].y);
         ctx.lineTo(inner[j].x,inner[j].y);
@@ -469,9 +469,9 @@
       }
 
       const table=ctx.createRadialGradient(cx-R*.12,cy-R*.10,0,cx,cy,R*t.table);
-      table.addColorStop(0,rgba(t.accent,.56));
-      table.addColorStop(.45,rgba(t.color,.35));
-      table.addColorStop(1,rgba(t.dark,.25));
+      table.addColorStop(0,rgba(t.accent,.68));
+      table.addColorStop(.45,rgba(t.color,.44));
+      table.addColorStop(1,mixCss(t.dark,t.color,.58,.16));
       ctx.fillStyle=table;
       polygonPath(ctx,inner);
       ctx.fill();
@@ -480,7 +480,7 @@
       ctx.globalCompositeOperation='multiply';
       for(let i=1;i<n;i+=3){
         const j=(i+2)%n;
-        ctx.fillStyle=rgba(t.dark,.12);
+        ctx.fillStyle=mixCss(t.dark,t.color,.58,.055);
         ctx.beginPath();
         ctx.moveTo(cx,cy);
         ctx.lineTo(inner[i].x,inner[i].y);
@@ -574,13 +574,16 @@
       if(!this.webglLighting) return;
 
       this.lights.enable();
-      this.lights.setAmbientColor(0x49364f);
+      // Keep every stone readable even when no facet directly faces a lamp.
+      // Gemstone shadows should stay richly coloured, not collapse to black.
+      this.lights.setAmbientColor(0x927f99);
 
-      // Warm vault key light, cool violet fill, and a subtle pink lower rim.
-      // These remain fixed in world space while the gem normals rotate.
-      this.keyLight=this.lights.addLight(72,34,820,0xffe6b0,2.35);
-      this.fillLight=this.lights.addLight(590,410,660,0x8756ff,.72);
-      this.rimLight=this.lights.addLight(340,840,500,0xff4f9f,.34);
+      // Large-radius lights create a jewellery-display feel across the whole
+      // basin. Direction still matters to the normal maps, but brightness no
+      // longer falls off dramatically just because a gem reaches the floor.
+      this.keyLight=this.lights.addLight(70,-30,1460,0xffefd0,1.72);
+      this.fillLight=this.lights.addLight(650,280,1260,0xb19aff,.62);
+      this.rimLight=this.lights.addLight(320,910,920,0xff77b6,.34);
     }
 
     applyGemLighting(gameObject) {
