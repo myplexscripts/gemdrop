@@ -26,19 +26,88 @@
   const finalScoreEl = $('finalScore');
   const bestMergeEl = $('bestMerge');
 
+  const CUTS = {
+    rose: {
+      label:'Rose',
+      verts:[[-.58,-.82],[0,-1],[.58,-.82],[.92,-.28],[.86,.36],[.48,.82],[0,.98],[-.48,.82],[-.86,.36],[-.92,-.28]],
+      rings:[.43],
+      pattern:'rose'
+    },
+    trillion: {
+      label:'Trillion',
+      verts:[[0,-1],[.92,.67],[.56,.94],[-.56,.94],[-.92,.67]],
+      rings:[.47],
+      pattern:'tri'
+    },
+    cushion: {
+      label:'Cushion',
+      verts:[[-.58,-.88],[.58,-.88],[.88,-.58],[.92,.48],[.62,.84],[-.62,.84],[-.92,.48],[-.88,-.58]],
+      rings:[.48],
+      pattern:'cushion'
+    },
+    emerald: {
+      label:'Emerald',
+      verts:[[-.54,-.94],[.54,-.94],[.82,-.66],[.82,.66],[.54,.94],[-.54,.94],[-.82,.66],[-.82,-.66]],
+      rings:[.72,.48],
+      pattern:'step'
+    },
+    princess: {
+      label:'Princess',
+      verts:[[-.88,-.88],[.88,-.88],[.88,.88],[-.88,.88]],
+      rings:[.66,.39],
+      pattern:'princess'
+    },
+    radiant: {
+      label:'Radiant',
+      verts:[[-.58,-.92],[.58,-.92],[.88,-.62],[.88,.62],[.58,.92],[-.58,.92],[-.88,.62],[-.88,-.62]],
+      rings:[.68,.42],
+      pattern:'radiant'
+    },
+    oval: {
+      label:'Oval',
+      verts:[[0,-1],[.42,-.92],[.74,-.70],[.92,-.34],[.98,0],[.92,.34],[.74,.70],[.42,.92],[0,1],[-.42,.92],[-.74,.70],[-.92,.34],[-.98,0],[-.92,-.34],[-.74,-.70],[-.42,-.92]],
+      rings:[.46],
+      pattern:'brilliant'
+    },
+    asscher: {
+      label:'Asscher',
+      verts:[[-.54,-.92],[.54,-.92],[.86,-.60],[.86,.60],[.54,.92],[-.54,.92],[-.86,.60],[-.86,-.60]],
+      rings:[.74,.56,.36],
+      pattern:'step'
+    },
+    pear: {
+      label:'Pear',
+      verts:[[0,-1],[.30,-.72],[.58,-.34],[.76,.12],[.70,.52],[.46,.82],[0,.98],[-.46,.82],[-.70,.52],[-.76,.12],[-.58,-.34],[-.30,-.72]],
+      rings:[.45],
+      pattern:'pear'
+    },
+    navette: {
+      label:'Navette',
+      verts:[[0,-1],[.34,-.64],[.56,-.18],[.56,.18],[.34,.64],[0,1],[-.34,.64],[-.56,.18],[-.56,-.18],[-.34,-.64]],
+      rings:[.46],
+      pattern:'navette'
+    },
+    brilliant: {
+      label:'Brilliant',
+      verts:[[0,-1],[.38,-.92],[.70,-.70],[.92,-.38],[1,0],[.92,.38],[.70,.70],[.38,.92],[0,1],[-.38,.92],[-.70,.70],[-.92,.38],[-1,0],[-.92,-.38],[-.70,-.70],[-.38,-.92]],
+      rings:[.48],
+      pattern:'brilliant'
+    }
+  };
+
   const tiers = [
-    {name:'Quartz',     cut:'Brilliant', r:34,  score:1,  color:'#D9E8F0', accent:'#FFFFFF', dark:'#7D929F', sides:6,  physicsSides:6,  table:.38, twist:0.00},
-    {name:'Citrine',    cut:'Rose',      r:42,  score:3,  color:'#F0B63D', accent:'#FFE38D', dark:'#A86B22', sides:5,  physicsSides:5,  table:.32, twist:.14},
-    {name:'Peridot',    cut:'Cushion',   r:50,  score:6,  color:'#7BC45C', accent:'#CBEAA8', dark:'#4A843A', sides:7,  physicsSides:7,  table:.43, twist:.06},
-    {name:'Aquamarine', cut:'Step',      r:60,  score:10, color:'#44B7C7', accent:'#BCE8ED', dark:'#287784', sides:8,  physicsSides:8,  table:.50, twist:.00},
-    {name:'Amethyst',   cut:'Princess',  r:72,  score:15, color:'#986CD8', accent:'#D9C2F1', dark:'#684897', sides:4,  physicsSides:4,  table:.36, twist:.18},
-    {name:'Topaz',      cut:'Radiant',   r:84,  score:21, color:'#EF7F49', accent:'#F8C39B', dark:'#AA4E31', sides:6,  physicsSides:6,  table:.44, twist:.08},
-    {name:'Sapphire',   cut:'Star',      r:98,  score:28, color:'#5379E4', accent:'#BCCCF7', dark:'#324F9F', sides:7,  physicsSides:7,  table:.34, twist:.15},
-    {name:'Emerald',    cut:'Asscher',   r:112, score:36, color:'#3BB186', accent:'#A9DEC7', dark:'#247257', sides:8,  physicsSides:8,  table:.52, twist:.00},
-    {name:'Ruby',       cut:'Royal',     r:130, score:45, color:'#DF506D', accent:'#F4ADBA', dark:'#A33249', sides:9,  physicsSides:9,  table:.38, twist:.11},
-    {name:'Starstone',  cut:'Celestial', r:150, score:55, color:'#8264D0', accent:'#C9B6EE', dark:'#553E90', sides:10, physicsSides:10, table:.32, twist:.20},
-    {name:'Crownstone', cut:'Crown',     r:170, score:66, color:'#E8A43A', accent:'#F9D986', dark:'#A16623', sides:12, physicsSides:12, table:.46, twist:.08}
-  ];
+    {name:'Quartz',     cut:'Rose',      cutKey:'rose',      r:34,  score:1,  color:'#E9E7F7', accent:'#FFFFFF', dark:'#A7A1C4'},
+    {name:'Citrine',    cut:'Trillion',  cutKey:'trillion',  r:42,  score:3,  color:'#F3B82E', accent:'#FFF0A7', dark:'#B47114'},
+    {name:'Peridot',    cut:'Cushion',   cutKey:'cushion',   r:50,  score:6,  color:'#87D35D', accent:'#D8F6A7', dark:'#4F8F35'},
+    {name:'Aquamarine', cut:'Emerald',   cutKey:'emerald',   r:60,  score:10, color:'#53CAE0', accent:'#D2FAFF', dark:'#267D96'},
+    {name:'Amethyst',   cut:'Princess',  cutKey:'princess',  r:72,  score:15, color:'#A26AE7', accent:'#E9D2FF', dark:'#69409C'},
+    {name:'Topaz',      cut:'Radiant',   cutKey:'radiant',   r:84,  score:21, color:'#F58E4C', accent:'#FFD2A3', dark:'#AF4F2B'},
+    {name:'Sapphire',   cut:'Oval',      cutKey:'oval',      r:98,  score:28, color:'#397BE8', accent:'#B9D9FF', dark:'#173C91'},
+    {name:'Emerald',    cut:'Asscher',   cutKey:'asscher',   r:112, score:36, color:'#36C98A', accent:'#B8F6DA', dark:'#126846'},
+    {name:'Ruby',       cut:'Pear',      cutKey:'pear',      r:130, score:45, color:'#EB4D72', accent:'#FFC3CF', dark:'#9B213F'},
+    {name:'Starstone',  cut:'Navette',   cutKey:'navette',   r:150, score:55, color:'#7C62EA', accent:'#DCCFFF', dark:'#43308E'},
+    {name:'Crownstone', cut:'Brilliant', cutKey:'brilliant', r:170, score:66, color:'#F2AD3B', accent:'#FFF0AE', dark:'#A76813'}
+  ]
 
   let audioCtx = null;
 
@@ -369,32 +438,30 @@
       this.textures.addCanvas('gem-sparkle',canvas);
     }
 
+    cutPoints(cutKey,scale,cx=0,cy=0) {
+      const cut=CUTS[cutKey]||CUTS.brilliant;
+      return cut.verts.map(v=>({x:cx+v[0]*scale,y:cy+v[1]*scale}));
+    }
+
+    insetPoints(points,cx,cy,scale) {
+      return points.map(p=>({
+        x:cx+(p.x-cx)*scale,
+        y:cy+(p.y-cy)*scale
+      }));
+    }
+
     makeGemTexture(index) {
       const t=tiers[index];
+      const cut=CUTS[t.cutKey];
       const r=t.r;
-      const size=Math.ceil(r*2.18);
+      const size=Math.ceil(r*2.26);
       const cx=size/2;
       const cy=size/2;
       const R=r*ART_SCALE;
-      const outer=[];
-      const inner=[];
-      const n=t.sides;
-
-      for(let i=0;i<n;i++){
-        const a=-Math.PI/2+(i/n)*Math.PI*2;
-        const wobble=1-(i%3===1?.016:0);
-
-        outer.push({
-          x:cx+Math.cos(a)*R*wobble,
-          y:cy+Math.sin(a)*R*wobble
-        });
-
-        const ia=a+t.twist;
-        inner.push({
-          x:cx+Math.cos(ia)*R*t.table,
-          y:cy+Math.sin(ia)*R*t.table
-        });
-      }
+      const outer=this.cutPoints(t.cutKey,R,cx,cy);
+      const rings=cut.rings.map(scale=>this.insetPoints(outer,cx,cy,scale));
+      const inner=rings[rings.length-1];
+      const n=outer.length;
 
       const canvas=document.createElement('canvas');
       canvas.width=size;
@@ -405,82 +472,123 @@
       polygonPath(ctx,outer);
       ctx.clip();
 
-      // Material body: saturated gem colour with a clearer core and deeper edges.
-      const body=ctx.createRadialGradient(cx,cy,R*.08,cx,cy,R*1.02);
-      body.addColorStop(0,rgba(t.accent,.96));
-      body.addColorStop(.22,rgba(t.color,.98));
-      body.addColorStop(.70,rgba(t.color,.96));
-      body.addColorStop(1,mixCss(t.dark,t.color,.42,.94));
+      const body=ctx.createRadialGradient(cx-R*.12,cy-R*.15,R*.03,cx,cy,R*1.08);
+      body.addColorStop(0,rgba(t.accent,.98));
+      body.addColorStop(.24,rgba(t.color,.98));
+      body.addColorStop(.72,rgba(t.color,.97));
+      body.addColorStop(1,mixCss(t.dark,t.color,.46,.96));
       ctx.fillStyle=body;
       ctx.fillRect(0,0,size,size);
 
-      // Simulated light transmission. This stays subtle because real world
-      // directionality comes from the normal map and Light2D pipeline.
+      // Clear gemstone transmission, kept bright enough to read on a dark board.
       ctx.globalCompositeOperation='screen';
-      const transmission=ctx.createRadialGradient(cx,cy,R*.04,cx,cy,R*.62);
-      transmission.addColorStop(0,rgba(t.accent,.33));
-      transmission.addColorStop(.55,rgba(t.color,.12));
+      const transmission=ctx.createRadialGradient(cx-R*.18,cy-R*.22,0,cx,cy,R*.76);
+      transmission.addColorStop(0,'rgba(255,255,255,.32)');
+      transmission.addColorStop(.25,rgba(t.accent,.30));
+      transmission.addColorStop(.68,rgba(t.color,.10));
       transmission.addColorStop(1,'rgba(255,255,255,0)');
       ctx.fillStyle=transmission;
       ctx.fillRect(0,0,size,size);
-
-      // Coloured internal caustics.
-      for(let i=0;i<n;i+=2){
-        const p=inner[i];
-        ctx.fillStyle=rgba(t.accent,.08+(i%4)*.018);
-        ctx.beginPath();
-        ctx.moveTo(cx,cy);
-        ctx.lineTo(p.x,p.y);
-        ctx.lineTo(outer[(i+1)%n].x,outer[(i+1)%n].y);
-        ctx.closePath();
-        ctx.fill();
-      }
-
       ctx.globalCompositeOperation='source-over';
 
-      // Outer facet ring. Colour variation describes material and cut rather
-      // than baking a fixed light direction into the sprite.
-      for(let i=0;i<n;i++){
-        const j=(i+1)%n;
-        const mixTarget=(i%3===0)?t.accent:((i%3===1)?t.dark:t.color);
-        ctx.fillStyle=mixCss(t.color,mixTarget,.26+(i%2)*.08,.23);
-        ctx.beginPath();
-        ctx.moveTo(outer[i].x,outer[i].y);
-        ctx.lineTo(outer[j].x,outer[j].y);
-        ctx.lineTo(inner[j].x,inner[j].y);
-        ctx.lineTo(inner[i].x,inner[i].y);
-        ctx.closePath();
-        ctx.fill();
+      const drawRingFacets=(a,b,alphaBase=.18)=>{
+        const count=Math.min(a.length,b.length);
+        for(let i=0;i<count;i++){
+          const j=(i+1)%count;
+          const target=i%3===0?t.accent:(i%3===1?t.dark:t.color);
+          ctx.fillStyle=mixCss(t.color,target,.24+(i%2)*.10,alphaBase+(i%3)*.025);
+          ctx.beginPath();
+          ctx.moveTo(a[i].x,a[i].y);
+          ctx.lineTo(a[j].x,a[j].y);
+          ctx.lineTo(b[j].x,b[j].y);
+          ctx.lineTo(b[i].x,b[i].y);
+          ctx.closePath();
+          ctx.fill();
+        }
+      };
+
+      let previous=outer;
+      for(let ri=0;ri<rings.length;ri++){
+        drawRingFacets(previous,rings[ri],.16+ri*.025);
+        previous=rings[ri];
       }
 
-      // Pavilion facets provide the dark / bright broken-up interior that makes
-      // cut stones look deep instead of like flat coloured polygons.
-      for(let i=0;i<n;i++){
-        const j=(i+1)%n;
-        ctx.fillStyle=(i%2===0)
-          ? mixCss(t.dark,t.color,.64,.18)
-          : mixCss(t.color,t.accent,.38,.16);
-        ctx.beginPath();
-        ctx.moveTo(inner[i].x,inner[i].y);
-        ctx.lineTo(inner[j].x,inner[j].y);
-        ctx.lineTo(cx,cy);
-        ctx.closePath();
+      // Cut-specific internal facet geometry.
+      if(cut.pattern==='step'){
+        ctx.globalCompositeOperation='screen';
+        ctx.strokeStyle='rgba(255,255,255,.17)';
+        ctx.lineWidth=Math.max(1,r*.014);
+        for(const ring of rings){
+          polygonPath(ctx,ring);
+          ctx.stroke();
+        }
+        ctx.globalCompositeOperation='source-over';
+        ctx.fillStyle=mixCss(t.color,t.accent,.38,.22);
+        polygonPath(ctx,inner);
         ctx.fill();
+      }else if(cut.pattern==='princess'){
+        for(let i=0;i<n;i++){
+          const j=(i+1)%n;
+          ctx.fillStyle=i%2===0?mixCss(t.color,t.accent,.42,.24):mixCss(t.dark,t.color,.68,.16);
+          ctx.beginPath();
+          ctx.moveTo(inner[i].x,inner[i].y);
+          ctx.lineTo(inner[j].x,inner[j].y);
+          ctx.lineTo(cx,cy);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.strokeStyle='rgba(255,255,255,.18)';
+        ctx.lineWidth=Math.max(1,r*.014);
+        ctx.beginPath();
+        ctx.moveTo(inner[0].x,inner[0].y);
+        ctx.lineTo(inner[2].x,inner[2].y);
+        ctx.moveTo(inner[1].x,inner[1].y);
+        ctx.lineTo(inner[3].x,inner[3].y);
+        ctx.stroke();
+      }else{
+        for(let i=0;i<n;i++){
+          const j=(i+1)%n;
+          const target=(i%2===0)?t.accent:t.dark;
+          ctx.fillStyle=mixCss(t.color,target,i%2===0?.35:.24,i%2===0?.20:.14);
+          ctx.beginPath();
+          ctx.moveTo(inner[i].x,inner[i].y);
+          ctx.lineTo(inner[j].x,inner[j].y);
+          ctx.lineTo(cx,cy);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        if(cut.pattern==='rose'||cut.pattern==='brilliant'||cut.pattern==='tri'){
+          ctx.globalCompositeOperation='screen';
+          ctx.strokeStyle='rgba(255,255,255,.19)';
+          ctx.lineWidth=Math.max(1,r*.013);
+          const skip=cut.pattern==='brilliant'?2:1;
+          for(let i=0;i<n;i+=skip){
+            const target=outer[(i+Math.max(2,Math.floor(n/4)))%n];
+            ctx.beginPath();
+            ctx.moveTo(inner[i].x,inner[i].y);
+            ctx.lineTo(target.x,target.y);
+            ctx.stroke();
+          }
+          ctx.globalCompositeOperation='source-over';
+        }
       }
 
-      const table=ctx.createRadialGradient(cx-R*.12,cy-R*.10,0,cx,cy,R*t.table);
-      table.addColorStop(0,rgba(t.accent,.68));
-      table.addColorStop(.45,rgba(t.color,.44));
-      table.addColorStop(1,mixCss(t.dark,t.color,.58,.16));
-      ctx.fillStyle=table;
-      polygonPath(ctx,inner);
+      const tableScale=cut.pattern==='step'?1:.82;
+      const table=this.insetPoints(inner,cx,cy,tableScale);
+      const tableGrad=ctx.createRadialGradient(cx-R*.12,cy-R*.12,0,cx,cy,R*.48);
+      tableGrad.addColorStop(0,rgba(t.accent,.72));
+      tableGrad.addColorStop(.50,rgba(t.color,.40));
+      tableGrad.addColorStop(1,mixCss(t.dark,t.color,.62,.16));
+      ctx.fillStyle=tableGrad;
+      polygonPath(ctx,table);
       ctx.fill();
 
-      // Refracted darker wedges.
+      // Subtle internal refraction wedges.
       ctx.globalCompositeOperation='multiply';
       for(let i=1;i<n;i+=3){
-        const j=(i+2)%n;
-        ctx.fillStyle=mixCss(t.dark,t.color,.58,.055);
+        const j=(i+Math.max(2,Math.floor(n/5)))%n;
+        ctx.fillStyle=mixCss(t.dark,t.color,.65,.045);
         ctx.beginPath();
         ctx.moveTo(cx,cy);
         ctx.lineTo(inner[i].x,inner[i].y);
@@ -489,31 +597,24 @@
         ctx.fill();
       }
 
-      // Fine facet borders catch additive lighting cleanly.
       ctx.globalCompositeOperation='screen';
-      ctx.strokeStyle='rgba(255,255,255,.18)';
-      ctx.lineWidth=Math.max(1,r*.016);
+      ctx.strokeStyle='rgba(255,255,255,.20)';
+      ctx.lineWidth=Math.max(1,r*.014);
       for(let i=0;i<n;i++){
-        const j=(i+1)%n;
         ctx.beginPath();
-        ctx.moveTo(inner[i].x,inner[i].y);
-        ctx.lineTo(outer[i].x,outer[i].y);
-        ctx.moveTo(inner[i].x,inner[i].y);
-        ctx.lineTo(inner[j].x,inner[j].y);
+        ctx.moveTo(outer[i].x,outer[i].y);
+        ctx.lineTo(inner[i].x,inner[i].y);
         ctx.stroke();
       }
 
       ctx.restore();
 
-      // Crisp polished girdle.
       polygonPath(ctx,outer);
-      ctx.strokeStyle=rgba(t.accent,.48);
+      ctx.strokeStyle=rgba(t.accent,.54);
       ctx.lineWidth=Math.max(1.4,r*.022);
       ctx.stroke();
 
-      // Build a matching normal map. Every facet gets a different surface
-      // normal, allowing Phaser's fixed world lights to move across the cut
-      // while the Matter body rotates.
+      // Matching normal map. Each actual facet gets its own surface direction.
       const normal=document.createElement('canvas');
       normal.width=size;
       normal.height=size;
@@ -523,32 +624,40 @@
       nctx.fillStyle='rgb(128,128,255)';
       nctx.fill();
 
-      for(let i=0;i<n;i++){
-        const j=(i+1)%n;
-        const a=-Math.PI/2+((i+.5)/n)*Math.PI*2+t.twist*.18;
-        const nx=Math.cos(a)*.58;
-        const ny=-Math.sin(a)*.58;
-        const nz=.76;
+      const paintNormalRing=(a,b,tilt,z)=>{
+        const count=Math.min(a.length,b.length);
+        for(let i=0;i<count;i++){
+          const j=(i+1)%count;
+          const mx=(a[i].x+a[j].x+b[i].x+b[j].x)/4-cx;
+          const my=(a[i].y+a[j].y+b[i].y+b[j].y)/4-cy;
+          const len=Math.hypot(mx,my)||1;
+          const nx=(mx/len)*tilt;
+          const ny=-(my/len)*tilt;
 
-        nctx.fillStyle=normalCss(nx,ny,nz);
-        nctx.beginPath();
-        nctx.moveTo(outer[i].x,outer[i].y);
-        nctx.lineTo(outer[j].x,outer[j].y);
-        nctx.lineTo(inner[j].x,inner[j].y);
-        nctx.lineTo(inner[i].x,inner[i].y);
-        nctx.closePath();
-        nctx.fill();
+          nctx.fillStyle=normalCss(nx,ny,z);
+          nctx.beginPath();
+          nctx.moveTo(a[i].x,a[i].y);
+          nctx.lineTo(a[j].x,a[j].y);
+          nctx.lineTo(b[j].x,b[j].y);
+          nctx.lineTo(b[i].x,b[i].y);
+          nctx.closePath();
+          nctx.fill();
+        }
+      };
+
+      previous=outer;
+      for(let ri=0;ri<rings.length;ri++){
+        paintNormalRing(previous,rings[ri],.62-ri*.09,.73+ri*.07);
+        previous=rings[ri];
       }
 
       for(let i=0;i<n;i++){
         const j=(i+1)%n;
-        const a=-Math.PI/2+((i+.5)/n)*Math.PI*2-t.twist*.34;
-        const alternator=(i%2===0)?1:-1;
-        const nx=Math.cos(a)*(.68+alternator*.05);
-        const ny=-Math.sin(a)*(.68-alternator*.04);
-        const nz=.56;
+        const mx=(inner[i].x+inner[j].x)/2-cx;
+        const my=(inner[i].y+inner[j].y)/2-cy;
+        const len=Math.hypot(mx,my)||1;
 
-        nctx.fillStyle=normalCss(nx,ny,nz);
+        nctx.fillStyle=normalCss((mx/len)*.38,-(my/len)*.38,.90);
         nctx.beginPath();
         nctx.moveTo(inner[i].x,inner[i].y);
         nctx.lineTo(inner[j].x,inner[j].y);
@@ -557,7 +666,7 @@
         nctx.fill();
       }
 
-      polygonPath(nctx,inner);
+      polygonPath(nctx,table);
       nctx.fillStyle=normalCss(0,0,1);
       nctx.fill();
 
@@ -616,12 +725,14 @@
 
       // Sharp angle-dependent flashes. The highlight is world-oriented, so it
       // does not look painted onto the rotating sprite.
-      const phase=(gem.rotation-lightAngle)*t.sides*2+gem.opticSeed;
+      const cut=CUTS[t.cutKey]||CUTS.brilliant;
+      const facetCount=cut.verts.length;
+      const phase=(gem.rotation-lightAngle)*facetCount*2+gem.opticSeed;
       const flash=Math.pow(Math.max(0,Math.cos(phase)),18);
       const motion=clamp(Math.abs(gem.body.angularVelocity)*65+gem.body.speed*.08,.18,1);
 
       const localLight=Phaser.Math.Angle.Wrap(lightAngle-gem.rotation);
-      const facetStep=(Math.PI*2)/t.sides;
+      const facetStep=(Math.PI*2)/facetCount;
       const facetIndex=Math.round((localLight+Math.PI/2)/facetStep);
       const localFacet=-Math.PI/2+facetIndex*facetStep;
       const worldFacet=localFacet+gem.rotation;
@@ -760,14 +871,14 @@
         sleepThreshold:0
       });
 
-      gem.setPolygon(
-        t.r*COLLIDER_SCALE,
-        t.physicsSides,
+      const cutVerts=this.cutPoints(t.cutKey,t.r*COLLIDER_SCALE);
+
+      gem.setBody(
         {
-          chamfer:{
-            radius:Math.max(2,Math.min(8,t.r*.055)),
-            quality:2
-          },
+          type:'fromVertices',
+          verts:cutVerts
+        },
+        {
           restitution:.012,
           friction:.018,
           frictionStatic:.075,
