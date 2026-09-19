@@ -116,7 +116,7 @@
       this.limitJewels=[];
       this.statusTimer=null;
       this.statusKind='';
-      this.powerUsed={shatter:false,cascade:false,prism:false};
+      this.powerUsed={tumble:false,cascade:false,prism:false};
       this.gemMaskShape=null;
       this.gemMask=null;
       this.uiBound=false;
@@ -222,7 +222,7 @@
         this.startRun();
       });
 
-      $('powerShatter').addEventListener('click',()=>this.useShatter());
+      $('powerTumble').addEventListener('click',()=>this.useTumble());
       $('powerCascade').addEventListener('click',()=>this.useCascade());
       $('powerPrism').addEventListener('click',()=>this.usePrism());
 
@@ -448,7 +448,7 @@
       this.mergeWindow=0;
       this.mergeChain=0;
       this.discoveredCuts=new Set([0]);
-      this.powerUsed={shatter:false,cascade:false,prism:false};
+      this.powerUsed={tumble:false,cascade:false,prism:false};
 
       scoreEl.textContent='$0';
       this.clearStatus();
@@ -865,28 +865,36 @@
       const active=this.running&&!this.paused;
       const canCascade=this.matchingPairs().length>0;
 
-      $('powerShatter').disabled=!active||this.powerUsed.shatter||this.gems.length===0;
+      $('powerTumble').disabled=!active||this.powerUsed.tumble||this.gems.length===0;
       $('powerCascade').disabled=!active||this.powerUsed.cascade||!canCascade;
       $('powerPrism').disabled=!active||this.powerUsed.prism||!this.ready||this.currentTier>=tiers.length-1;
     }
 
-    useShatter() {
-      if(!this.running||this.paused||this.powerUsed.shatter||!this.gems.length) return;
+    useTumble() {
+      if(!this.running||this.paused||this.powerUsed.tumble||!this.gems.length) return;
 
-      const target=[...this.gems]
-        .filter(g=>g&&g.active)
-        .sort((a,b)=>a.y-b.y||b.tier-a.tier)[0];
-      if(!target) return;
+      this.powerUsed.tumble=true;
+      const M=Phaser.Physics.Matter.Matter;
+      const centreX=W/2;
 
-      this.powerUsed.shatter=true;
-      const t=tiers[target.tier];
+      for(const gem of this.gems){
+        if(!gem||!gem.active||!gem.body) continue;
 
-      this.mergeBurst(target.x,target.y,t,true);
-      this.cameras.main.shake(90,.003);
-      this.removeGem(target);
-      this.showStatus('SHATTERED '+t.name.toUpperCase(),'reward',1100);
-      tone(190,.08,.03,'square');
-      haptic([10,18,10]);
+        const side=gem.x<centreX?1:-1;
+        const horizontal=side*(.00012+.00008*Math.random())*gem.body.mass;
+        const lift=-(.000055+.000035*Math.random())*gem.body.mass;
+
+        M.Body.applyForce(gem.body,gem.body.position,{x:horizontal,y:lift});
+        M.Body.setAngularVelocity(
+          gem.body,
+          clamp(gem.body.angularVelocity+side*Phaser.Math.FloatBetween(.006,.014),-.035,.035)
+        );
+      }
+
+      this.cameras.main.shake(180,.0025);
+      this.showStatus('TUMBLE!','reward',950);
+      tone(230,.10,.028,'triangle');
+      haptic([7,18,7]);
       this.updatePowerButtons();
     }
 
