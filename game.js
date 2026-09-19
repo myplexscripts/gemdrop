@@ -178,6 +178,9 @@
   ];;
 
   let audioCtx = null;
+  let dingBuffer = null;
+  let dingLoadPromise = null;
+  let lastDingAt = 0;
 
   function clamp(v,min,max) {
     return Math.max(min,Math.min(max,v));
@@ -235,11 +238,69 @@
     ctx.closePath();
   }
 
+  function loadDing() {
+    if(!audioCtx||dingBuffer) return Promise.resolve(dingBuffer);
+    if(dingLoadPromise) return dingLoadPromise;
+
+    dingLoadPromise=fetch('ding.ogg')
+      .then(response=>{
+        if(!response.ok) throw new Error('Could not load ding.ogg');
+        return response.arrayBuffer();
+      })
+      .then(data=>audioCtx.decodeAudioData(data.slice(0)))
+      .then(buffer=>{
+        dingBuffer=buffer;
+        return buffer;
+      })
+      .catch(()=>{
+        dingLoadPromise=null;
+        return null;
+      });
+
+    return dingLoadPromise;
+  }
+
   function unlockAudio() {
     if (!audioCtx) {
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
     }
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+    if(audioCtx){
+      if(audioCtx.state==='suspended') audioCtx.resume();
+      loadDing();
+    }
+  }
+
+  function playGemDing(tier,impact=1,x=W/2) {
+    if(!audioCtx||!dingBuffer||audioCtx.state!=='running') return;
+
+    const now=performance.now();
+    if(now-lastDingAt<30) return;
+    lastDingAt=now;
+
+    const tierT=clamp(tier/Math.max(1,tiers.length-1),0,1);
+    const sizePitch=1.13-(tierT*.31);
+    const variation=(Math.random()-.5)*.07;
+    const playbackRate=clamp(sizePitch+variation,.78,1.17);
+
+    const strength=clamp((impact-.45)/4.8,0,1);
+    const volume=.018+strength*.092;
+
+    const source=audioCtx.createBufferSource();
+    const gain=audioCtx.createGain();
+    source.buffer=dingBuffer;
+    source.playbackRate.value=playbackRate;
+    gain.gain.value=volume;
+
+    if(typeof audioCtx.createStereoPanner==='function'){
+      const pan=audioCtx.createStereoPanner();
+      pan.pan.value=clamp((x/W)*2-1,-.72,.72);
+      source.connect(gain).connect(pan).connect(audioCtx.destination);
+    }else{
+      source.connect(gain).connect(audioCtx.destination);
+    }
+
+    source.start();
   }
 
   function tone(freq,duration=.055,volume=.022,type='sine') {
@@ -1315,6 +1376,7 @@
       gem.tier=tier;
       gem.merging=false;
       gem.born=this.time.now;
+      gem.lastDingAt=0;
       gem.setDepth(10+tier*.01);
       gem.setAlpha(1);
       this.applyGemLighting(gem);
@@ -1392,26 +1454,64 @@
     }
 
     onCollisionStart(event) {
+      const now=this.time.now;
+
       for(const pair of event.pairs){
-        const a=pair.bodyA&&pair.bodyA.gameObject;
-        const b=pair.bodyB&&pair.bodyB.gameObject;
+        const bodyA=pair.bodyA;
+        const bodyB=pair.bodyB;
+        const a=bodyA&&bodyA.gameObject;
+        const b=bodyB&&bodyB.gameObject;
+        const aGem=!!(a&&a.isGem&&a.active&&a.body);
+        const bGem=!!(b&&b.isGem&&b.active&&b.body);
 
-        if(!a||!b||!a.isGem||!b.isGem||!a.active||!b.active) continue;
+        if(!aGem&&!bGem) continue;
 
-        const av=a.body.velocity;
-        const bv=b.body.velocity;
-        const speed=Math.hypot(bv.x-av.x,bv.y-av.y);
+        // Gem against gem.
+        if(aGem&&bGem){
+          const av=a.body.velocity;
+          const bv=b.body.velocity;
+          const speed=Math.hypot(bv.x-av.x,bv.y-av.y);
 
-        if(speed>2){
-          this.contactSpark(
-            (a.x+b.x)/2,
-            (a.y+b.y)/2,
-            tiers[Math.max(a.tier,b.tier)].accent,
-            speed
-          );
+          if(
+            speed>.55 &&
+            now-(a.lastDingAt||0)>72 &&
+            now-(b.lastDingAt||0)>72
+          ){
+            a.lastDingAt=now;
+            b.lastDingAt=now;
+            playGemDing(
+              Math.max(a.tier,b.tier),
+              speed,
+              (a.x+b.x)/2
+            );
+          }
+
+          if(speed>2){
+            this.contactSpark(
+              (a.x+b.x)/2,
+              (a.y+b.y)/2,
+              tiers[Math.max(a.tier,b.tier)].accent,
+              speed
+            );
+          }
+
+          this.queueMerge(a,b);
+          continue;
         }
 
-        this.queueMerge(a,b);
+        // Gem against the basin floor or side walls.
+        const gem=aGem?a:b;
+        const otherBody=aGem?bodyB:bodyA;
+
+        if(!otherBody||otherBody.label!=='vault-wall') continue;
+
+        const v=gem.body.velocity;
+        const speed=Math.hypot(v.x,v.y);
+
+        if(speed>.55&&now-(gem.lastDingAt||0)>72){
+          gem.lastDingAt=now;
+          playGemDing(gem.tier,speed,gem.x);
+        }
       }
     }
 
