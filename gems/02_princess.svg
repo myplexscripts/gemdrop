@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Princess gemstone">
+<defs>
+  <radialGradient id="base" cx="34%" cy="22%" r="88%">
+    <stop offset="0" stop-color="hsl(var(--gem-hue,210) 100% 91%)"/>
+    <stop offset=".12" stop-color="hsl(var(--gem-hue,210) 100% 73%)"/>
+    <stop offset=".30" stop-color="hsl(var(--gem-hue,210) 98% 55%)"/>
+    <stop offset=".56" stop-color="hsl(var(--gem-hue,210) 94% 38%)"/>
+    <stop offset=".80" stop-color="hsl(var(--gem-hue,210) 90% 22%)"/>
+    <stop offset="1" stop-color="hsl(var(--gem-hue,210) 96% 9%)"/>
+  </radialGradient>
+
+  <linearGradient id="flash" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".98"/>
+    <stop offset=".34" stop-color="hsl(var(--gem-hue,210) 100% 88%)" stop-opacity=".94"/>
+    <stop offset="1" stop-color="hsl(var(--gem-hue,210) 100% 64%)" stop-opacity=".38"/>
+  </linearGradient>
+  <linearGradient id="light" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".90"/>
+    <stop offset=".34" stop-color="hsl(var(--gem-hue,210) 100% 82%)" stop-opacity=".84"/>
+    <stop offset="1" stop-color="hsl(var(--gem-hue,210) 97% 56%)" stop-opacity=".28"/>
+  </linearGradient>
+  <linearGradient id="mid" x1="1" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="hsl(var(--gem-hue,210) 100% 76%)"/>
+    <stop offset=".48" stop-color="hsl(var(--gem-hue,210) 96% 48%)"/>
+    <stop offset="1" stop-color="hsl(var(--gem-hue,210) 88% 24%)"/>
+  </linearGradient>
+  <linearGradient id="dark" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="hsl(var(--gem-hue,210) 90% 42%)"/>
+    <stop offset=".46" stop-color="hsl(var(--gem-hue,210) 90% 21%)"/>
+    <stop offset="1" stop-color="hsl(var(--gem-hue,210) 98% 11%)"/>
+  </linearGradient>
+  <linearGradient id="deep" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="hsl(var(--gem-hue,210) 88% 26%)"/>
+    <stop offset=".5" stop-color="hsl(var(--gem-hue,210) 94% 13%)"/>
+    <stop offset="1" stop-color="#010611"/>
+  </linearGradient>
+
+  <radialGradient id="table" cx="38%" cy="30%" r="78%">
+    <stop offset="0" stop-color="hsl(var(--gem-hue,210) 100% 84%)" stop-opacity=".58"/>
+    <stop offset=".30" stop-color="hsl(var(--gem-hue,210) 98% 56%)" stop-opacity=".72"/>
+    <stop offset=".72" stop-color="hsl(var(--gem-hue,210) 88% 31%)" stop-opacity=".88"/>
+    <stop offset="1" stop-color="hsl(var(--gem-hue,210) 93% 20%)" stop-opacity=".94"/>
+  </radialGradient>
+  <linearGradient id="tableGlass" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".26"/>
+    <stop offset=".48" stop-color="hsl(var(--gem-hue,210) 100% 73%)" stop-opacity=".10"/>
+    <stop offset="1" stop-color="hsl(var(--gem-hue,210) 100% 18%)" stop-opacity=".22"/>
+  </linearGradient>
+
+  <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".78"/>
+    <stop offset=".45" stop-color="hsl(var(--gem-hue,210) 100% 84%)" stop-opacity=".30"/>
+    <stop offset="1" stop-color="#000" stop-opacity=".18"/>
+  </linearGradient>
+
+  <filter id="drop" x="-40%" y="-40%" width="180%" height="200%">
+    <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#001020" flood-opacity=".28"/>
+  </filter>
+  <filter id="blur" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+  <clipPath id="clip"><polygon points="81.00,81.00 431.00,81.00 431.00,431.00 81.00,431.00"/></clipPath>
+</defs>
+
+<g filter="url(#drop)">
+  <polygon points="81.00,81.00 431.00,81.00 431.00,431.00 81.00,431.00" fill="url(#base)"/>
+  <g clip-path="url(#clip)">
+    <polygon points="81.00,81.00 196.50,81.00 178.72,95.00 95.00,95.00" fill="url(#light)" opacity="0.95"/>
+<polygon points="196.50,81.00 315.50,81.00 313.96,95.00 178.72,95.00" fill="url(#light)" opacity="0.95"/>
+<polygon points="315.50,81.00 431.00,81.00 417.00,95.00 313.96,95.00" fill="url(#mid)" opacity="0.9"/>
+<polygon points="431.00,81.00 431.00,196.50 417.00,178.72 417.00,95.00" fill="url(#dark)" opacity="0.93"/>
+<polygon points="431.00,196.50 431.00,315.50 417.00,313.96 417.00,178.72" fill="url(#deep)" opacity="0.96"/>
+<polygon points="431.00,315.50 431.00,431.00 417.00,417.00 417.00,313.96" fill="url(#deep)" opacity="0.96"/>
+<polygon points="431.00,431.00 315.50,431.00 333.28,417.00 417.00,417.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="315.50,431.00 196.50,431.00 198.04,417.00 333.28,417.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="196.50,431.00 81.00,431.00 95.00,417.00 198.04,417.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="81.00,431.00 81.00,315.50 95.00,333.28 95.00,417.00" fill="url(#dark)" opacity="0.93"/>
+<polygon points="81.00,315.50 81.00,196.50 95.00,198.04 95.00,333.28" fill="url(#mid)" opacity="0.9"/>
+<polygon points="81.00,196.50 81.00,81.00 95.00,95.00 95.00,198.04" fill="url(#light)" opacity="0.95"/>
+<polygon points="95.00,95.00 201.26,95.00 187.12,112.50 112.50,112.50" fill="url(#light)" opacity="0.95"/>
+<polygon points="201.26,95.00 310.74,95.00 307.66,112.50 187.12,112.50" fill="url(#light)" opacity="0.95"/>
+<polygon points="310.74,95.00 417.00,95.00 399.50,112.50 307.66,112.50" fill="url(#mid)" opacity="0.9"/>
+<polygon points="417.00,95.00 417.00,201.26 399.50,187.12 399.50,112.50" fill="url(#dark)" opacity="0.93"/>
+<polygon points="417.00,201.26 417.00,310.74 399.50,307.66 399.50,187.12" fill="url(#deep)" opacity="0.96"/>
+<polygon points="417.00,310.74 417.00,417.00 399.50,399.50 399.50,307.66" fill="url(#deep)" opacity="0.96"/>
+<polygon points="417.00,417.00 310.74,417.00 324.88,399.50 399.50,399.50" fill="url(#deep)" opacity="0.96"/>
+<polygon points="310.74,417.00 201.26,417.00 204.34,399.50 324.88,399.50" fill="url(#deep)" opacity="0.96"/>
+<polygon points="201.26,417.00 95.00,417.00 112.50,399.50 204.34,399.50" fill="url(#deep)" opacity="0.96"/>
+<polygon points="95.00,417.00 95.00,310.74 112.50,324.88 112.50,399.50" fill="url(#dark)" opacity="0.93"/>
+<polygon points="95.00,310.74 95.00,201.26 112.50,204.34 112.50,324.88" fill="url(#light)" opacity="0.95"/>
+<polygon points="95.00,201.26 95.00,95.00 112.50,112.50 112.50,204.34" fill="url(#light)" opacity="0.95"/>
+<polygon points="112.50,112.50 207.21,112.50 195.52,130.00 130.00,130.00" fill="url(#light)" opacity="0.95"/>
+<polygon points="207.21,112.50 304.79,112.50 301.36,130.00 195.52,130.00" fill="url(#light)" opacity="0.95"/>
+<polygon points="304.79,112.50 399.50,112.50 382.00,130.00 301.36,130.00" fill="url(#mid)" opacity="0.9"/>
+<polygon points="399.50,112.50 399.50,207.21 382.00,195.52 382.00,130.00" fill="url(#dark)" opacity="0.93"/>
+<polygon points="399.50,207.21 399.50,304.79 382.00,301.36 382.00,195.52" fill="url(#deep)" opacity="0.96"/>
+<polygon points="399.50,304.79 399.50,399.50 382.00,382.00 382.00,301.36" fill="url(#deep)" opacity="0.96"/>
+<polygon points="399.50,399.50 304.79,399.50 316.48,382.00 382.00,382.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="304.79,399.50 207.21,399.50 210.64,382.00 316.48,382.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="207.21,399.50 112.50,399.50 130.00,382.00 210.64,382.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="112.50,399.50 112.50,304.79 130.00,316.48 130.00,382.00" fill="url(#dark)" opacity="0.93"/>
+<polygon points="112.50,304.79 112.50,207.21 130.00,210.64 130.00,316.48" fill="url(#light)" opacity="0.95"/>
+<polygon points="112.50,207.21 112.50,112.50 130.00,130.00 130.00,210.64" fill="url(#light)" opacity="0.95"/>
+<polygon points="130.00,130.00 213.16,130.00 204.76,149.25 149.25,149.25" fill="url(#flash)" opacity="0.98"/>
+<polygon points="213.16,130.00 298.84,130.00 294.43,149.25 204.76,149.25" fill="url(#light)" opacity="0.95"/>
+<polygon points="298.84,130.00 382.00,130.00 362.75,149.25 294.43,149.25" fill="url(#mid)" opacity="0.9"/>
+<polygon points="382.00,130.00 382.00,213.16 362.75,204.76 362.75,149.25" fill="url(#dark)" opacity="0.93"/>
+<polygon points="382.00,213.16 382.00,298.84 362.75,294.43 362.75,204.76" fill="url(#deep)" opacity="0.96"/>
+<polygon points="382.00,298.84 382.00,382.00 362.75,362.75 362.75,294.43" fill="url(#deep)" opacity="0.96"/>
+<polygon points="382.00,382.00 298.84,382.00 307.24,362.75 362.75,362.75" fill="url(#deep)" opacity="0.96"/>
+<polygon points="298.84,382.00 213.16,382.00 217.57,362.75 307.24,362.75" fill="url(#deep)" opacity="0.96"/>
+<polygon points="213.16,382.00 130.00,382.00 149.25,362.75 217.57,362.75" fill="url(#dark)" opacity="0.93"/>
+<polygon points="130.00,382.00 130.00,298.84 149.25,307.24 149.25,362.75" fill="url(#mid)" opacity="0.9"/>
+<polygon points="130.00,298.84 130.00,213.16 149.25,217.57 149.25,307.24" fill="url(#light)" opacity="0.95"/>
+<polygon points="130.00,213.16 130.00,130.00 149.25,149.25 149.25,217.57" fill="url(#light)" opacity="0.95"/>
+<polygon points="149.25,149.25 219.70,149.25 214.00,168.50 168.50,168.50" fill="url(#flash)" opacity="0.98"/>
+<polygon points="219.70,149.25 292.30,149.25 287.50,168.50 214.00,168.50" fill="url(#light)" opacity="0.95"/>
+<polygon points="292.30,149.25 362.75,149.25 343.50,168.50 287.50,168.50" fill="url(#mid)" opacity="0.9"/>
+<polygon points="362.75,149.25 362.75,219.70 343.50,214.00 343.50,168.50" fill="url(#mid)" opacity="0.9"/>
+<polygon points="362.75,219.70 362.75,292.30 343.50,287.50 343.50,214.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="362.75,292.30 362.75,362.75 343.50,343.50 343.50,287.50" fill="url(#deep)" opacity="0.96"/>
+<polygon points="362.75,362.75 292.30,362.75 298.00,343.50 343.50,343.50" fill="url(#deep)" opacity="0.96"/>
+<polygon points="292.30,362.75 219.70,362.75 224.50,343.50 298.00,343.50" fill="url(#deep)" opacity="0.96"/>
+<polygon points="219.70,362.75 149.25,362.75 168.50,343.50 224.50,343.50" fill="url(#dark)" opacity="0.93"/>
+<polygon points="149.25,362.75 149.25,292.30 168.50,298.00 168.50,343.50" fill="url(#mid)" opacity="0.9"/>
+<polygon points="149.25,292.30 149.25,219.70 168.50,224.50 168.50,298.00" fill="url(#light)" opacity="0.95"/>
+<polygon points="149.25,219.70 149.25,149.25 168.50,168.50 168.50,224.50" fill="url(#flash)" opacity="0.98"/>
+<polygon points="168.50,168.50 226.25,168.50 222.40,186.00 186.00,186.00" fill="url(#flash)" opacity="0.98"/>
+<polygon points="226.25,168.50 285.75,168.50 281.20,186.00 222.40,186.00" fill="url(#light)" opacity="0.95"/>
+<polygon points="285.75,168.50 343.50,168.50 326.00,186.00 281.20,186.00" fill="url(#mid)" opacity="0.9"/>
+<polygon points="343.50,168.50 343.50,226.25 326.00,222.40 326.00,186.00" fill="url(#mid)" opacity="0.9"/>
+<polygon points="343.50,226.25 343.50,285.75 326.00,281.20 326.00,222.40" fill="url(#dark)" opacity="0.93"/>
+<polygon points="343.50,285.75 343.50,343.50 326.00,326.00 326.00,281.20" fill="url(#deep)" opacity="0.96"/>
+<polygon points="343.50,343.50 285.75,343.50 289.60,326.00 326.00,326.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="285.75,343.50 226.25,343.50 230.80,326.00 289.60,326.00" fill="url(#deep)" opacity="0.96"/>
+<polygon points="226.25,343.50 168.50,343.50 186.00,326.00 230.80,326.00" fill="url(#dark)" opacity="0.93"/>
+<polygon points="168.50,343.50 168.50,285.75 186.00,289.60 186.00,326.00" fill="url(#mid)" opacity="0.9"/>
+<polygon points="168.50,285.75 168.50,226.25 186.00,230.80 186.00,289.60" fill="url(#light)" opacity="0.95"/>
+<polygon points="168.50,226.25 168.50,168.50 186.00,186.00 186.00,230.80" fill="url(#flash)" opacity="0.98"/>
+<polygon points="186.00,186.00 326.00,186.00 298.00,214.00 214.00,214.00" fill="url(#light)" opacity="0.95"/>
+<polygon points="326.00,186.00 326.00,326.00 298.00,298.00 298.00,214.00" fill="url(#dark)" opacity="0.93"/>
+<polygon points="326.00,326.00 186.00,326.00 214.00,298.00 298.00,298.00" fill="url(#dark)" opacity="0.93"/>
+<polygon points="186.00,326.00 186.00,186.00 214.00,214.00 214.00,298.00" fill="url(#light)" opacity="0.95"/>
+    
+      <polygon points="214.00,214.00 298.00,214.00 298.00,298.00 214.00,298.00" fill="url(#table)" opacity=".96"/>
+      <polygon points="223.24,223.24 288.76,223.24 288.76,288.76 223.24,288.76" fill="url(#tableGlass)" opacity=".62"/>
+    
+
+    <ellipse cx="182.5" cy="151.0" rx="52.5" ry="31.5"
+             fill="#fff" opacity=".09" filter="url(#blur)"/>
+    <ellipse cx="350.5" cy="361.0" rx="66.5" ry="52.5"
+             fill="#000" opacity=".10" filter="url(#blur)"/>
+
+    <g fill="none" stroke="rgba(255,255,255,.10)" stroke-width="1">
+      <polygon points="95.00,95.00 417.00,95.00 417.00,417.00 95.00,417.00" fill="none" stroke="rgba(255,255,255,.075)" stroke-width="1"/>
+<polygon points="112.50,112.50 399.50,112.50 399.50,399.50 112.50,399.50" fill="none" stroke="rgba(255,255,255,.075)" stroke-width="1"/>
+<polygon points="130.00,130.00 382.00,130.00 382.00,382.00 130.00,382.00" fill="none" stroke="rgba(255,255,255,.075)" stroke-width="1"/>
+<polygon points="149.25,149.25 362.75,149.25 362.75,362.75 149.25,362.75" fill="none" stroke="rgba(255,255,255,.075)" stroke-width="1"/>
+<polygon points="168.50,168.50 343.50,168.50 343.50,343.50 168.50,343.50" fill="none" stroke="rgba(255,255,255,.075)" stroke-width="1"/>
+<polygon points="186.00,186.00 326.00,186.00 326.00,326.00 186.00,326.00" fill="none" stroke="rgba(255,255,255,.075)" stroke-width="1"/>
+    </g>
+
+    <circle cx="172.0" cy="140.5" r="3.5" fill="#fff" opacity=".92"/>
+    <circle cx="200.0" cy="130.0" r="1.6" fill="#fff" opacity=".68"/>
+  </g>
+
+  <polygon points="81.00,81.00 431.00,81.00 431.00,431.00 81.00,431.00" fill="none" stroke="url(#rim)" stroke-width="3.2"/>
+  <polygon points="81.00,81.00 431.00,81.00 431.00,431.00 81.00,431.00" fill="none" stroke="rgba(0,8,22,.28)" stroke-width="7"/>
+</g>
+</svg>
