@@ -20,6 +20,11 @@
   const homeBestEl = $('homeBest');
   const nextPreview = $('nextPreview');
   const statusHud = $('statusHud');
+  const statusIcon = $('statusIcon');
+  const statusText = $('statusText');
+  const collectionOverlay = $('collectionOverlay');
+  const gemCollection = $('gemCollection');
+  const collectionProgress = $('collectionProgress');
   const startOverlay = $('startOverlay');
   const pauseOverlay = $('pauseOverlay');
   const gameOverOverlay = $('gameOverOverlay');
@@ -96,18 +101,18 @@
   };
 
   const tiers = [
-    {name:'Quartz',     cut:'Rose',      cutKey:'rose',      r:34,  score:1,  color:'#E9E7F7', accent:'#FFFFFF', dark:'#A7A1C4'},
-    {name:'Citrine',    cut:'Trillion',  cutKey:'trillion',  r:42,  score:3,  color:'#F3B82E', accent:'#FFF0A7', dark:'#B47114'},
-    {name:'Peridot',    cut:'Cushion',   cutKey:'cushion',   r:50,  score:6,  color:'#87D35D', accent:'#D8F6A7', dark:'#4F8F35'},
-    {name:'Aquamarine', cut:'Emerald',   cutKey:'emerald',   r:60,  score:10, color:'#53CAE0', accent:'#D2FAFF', dark:'#267D96'},
-    {name:'Amethyst',   cut:'Princess',  cutKey:'princess',  r:72,  score:15, color:'#A26AE7', accent:'#E9D2FF', dark:'#69409C'},
-    {name:'Topaz',      cut:'Radiant',   cutKey:'radiant',   r:84,  score:21, color:'#F58E4C', accent:'#FFD2A3', dark:'#AF4F2B'},
-    {name:'Sapphire',   cut:'Oval',      cutKey:'oval',      r:98,  score:28, color:'#397BE8', accent:'#B9D9FF', dark:'#173C91'},
-    {name:'Emerald',    cut:'Asscher',   cutKey:'asscher',   r:112, score:36, color:'#36C98A', accent:'#B8F6DA', dark:'#126846'},
-    {name:'Ruby',       cut:'Pear',      cutKey:'pear',      r:130, score:45, color:'#EB4D72', accent:'#FFC3CF', dark:'#9B213F'},
-    {name:'Starstone',  cut:'Navette',   cutKey:'navette',   r:150, score:55, color:'#7C62EA', accent:'#DCCFFF', dark:'#43308E'},
-    {name:'Crownstone', cut:'Brilliant', cutKey:'brilliant', r:170, score:66, color:'#F2AD3B', accent:'#FFF0AE', dark:'#A76813'}
-  ]
+    {name:'Quartz',     cut:'Rose',      cutKey:'rose',      r:34,  score:1,  color:'#E7F0F4', accent:'#FFFFFF', dark:'#A7B4BC'},
+    {name:'Citrine',    cut:'Trillion',  cutKey:'trillion',  r:42,  score:3,  color:'#F2BC32', accent:'#FFF0A1', dark:'#B97718'},
+    {name:'Peridot',    cut:'Cushion',   cutKey:'cushion',   r:50,  score:6,  color:'#99D64D', accent:'#DFF5A0', dark:'#619A31'},
+    {name:'Aquamarine', cut:'Emerald',   cutKey:'emerald',   r:60,  score:10, color:'#6BD5E2', accent:'#D8FAFF', dark:'#3094A5'},
+    {name:'Amethyst',   cut:'Princess',  cutKey:'princess',  r:72,  score:15, color:'#A968E5', accent:'#EFD7FF', dark:'#7141A3'},
+    {name:'Topaz',      cut:'Radiant',   cutKey:'radiant',   r:84,  score:21, color:'#F07945', accent:'#FFD1A6', dark:'#B4492F'},
+    {name:'Sapphire',   cut:'Oval',      cutKey:'oval',      r:98,  score:28, color:'#3A6FE0', accent:'#C0D6FF', dark:'#2549A1'},
+    {name:'Emerald',    cut:'Asscher',   cutKey:'asscher',   r:112, score:36, color:'#22BC82', accent:'#AAF0D1', dark:'#137956'},
+    {name:'Ruby',       cut:'Pear',      cutKey:'pear',      r:130, score:45, color:'#E94063', accent:'#FFC1CF', dark:'#9B2944'},
+    {name:'Starstone',  cut:'Navette',   cutKey:'navette',   r:150, score:55, color:'#756CF0', accent:'#DED8FF', dark:'#493BA3'},
+    {name:'Crownstone', cut:'Brilliant', cutKey:'brilliant', r:170, score:66, color:'#F3AF37', accent:'#FFF1A8', dark:'#AA6C16'}
+  ];
 
   let audioCtx = null;
 
@@ -213,6 +218,7 @@
       this.mergeWindow=0;
       this.mergeChain=0;
       this.discoveredCuts=new Set([0]);
+      this.unlockedTiers=new Set([0]);
       this.limitLine=null;
       this.dropper=null;
       this.limitJewels=[];
@@ -259,8 +265,11 @@
 
       this.best=this.loadBest();
       homeBestEl.textContent='$'+fmt(this.best);
+      this.unlockedTiers=this.loadUnlocked();
+      this.discoveredCuts=new Set(this.unlockedTiers);
 
       this.bindUI();
+      this.renderCollection();
       this.updateNextPreview();
       this.updatePowerButtons();
     }
@@ -314,6 +323,15 @@
         unlockAudio();
         startOverlay.classList.remove('visible');
         this.startRun();
+      });
+
+      $('collectionButton').addEventListener('click',()=>{
+        this.renderCollection();
+        collectionOverlay.classList.add('visible');
+      });
+
+      $('collectionBack').addEventListener('click',()=>{
+        collectionOverlay.classList.remove('visible');
       });
 
       $('pauseButton').addEventListener('click',()=>this.setPaused(true));
@@ -393,6 +411,102 @@
 
     saveBest() {
       try { localStorage.setItem('gemDropBest',String(this.best)); } catch {}
+    }
+
+    loadUnlocked() {
+      try {
+        const raw=JSON.parse(localStorage.getItem('gemDropUnlocked')||'[0]');
+        const valid=Array.isArray(raw)
+          ? raw.filter(n=>Number.isInteger(n)&&n>=0&&n<tiers.length)
+          : [0];
+        valid.push(0);
+        return new Set(valid);
+      } catch {
+        return new Set([0]);
+      }
+    }
+
+    saveUnlocked() {
+      try {
+        localStorage.setItem(
+          'gemDropUnlocked',
+          JSON.stringify([...this.unlockedTiers].sort((a,b)=>a-b))
+        );
+      } catch {}
+    }
+
+    unlockTier(tier,notify=false) {
+      if(tier<0||tier>=tiers.length||this.unlockedTiers.has(tier)) return false;
+
+      this.unlockedTiers.add(tier);
+      this.discoveredCuts.add(tier);
+      this.saveUnlocked();
+      this.renderCollection();
+
+      if(notify){
+        const t=tiers[tier];
+        this.showStatus(t.name+' '+t.cut+' unlocked','reward',1500,'gem',tier);
+      }
+
+      return true;
+    }
+
+    drawCollectionGem(canvas,tier,locked) {
+      const ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      if(this.textures.exists('gem-'+tier)){
+        const source=this.textures.get('gem-'+tier).getSourceImage();
+        const max=locked?72:88;
+        const scale=Math.min(max/source.width,max/source.height);
+        const w=source.width*scale;
+        const h=source.height*scale;
+
+        ctx.save();
+        if(locked){
+          ctx.globalAlpha=.78;
+          ctx.filter='grayscale(1) brightness(.34)';
+        }
+        ctx.drawImage(source,(canvas.width-w)/2,(canvas.height-h)/2,w,h);
+        ctx.restore();
+      }
+    }
+
+    renderCollection() {
+      if(!gemCollection) return;
+
+      gemCollection.innerHTML='';
+
+      tiers.forEach((t,tier)=>{
+        const unlocked=this.unlockedTiers.has(tier);
+        const card=document.createElement('article');
+        card.className='gem-card'+(unlocked?'':' locked');
+
+        const art=document.createElement('div');
+        art.className='gem-card__art';
+
+        const canvas=document.createElement('canvas');
+        canvas.width=112;
+        canvas.height=112;
+        canvas.setAttribute('aria-hidden','true');
+        art.appendChild(canvas);
+
+        const name=document.createElement('strong');
+        name.textContent=unlocked?t.name:'???';
+
+        const cut=document.createElement('small');
+        cut.textContent=unlocked?t.cut+' cut':'Locked';
+
+        const value=document.createElement('div');
+        value.className='gem-card__value';
+        value.textContent=unlocked?'$'+fmt(t.score):'';
+
+        card.append(art,name,cut,value);
+        gemCollection.appendChild(card);
+        this.drawCollectionGem(canvas,tier,!unlocked);
+      });
+
+      collectionProgress.textContent=this.unlockedTiers.size+' / '+tiers.length;
     }
 
     makeTextures() {
@@ -749,10 +863,10 @@
 
     drawVaultBackdrop() {
       const bg=this.add.graphics().setDepth(0);
-      bg.fillStyle(0x190722,.62);
+      bg.fillStyle(0x15091c,.76);
       bg.fillRect(0,0,W,H);
 
-      bg.fillStyle(0x6a1b78,.055);
+      bg.fillStyle(0x552063,.045);
       bg.fillEllipse(W*.5,H*.72,W*.82,H*.40);
 
       const rails=this.add.graphics().setDepth(18);
@@ -797,6 +911,8 @@
       this.score=0;
       this.currentTier=this.randomSpawnTier();
       this.nextTier=this.randomSpawnTier();
+      this.unlockTier(this.currentTier,false);
+      this.unlockTier(this.nextTier,false);
       this.bestTierReached=0;
       this.ready=true;
       this.running=true;
@@ -807,7 +923,7 @@
       this.dangerTime=0;
       this.mergeWindow=0;
       this.mergeChain=0;
-      this.discoveredCuts=new Set([0]);
+      this.discoveredCuts=new Set(this.unlockedTiers);
       this.powerUsed={tumble:false,cascade:false,prism:false};
 
       scoreEl.textContent='$0';
@@ -962,6 +1078,8 @@
 
       this.currentTier=this.nextTier;
       this.nextTier=this.randomSpawnTier();
+      this.unlockTier(this.currentTier,false);
+      this.unlockTier(this.nextTier,false);
 
       this.updateNextPreview();
       this.updateAimHandle();
@@ -1087,9 +1205,8 @@
         tone(270+next*43,.07+next*.004,.022+Math.min(.017,next*.0018),'sine');
         haptic(next>=8?15:8);
 
-        if(!this.discoveredCuts.has(next)){
-          this.discoveredCuts.add(next);
-          this.showStatus(tiers[next].name+' '+tiers[next].cut+' unlocked','reward',1400);
+        if(!this.unlockedTiers.has(next)){
+          this.unlockTier(next,true);
         }
       }
 
@@ -1187,10 +1304,49 @@
       });
     }
 
-    showStatus(text,kind='info',duration=1300) {
+    renderStatusIcon(icon='sparkles',tier=null) {
+      statusIcon.innerHTML='';
+
+      if(icon==='gem'&&Number.isInteger(tier)&&this.textures.exists('gem-'+tier)){
+        const canvas=document.createElement('canvas');
+        canvas.width=40;
+        canvas.height=40;
+        const ctx=canvas.getContext('2d');
+        const source=this.textures.get('gem-'+tier).getSourceImage();
+        const scale=Math.min(34/source.width,34/source.height);
+        const w=source.width*scale;
+        const h=source.height*scale;
+        ctx.drawImage(source,(40-w)/2,(40-h)/2,w,h);
+        statusIcon.appendChild(canvas);
+        return;
+      }
+
+      const i=document.createElement('i');
+      i.setAttribute('data-lucide',icon);
+      i.setAttribute('aria-hidden','true');
+      statusIcon.appendChild(i);
+
+      if(window.lucide){
+        window.lucide.createIcons({attrs:{'stroke-width':1.9}});
+      }
+    }
+
+    showStatus(text,kind='info',duration=1300,icon=null,tier=null) {
       window.clearTimeout(this.statusTimer);
       this.statusKind=kind;
-      statusHud.textContent=text;
+
+      let resolvedIcon=icon;
+      if(!resolvedIcon){
+        if(kind==='danger') resolvedIcon='triangle-alert';
+        else if(text.startsWith('TUMBLE')) resolvedIcon='rotate-cw';
+        else if(text.startsWith('CASCADE')) resolvedIcon='sparkles';
+        else if(text.startsWith('PRISM')) resolvedIcon='gem';
+        else if(text.startsWith('NO MATCH')) resolvedIcon='circle-slash-2';
+        else resolvedIcon='sparkles';
+      }
+
+      this.renderStatusIcon(resolvedIcon,tier);
+      statusText.textContent=text;
       statusHud.className='status-hud show'+(kind==='danger'?' danger':'');
 
       if(duration>0){
@@ -1203,7 +1359,8 @@
     clearStatus() {
       window.clearTimeout(this.statusTimer);
       this.statusKind='';
-      statusHud.textContent='';
+      statusText.textContent='';
+      statusIcon.innerHTML='';
       statusHud.className='status-hud';
     }
 
@@ -1260,7 +1417,7 @@
       }
 
       this.cameras.main.shake(180,.0025);
-      this.showStatus('TUMBLE!','reward',950);
+      this.showStatus('TUMBLE!','reward',950,'rotate-cw');
       tone(230,.10,.028,'triangle');
       haptic([7,18,7]);
       this.updatePowerButtons();
@@ -1271,7 +1428,7 @@
 
       const pairs=this.matchingPairs();
       if(!pairs.length){
-        this.showStatus('NO MATCHES TO CASCADE','info',900);
+        this.showStatus('NO MATCHES TO CASCADE','info',900,'circle-slash-2');
         this.updatePowerButtons();
         return;
       }
@@ -1282,7 +1439,7 @@
         this.queueMerge(pair[0],pair[1]);
       }
 
-      this.showStatus('CASCADE ×'+pairs.length,'reward',1050);
+      this.showStatus('CASCADE ×'+pairs.length,'reward',1050,'sparkles');
       this.cameras.main.shake(75,.002);
       tone(520,.11,.03,'sine');
       haptic([8,20,8]);
@@ -1300,6 +1457,7 @@
 
       this.powerUsed.prism=true;
       this.currentTier=Math.min(this.currentTier+1,tiers.length-1);
+      this.unlockTier(this.currentTier,true);
 
       if(this.preview){
         const x=this.preview.x;
@@ -1310,7 +1468,7 @@
       }
 
       this.updateAimHandle();
-      this.showStatus('PRISM UPGRADE','reward',1100);
+      this.showStatus('PRISM UPGRADE','reward',1100,'gem',this.currentTier);
       tone(680,.11,.03,'sine');
       haptic([7,13,7]);
       this.updatePowerButtons();
@@ -1435,7 +1593,7 @@
         else this.dangerTime=Math.max(0,this.dangerTime-dt*3.8);
 
         if(this.dangerTime>=.18){
-          if(this.statusKind!=='danger') this.showStatus('TOO HIGH','danger',0);
+          if(this.statusKind!=='danger') this.showStatus('TOO HIGH','danger',0,'triangle-alert');
         }else if(this.statusKind==='danger'){
           this.clearStatus();
         }
