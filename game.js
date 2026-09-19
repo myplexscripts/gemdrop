@@ -730,167 +730,280 @@
       const t=tiers[index];
       const cut=CUTS[t.cutKey];
       const r=t.r;
-      const size=Math.ceil(r*2.26);
+      const size=Math.ceil(r*2.34);
       const cx=size/2;
       const cy=size/2;
       const R=r*ART_SCALE;
       const outer=this.cutPoints(t.cutKey,R,cx,cy);
-      const rings=cut.rings.map(scale=>this.insetPoints(outer,cx,cy,scale));
-      const inner=rings[rings.length-1];
       const n=outer.length;
+
+      // Add extra crown / pavilion rings even to simple cuts so every stone
+      // has enough facet density to read like jewellery instead of a polygon.
+      const ringScales=[.79,...cut.rings,.29]
+        .filter(v=>v>.18&&v<.90)
+        .sort((a,b)=>b-a)
+        .filter((v,i,a)=>i===0||Math.abs(v-a[i-1])>.075);
+
+      const rings=ringScales.map(scale=>this.insetPoints(outer,cx,cy,scale));
+      const table=rings[rings.length-1];
 
       const canvas=document.createElement('canvas');
       canvas.width=size;
       canvas.height=size;
       const ctx=canvas.getContext('2d');
 
+      const facetTone=(i,ringIndex,half=0)=>{
+        const p=outer[i%n];
+        const angle=Math.atan2(p.y-cy,p.x-cx);
+        const key=Math.max(0,Math.cos(angle+2.22));
+        const fill=Math.max(0,Math.cos(angle-.58));
+        const deterministic=.5+.5*Math.sin(
+          (index+1)*7.13+(i+1)*3.71+(ringIndex+1)*5.27+half*2.11
+        );
+        const sparkle=Math.pow(key,5);
+        return {key,fill,deterministic,sparkle};
+      };
+
       ctx.save();
       polygonPath(ctx,outer);
       ctx.clip();
 
-      const body=ctx.createRadialGradient(cx-R*.12,cy-R*.15,R*.03,cx,cy,R*1.08);
+      // Deep transmitted body colour. The bright off-centre core and richer
+      // edge saturation mimic light travelling through a thick cut stone.
+      const body=ctx.createRadialGradient(
+        cx-R*.18,
+        cy-R*.22,
+        R*.02,
+        cx,
+        cy,
+        R*1.08
+      );
       body.addColorStop(0,rgba(t.accent,.98));
-      body.addColorStop(.24,rgba(t.color,.98));
-      body.addColorStop(.72,rgba(t.color,.97));
-      body.addColorStop(1,mixCss(t.dark,t.color,.46,.96));
+      body.addColorStop(.16,mixCss(t.color,t.accent,.56,.98));
+      body.addColorStop(.48,rgba(t.color,.98));
+      body.addColorStop(.76,mixCss(t.color,t.dark,.22,.97));
+      body.addColorStop(1,mixCss(t.dark,t.color,.52,.94));
       ctx.fillStyle=body;
       ctx.fillRect(0,0,size,size);
 
-      // Clear gemstone transmission, kept bright enough to read on a dark board.
+      // Secondary transmitted glow from the opposite side of the key light.
       ctx.globalCompositeOperation='screen';
-      const transmission=ctx.createRadialGradient(cx-R*.18,cy-R*.22,0,cx,cy,R*.76);
-      transmission.addColorStop(0,'rgba(255,255,255,.32)');
-      transmission.addColorStop(.25,rgba(t.accent,.30));
-      transmission.addColorStop(.68,rgba(t.color,.10));
-      transmission.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=transmission;
+      const transmitted=ctx.createRadialGradient(
+        cx+R*.24,
+        cy+R*.30,
+        0,
+        cx+R*.14,
+        cy+R*.20,
+        R*.82
+      );
+      transmitted.addColorStop(0,rgba(t.accent,.27));
+      transmitted.addColorStop(.34,rgba(t.color,.15));
+      transmitted.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=transmitted;
       ctx.fillRect(0,0,size,size);
       ctx.globalCompositeOperation='source-over';
 
-      const drawRingFacets=(a,b,alphaBase=.18)=>{
-        const count=Math.min(a.length,b.length);
-        for(let i=0;i<count;i++){
-          const j=(i+1)%count;
-          const target=i%3===0?t.accent:(i%3===1?t.dark:t.color);
-          ctx.fillStyle=mixCss(t.color,target,.24+(i%2)*.10,alphaBase+(i%3)*.025);
-          ctx.beginPath();
-          ctx.moveTo(a[i].x,a[i].y);
-          ctx.lineTo(a[j].x,a[j].y);
-          ctx.lineTo(b[j].x,b[j].y);
-          ctx.lineTo(b[i].x,b[i].y);
-          ctx.closePath();
-          ctx.fill();
-        }
-      };
-
+      // Crown facet rings. Each quadrilateral is split into two triangles,
+      // producing many more real-looking planes without increasing physics cost.
       let previous=outer;
       for(let ri=0;ri<rings.length;ri++){
-        drawRingFacets(previous,rings[ri],.16+ri*.025);
-        previous=rings[ri];
-      }
+        const current=rings[ri];
+        const count=Math.min(previous.length,current.length);
 
-      // Cut-specific internal facet geometry.
-      if(cut.pattern==='step'){
-        ctx.globalCompositeOperation='screen';
-        ctx.strokeStyle='rgba(255,255,255,.17)';
-        ctx.lineWidth=Math.max(1,r*.014);
-        for(const ring of rings){
-          polygonPath(ctx,ring);
+        for(let i=0;i<count;i++){
+          const j=(i+1)%count;
+          const mid={
+            x:(previous[i].x+previous[j].x+current[i].x+current[j].x)/4,
+            y:(previous[i].y+previous[j].y+current[i].y+current[j].y)/4
+          };
+
+          const a=facetTone(i,ri,0);
+          const b=facetTone(i,ri,1);
+
+          const facetFill=(tone,alt)=>{
+            if(tone.sparkle>.36){
+              return mixCss(t.color,t.accent,.58+tone.sparkle*.30,.76);
+            }
+            if(tone.key>.48){
+              return mixCss(t.color,t.accent,.24+tone.key*.30,.56);
+            }
+            if(tone.fill>.50){
+              return mixCss(t.color,t.accent,.16+tone.fill*.14,.48);
+            }
+            return mixCss(t.dark,t.color,.58+tone.deterministic*.20,alt?.48:.42);
+          };
+
+          ctx.fillStyle=facetFill(a,false);
+          ctx.beginPath();
+          ctx.moveTo(previous[i].x,previous[i].y);
+          ctx.lineTo(previous[j].x,previous[j].y);
+          ctx.lineTo(mid.x,mid.y);
+          ctx.lineTo(current[i].x,current[i].y);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle=facetFill(b,true);
+          ctx.beginPath();
+          ctx.moveTo(previous[j].x,previous[j].y);
+          ctx.lineTo(current[j].x,current[j].y);
+          ctx.lineTo(current[i].x,current[i].y);
+          ctx.lineTo(mid.x,mid.y);
+          ctx.closePath();
+          ctx.fill();
+
+          // Crisp shared facet seam.
+          ctx.strokeStyle='rgba(255,255,255,.105)';
+          ctx.lineWidth=Math.max(.8,r*.009);
+          ctx.beginPath();
+          ctx.moveTo(mid.x,mid.y);
+          ctx.lineTo(current[i].x,current[i].y);
           ctx.stroke();
         }
-        ctx.globalCompositeOperation='source-over';
-        ctx.fillStyle=mixCss(t.color,t.accent,.38,.22);
-        polygonPath(ctx,inner);
-        ctx.fill();
-      }else if(cut.pattern==='princess'){
-        for(let i=0;i<n;i++){
-          const j=(i+1)%n;
-          ctx.fillStyle=i%2===0?mixCss(t.color,t.accent,.42,.24):mixCss(t.dark,t.color,.68,.16);
-          ctx.beginPath();
-          ctx.moveTo(inner[i].x,inner[i].y);
-          ctx.lineTo(inner[j].x,inner[j].y);
-          ctx.lineTo(cx,cy);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.strokeStyle='rgba(255,255,255,.18)';
-        ctx.lineWidth=Math.max(1,r*.014);
-        ctx.beginPath();
-        ctx.moveTo(inner[0].x,inner[0].y);
-        ctx.lineTo(inner[2].x,inner[2].y);
-        ctx.moveTo(inner[1].x,inner[1].y);
-        ctx.lineTo(inner[3].x,inner[3].y);
-        ctx.stroke();
-      }else{
-        for(let i=0;i<n;i++){
-          const j=(i+1)%n;
-          const target=(i%2===0)?t.accent:t.dark;
-          ctx.fillStyle=mixCss(t.color,target,i%2===0?.35:.24,i%2===0?.20:.14);
-          ctx.beginPath();
-          ctx.moveTo(inner[i].x,inner[i].y);
-          ctx.lineTo(inner[j].x,inner[j].y);
-          ctx.lineTo(cx,cy);
-          ctx.closePath();
-          ctx.fill();
-        }
 
-        if(cut.pattern==='rose'||cut.pattern==='brilliant'||cut.pattern==='tri'){
-          ctx.globalCompositeOperation='screen';
-          ctx.strokeStyle='rgba(255,255,255,.19)';
-          ctx.lineWidth=Math.max(1,r*.013);
-          const skip=cut.pattern==='brilliant'?2:1;
-          for(let i=0;i<n;i+=skip){
-            const target=outer[(i+Math.max(2,Math.floor(n/4)))%n];
-            ctx.beginPath();
-            ctx.moveTo(inner[i].x,inner[i].y);
-            ctx.lineTo(target.x,target.y);
-            ctx.stroke();
-          }
-          ctx.globalCompositeOperation='source-over';
-        }
+        previous=current;
       }
 
-      const tableScale=cut.pattern==='step'?1:.82;
-      const table=this.insetPoints(inner,cx,cy,tableScale);
-      const tableGrad=ctx.createRadialGradient(cx-R*.12,cy-R*.12,0,cx,cy,R*.48);
-      tableGrad.addColorStop(0,rgba(t.accent,.72));
-      tableGrad.addColorStop(.50,rgba(t.color,.40));
-      tableGrad.addColorStop(1,mixCss(t.dark,t.color,.62,.16));
-      ctx.fillStyle=tableGrad;
-      polygonPath(ctx,table);
-      ctx.fill();
+      // Pavilion / star facets under the table.
+      for(let i=0;i<n;i++){
+        const j=(i+1)%n;
+        const tone=facetTone(i,rings.length+1,0);
+        const centreOffset={
+          x:cx+Math.cos((i/n)*Math.PI*2)*R*.045,
+          y:cy+Math.sin((i/n)*Math.PI*2)*R*.045
+        };
 
-      // Subtle internal refraction wedges.
-      ctx.globalCompositeOperation='multiply';
-      for(let i=1;i<n;i+=3){
-        const j=(i+Math.max(2,Math.floor(n/5)))%n;
-        ctx.fillStyle=mixCss(t.dark,t.color,.65,.045);
+        ctx.fillStyle=tone.key>.56
+          ? mixCss(t.color,t.accent,.50,.58)
+          : mixCss(t.dark,t.color,.66+tone.deterministic*.14,.48);
+
         ctx.beginPath();
-        ctx.moveTo(cx,cy);
-        ctx.lineTo(inner[i].x,inner[i].y);
-        ctx.lineTo(outer[j].x,outer[j].y);
+        ctx.moveTo(table[i].x,table[i].y);
+        ctx.lineTo(table[j].x,table[j].y);
+        ctx.lineTo(centreOffset.x,centreOffset.y);
         ctx.closePath();
         ctx.fill();
       }
 
-      ctx.globalCompositeOperation='screen';
-      ctx.strokeStyle='rgba(255,255,255,.20)';
-      ctx.lineWidth=Math.max(1,r*.014);
-      for(let i=0;i<n;i++){
+      // Table. Keep this cleaner than the surrounding facets so the cut reads.
+      const tableInset=this.insetPoints(table,cx,cy,.72);
+      const tableLight=ctx.createLinearGradient(
+        cx-R*.35,cy-R*.35,
+        cx+R*.35,cy+R*.35
+      );
+      tableLight.addColorStop(0,rgba(t.accent,.82));
+      tableLight.addColorStop(.22,mixCss(t.color,t.accent,.48,.66));
+      tableLight.addColorStop(.58,rgba(t.color,.48));
+      tableLight.addColorStop(1,mixCss(t.dark,t.color,.64,.34));
+      ctx.fillStyle=tableLight;
+      polygonPath(ctx,tableInset);
+      ctx.fill();
+
+      // Total internal reflection. Dark mirrored shards around the centre are
+      // essential to make a gem look transparent instead of simply translucent.
+      ctx.globalCompositeOperation='multiply';
+      for(let i=0;i<n;i+=2){
+        const a=table[i];
+        const b=outer[(i+Math.max(2,Math.floor(n*.34)))%n];
+        const c=rings[Math.max(0,rings.length-2)][(i+1)%n];
+
+        ctx.fillStyle=mixCss(t.dark,t.color,.56,.10);
         ctx.beginPath();
-        ctx.moveTo(outer[i].x,outer[i].y);
-        ctx.lineTo(inner[i].x,inner[i].y);
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(b.x,b.y);
+        ctx.lineTo(c.x,c.y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // White and coloured caustic flashes. These are tiny and partially
+      // transparent so the Light2D pass can still move across them naturally.
+      ctx.globalCompositeOperation='screen';
+      for(let i=0;i<Math.min(7,n);i++){
+        const seed=.5+.5*Math.sin((index+3)*11.7+i*5.31);
+        if(seed<.34) continue;
+
+        const a=(i/n)*Math.PI*2-2.15;
+        const rr=R*(.22+.46*seed);
+        const x=cx+Math.cos(a)*rr;
+        const y=cy+Math.sin(a)*rr;
+        const length=R*(.10+.12*seed);
+
+        const flare=ctx.createLinearGradient(
+          x-Math.cos(a)*length,
+          y-Math.sin(a)*length,
+          x+Math.cos(a)*length,
+          y+Math.sin(a)*length
+        );
+        flare.addColorStop(0,'rgba(255,255,255,0)');
+        flare.addColorStop(.46,rgba(t.accent,.10));
+        flare.addColorStop(.50,'rgba(255,255,255,.42)');
+        flare.addColorStop(.54,rgba(t.accent,.12));
+        flare.addColorStop(1,'rgba(255,255,255,0)');
+
+        ctx.strokeStyle=flare;
+        ctx.lineWidth=Math.max(.9,r*.010);
+        ctx.beginPath();
+        ctx.moveTo(x-Math.cos(a)*length,y-Math.sin(a)*length);
+        ctx.lineTo(x+Math.cos(a)*length,y+Math.sin(a)*length);
         ctx.stroke();
       }
 
+      // Fine facet boundaries. Keep them faint, like polished junctions rather
+      // than illustrated outlines.
+      ctx.strokeStyle='rgba(255,255,255,.14)';
+      ctx.lineWidth=Math.max(.8,r*.010);
+      for(const ring of rings){
+        polygonPath(ctx,ring);
+        ctx.stroke();
+      }
+      for(let i=0;i<n;i++){
+        ctx.beginPath();
+        ctx.moveTo(outer[i].x,outer[i].y);
+        ctx.lineTo(table[i].x,table[i].y);
+        ctx.stroke();
+      }
+
+      // Hot specular reflection from the jewellery light.
+      const hotX=cx-R*.26;
+      const hotY=cy-R*.30;
+      const hot=ctx.createRadialGradient(hotX,hotY,0,hotX,hotY,R*.31);
+      hot.addColorStop(0,'rgba(255,255,255,.48)');
+      hot.addColorStop(.15,rgba(t.accent,.25));
+      hot.addColorStop(.52,'rgba(255,255,255,.05)');
+      hot.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=hot;
+      ctx.fillRect(0,0,size,size);
+
+      // Make the girdle slightly clearer than the centre to suggest glass.
+      ctx.globalCompositeOperation='destination-in';
+      const alphaMask=ctx.createRadialGradient(cx,cy,R*.12,cx,cy,R*1.04);
+      alphaMask.addColorStop(0,'rgba(255,255,255,1)');
+      alphaMask.addColorStop(.68,'rgba(255,255,255,.99)');
+      alphaMask.addColorStop(1,'rgba(255,255,255,.86)');
+      ctx.fillStyle=alphaMask;
+      ctx.fillRect(0,0,size,size);
+
       ctx.restore();
 
+      // Polished girdle and a hairline white reflection on the upper edge.
       polygonPath(ctx,outer);
-      ctx.strokeStyle=rgba(t.accent,.54);
-      ctx.lineWidth=Math.max(1.4,r*.022);
+      ctx.strokeStyle=mixCss(t.color,t.accent,.62,.74);
+      ctx.lineWidth=Math.max(1.4,r*.018);
       ctx.stroke();
 
-      // Matching normal map. Each actual facet gets its own surface direction.
+      ctx.save();
+      polygonPath(ctx,outer);
+      ctx.clip();
+      ctx.strokeStyle='rgba(255,255,255,.44)';
+      ctx.lineWidth=Math.max(1,r*.012);
+      ctx.beginPath();
+      ctx.moveTo(cx-R*.72,cy-R*.58);
+      ctx.quadraticCurveTo(cx-R*.10,cy-R*.94,cx+R*.48,cy-R*.54);
+      ctx.stroke();
+      ctx.restore();
+
+      // Matching high-density normal map. Normal variation follows the same
+      // split crown facets, so different planes catch light as the gem tumbles.
       const normal=document.createElement('canvas');
       normal.width=size;
       normal.height=size;
@@ -900,50 +1013,72 @@
       nctx.fillStyle='rgb(128,128,255)';
       nctx.fill();
 
-      const paintNormalRing=(a,b,tilt,z)=>{
-        const count=Math.min(a.length,b.length);
-        for(let i=0;i<count;i++){
-          const j=(i+1)%count;
-          const mx=(a[i].x+a[j].x+b[i].x+b[j].x)/4-cx;
-          const my=(a[i].y+a[j].y+b[i].y+b[j].y)/4-cy;
-          const len=Math.hypot(mx,my)||1;
-          const nx=(mx/len)*tilt;
-          const ny=-(my/len)*tilt;
-
-          nctx.fillStyle=normalCss(nx,ny,z);
-          nctx.beginPath();
-          nctx.moveTo(a[i].x,a[i].y);
-          nctx.lineTo(a[j].x,a[j].y);
-          nctx.lineTo(b[j].x,b[j].y);
-          nctx.lineTo(b[i].x,b[i].y);
-          nctx.closePath();
-          nctx.fill();
-        }
-      };
-
       previous=outer;
       for(let ri=0;ri<rings.length;ri++){
-        paintNormalRing(previous,rings[ri],.62-ri*.09,.73+ri*.07);
-        previous=rings[ri];
+        const current=rings[ri];
+        const count=Math.min(previous.length,current.length);
+
+        for(let i=0;i<count;i++){
+          const j=(i+1)%count;
+          const mid={
+            x:(previous[i].x+previous[j].x+current[i].x+current[j].x)/4,
+            y:(previous[i].y+previous[j].y+current[i].y+current[j].y)/4
+          };
+          const mx=mid.x-cx;
+          const my=mid.y-cy;
+          const len=Math.hypot(mx,my)||1;
+          const baseTilt=.72-ri*.075;
+          const wobble=.07*Math.sin((index+1)*3.8+i*2.7+ri);
+
+          const paintTriangle=(points,nx,ny,nz)=>{
+            nctx.fillStyle=normalCss(nx,ny,nz);
+            nctx.beginPath();
+            nctx.moveTo(points[0].x,points[0].y);
+            for(let k=1;k<points.length;k++) nctx.lineTo(points[k].x,points[k].y);
+            nctx.closePath();
+            nctx.fill();
+          };
+
+          paintTriangle(
+            [previous[i],previous[j],mid,current[i]],
+            (mx/len)*(baseTilt+wobble),
+            -(my/len)*(baseTilt+wobble),
+            .66+ri*.06
+          );
+
+          paintTriangle(
+            [previous[j],current[j],current[i],mid],
+            (mx/len)*(baseTilt-wobble),
+            -(my/len)*(baseTilt-wobble),
+            .69+ri*.06
+          );
+        }
+
+        previous=current;
       }
 
       for(let i=0;i<n;i++){
         const j=(i+1)%n;
-        const mx=(inner[i].x+inner[j].x)/2-cx;
-        const my=(inner[i].y+inner[j].y)/2-cy;
+        const mx=(table[i].x+table[j].x)/2-cx;
+        const my=(table[i].y+table[j].y)/2-cy;
         const len=Math.hypot(mx,my)||1;
+        const alt=i%2===0?1:-1;
 
-        nctx.fillStyle=normalCss((mx/len)*.38,-(my/len)*.38,.90);
+        nctx.fillStyle=normalCss(
+          (mx/len)*(.34+alt*.06),
+          -(my/len)*(.34-alt*.05),
+          .91
+        );
         nctx.beginPath();
-        nctx.moveTo(inner[i].x,inner[i].y);
-        nctx.lineTo(inner[j].x,inner[j].y);
+        nctx.moveTo(table[i].x,table[i].y);
+        nctx.lineTo(table[j].x,table[j].y);
         nctx.lineTo(cx,cy);
         nctx.closePath();
         nctx.fill();
       }
 
-      polygonPath(nctx,table);
-      nctx.fillStyle=normalCss(0,0,1);
+      polygonPath(nctx,tableInset);
+      nctx.fillStyle=normalCss(-.06,.05,.996);
       nctx.fill();
 
       const texture=this.textures.addCanvas('gem-'+index,canvas);
@@ -1013,13 +1148,15 @@
       const localFacet=-Math.PI/2+facetIndex*facetStep;
       const worldFacet=localFacet+gem.rotation;
 
-      gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.42;
-      gem.glint.y=gem.y+Math.sin(worldFacet)*t.r*.42;
+      gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.46;
+      gem.glint.y=gem.y+Math.sin(worldFacet)*t.r*.46;
       gem.glint.rotation=0;
-      gem.glint.setScale(clamp(t.r/72,.55,2.15)*(.38+flash*.62));
-      gem.glint.setAlpha(clamp(.018+flash*(.48+.32*motion),0,.88));
 
-      const tintMix=.55+.20*Math.sin(time*.0014+gem.opticSeed);
+      const glintScale=clamp(t.r/92,.42,1.18);
+      gem.glint.setScale(glintScale*(.22+flash*.52));
+      gem.glint.setAlpha(clamp(.012+flash*(.62+.26*motion),0,.92));
+
+      const tintMix=.68+.18*Math.sin(time*.0014+gem.opticSeed);
       gem.glint.setTint(mixHex(t.accent,'#ffffff',tintMix));
     }
 
@@ -1122,7 +1259,7 @@
 
       this.preview=this.add.image(x,DROP_Y,'gem-'+this.currentTier).setDepth(32);
       this.applyGemLighting(this.preview);
-      this.preview.setAlpha(.97);
+      this.preview.setAlpha(1);
       if(this.gemMask) this.preview.setMask(this.gemMask);
 
       if(animate){
@@ -1179,7 +1316,7 @@
       gem.merging=false;
       gem.born=this.time.now;
       gem.setDepth(10+tier*.01);
-      gem.setAlpha(.97);
+      gem.setAlpha(1);
       this.applyGemLighting(gem);
 
       if(this.gemMask) gem.setMask(this.gemMask);
