@@ -858,69 +858,100 @@
       const source=texture.getSourceImage();
       if(!source) return;
 
+      const t=tiers[index];
       const w=source.width||384;
       const h=source.height||384;
       const canvas=document.createElement('canvas');
       canvas.width=w;
       canvas.height=h;
-      const ctx=canvas.getContext('2d');
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});
 
       try {
-        // Keep every facet, highlight and transparency from the supplied SVG.
         ctx.drawImage(source,0,0,w,h);
+        const image=ctx.getImageData(0,0,w,h);
+        const px=image.data;
 
-        // Canvas "color" blend mode replaces hue/saturation while preserving
-        // the original luminance, so all of the SVG's detailed facet shading
-        // survives without the fragile data-URI loader path.
+        const rgb=hex=>{
+          const v=parseInt(hex.slice(1),16);
+          return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
+        };
+        const dark=rgb(t.dark);
+        const body=rgb(t.color);
+        const light=rgb(t.accent);
+        const lerp=(x,y,u)=>Math.round(x+(y-x)*u);
+        const mix=(x,y,u)=>({r:lerp(x.r,y.r,u),g:lerp(x.g,y.g,u),b:lerp(x.b,y.b,u)});
+
+        let minX=w,minY=h,maxX=-1,maxY=-1;
+
+        for(let y=0;y<h;y++){
+          for(let x=0;x<w;x++){
+            const i=(y*w+x)*4;
+            const alpha=px[i+3];
+            if(alpha<8) continue;
+
+            if(x<minX) minX=x;
+            if(x>maxX) maxX=x;
+            if(y<minY) minY=y;
+            if(y>maxY) maxY=y;
+
+            const lum=(px[i]*.2126+px[i+1]*.7152+px[i+2]*.0722)/255;
+            const crystalLum=.20+.75*Math.pow(lum,.72);
+            let c;
+
+            if(crystalLum<.56){
+              const u=clamp((crystalLum-.20)/.36,0,1);
+              c=mix(mix(dark,body,.28),body,u);
+            }else{
+              const u=clamp((crystalLum-.56)/.39,0,1);
+              c=mix(body,light,Math.pow(u,.82)*.92);
+            }
+
+            const sx=(x/w)-.5;
+            const sy=(y/h)-.5;
+            const spectral=.5+.5*Math.sin((index+1)*1.7+x*.045-y*.031);
+            if(spectral>.72&&lum>.42) c=mix(c,light,(spectral-.72)*.24);
+            else if(spectral<.24&&lum<.68) c=mix(c,body,(.24-spectral)*.18);
+
+            px[i]=c.r;
+            px[i+1]=c.g;
+            px[i+2]=c.b;
+
+            const radial=clamp(Math.hypot(sx*1.15,sy*1.15),0,1);
+            const transmission=(1-radial)*(.09+.05*(1-lum));
+            px[i+3]=Math.round(alpha*(.98-transmission));
+          }
+        }
+
+        ctx.putImageData(image,0,0);
+
         ctx.save();
-        ctx.globalCompositeOperation='color';
-        ctx.fillStyle=tiers[index].color;
+        ctx.globalCompositeOperation='screen';
+        const glow=ctx.createRadialGradient(w*.40,h*.34,0,w*.47,h*.46,Math.max(w,h)*.40);
+        glow.addColorStop(0,rgba(t.accent,.30));
+        glow.addColorStop(.24,rgba(t.color,.18));
+        glow.addColorStop(.70,rgba(t.color,.055));
+        glow.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=glow;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // Restore the exact transparent silhouette after the blend pass.
         ctx.save();
         ctx.globalCompositeOperation='destination-in';
         ctx.drawImage(source,0,0,w,h);
         ctx.restore();
 
-        const pixels=ctx.getImageData(0,0,w,h).data;
-        let minX=w;
-        let minY=h;
-        let maxX=-1;
-        let maxY=-1;
-
-        for(let y=0;y<h;y++){
-          for(let x=0;x<w;x++){
-            const alpha=pixels[(y*w+x)*4+3];
-            if(alpha<8) continue;
-            if(x<minX) minX=x;
-            if(x>maxX) maxX=x;
-            if(y<minY) minY=y;
-            if(y>maxY) maxY=y;
-          }
-        }
-
         if(maxX>=minX&&maxY>=minY){
-          this.gemVisualBounds[index]=Math.max(
-            maxX-minX+1,
-            maxY-minY+1
-          );
+          this.gemVisualBounds[index]=Math.max(maxX-minX+1,maxY-minY+1);
         }else{
           this.gemVisualBounds[index]=Math.max(w,h);
         }
 
         this.textures.remove(key);
         const coloured=this.textures.addCanvas(key,canvas);
-
-        if(coloured){
-          coloured.setFilter(Phaser.Textures.FilterMode.LINEAR);
-        }
+        if(coloured) coloured.setFilter(Phaser.Textures.FilterMode.LINEAR);
       } catch {
-        // If recolouring is unavailable, leave the already-loaded SVG usable.
       }
     }
-
     attachSvgNormalMap(index) {
       const texture=this.textures.get('gem-'+index);
       if(!texture||!texture.getSourceImage) return;
