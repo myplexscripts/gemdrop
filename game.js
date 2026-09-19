@@ -492,7 +492,11 @@
     createGemMask() {
       this.gemMaskShape=this.make.graphics({x:0,y:0,add:false});
       this.gemMaskShape.fillStyle(0xffffff,1);
-      this.gemMaskShape.fillRect(WALL,20,W-WALL*2,FLOOR-20);
+      // Let the rendered jewel extend a few pixels below the physics floor.
+      // This prevents the lowest facets from being visibly shaved off while
+      // the decorative bottom rail still hides anything that should be behind it.
+      const visualMaskBottom=FRAME_FLOOR-10;
+      this.gemMaskShape.fillRect(WALL,20,W-WALL*2,visualMaskBottom-20);
       this.gemMask=this.gemMaskShape.createGeometryMask();
     }
 
