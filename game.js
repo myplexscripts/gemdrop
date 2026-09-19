@@ -868,6 +868,7 @@
 
       try {
         ctx.drawImage(source,0,0,w,h);
+
         const image=ctx.getImageData(0,0,w,h);
         const px=image.data;
 
@@ -875,11 +876,38 @@
           const v=parseInt(hex.slice(1),16);
           return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
         };
-        const dark=rgb(t.dark);
-        const body=rgb(t.color);
-        const light=rgb(t.accent);
-        const lerp=(x,y,u)=>Math.round(x+(y-x)*u);
-        const mix=(x,y,u)=>({r:lerp(x.r,y.r,u),g:lerp(x.g,y.g,u),b:lerp(x.b,y.b,u)});
+
+        const blend=(a,b,u)=>({
+          r:Math.round(a.r+(b.r-a.r)*u),
+          g:Math.round(a.g+(b.g-a.g)*u),
+          b:Math.round(a.b+(b.b-a.b)*u)
+        });
+
+        const base=rgb(t.color);
+        const accent=rgb(t.accent);
+        const deep=rgb(t.dark);
+        const white={r:255,g:255,b:255};
+
+        const p0=blend(deep,base,.18);
+        const p1=blend(deep,base,.58);
+        const p2=blend(base,accent,.10);
+        const p3=blend(base,accent,.38);
+        const p4=blend(base,accent,.68);
+        const p5=blend(accent,white,.58);
+
+        const palette=[p0,p1,p2,p3,p4,p5];
+        const stops=[0,.18,.39,.60,.79,1];
+
+        const samplePalette=v=>{
+          v=clamp(v,0,1);
+          for(let n=1;n<stops.length;n++){
+            if(v<=stops[n]){
+              const u=(v-stops[n-1])/(stops[n]-stops[n-1]);
+              return blend(palette[n-1],palette[n],u);
+            }
+          }
+          return palette[palette.length-1];
+        };
 
         let minX=w,minY=h,maxX=-1,maxY=-1;
 
@@ -895,30 +923,24 @@
             if(y>maxY) maxY=y;
 
             const lum=(px[i]*.2126+px[i+1]*.7152+px[i+2]*.0722)/255;
-            const crystalLum=.20+.75*Math.pow(lum,.72);
-            let c;
+            const nx=x/w-.5;
+            const ny=y/h-.5;
 
-            if(crystalLum<.56){
-              const u=clamp((crystalLum-.20)/.36,0,1);
-              c=mix(mix(dark,body,.28),body,u);
-            }else{
-              const u=clamp((crystalLum-.56)/.39,0,1);
-              c=mix(body,light,Math.pow(u,.82)*.92);
-            }
+            let value=.18+.82*Math.pow(lum,.62);
+            const directional=clamp((-.78*nx-.62*ny)*.18,-.11,.11);
+            const facetVariation=Math.sin(x*.071+y*.043+index*1.91)*.022;
+            value=clamp(value+directional+facetVariation,0,1);
 
-            const sx=(x/w)-.5;
-            const sy=(y/h)-.5;
-            const spectral=.5+.5*Math.sin((index+1)*1.7+x*.045-y*.031);
-            if(spectral>.72&&lum>.42) c=mix(c,light,(spectral-.72)*.24);
-            else if(spectral<.24&&lum<.68) c=mix(c,body,(.24-spectral)*.18);
+            let c=samplePalette(value);
+            if(lum<.14) c=blend(p0,p1,.28+.35*(lum/.14));
 
             px[i]=c.r;
             px[i+1]=c.g;
             px[i+2]=c.b;
 
-            const radial=clamp(Math.hypot(sx*1.15,sy*1.15),0,1);
-            const transmission=(1-radial)*(.09+.05*(1-lum));
-            px[i+3]=Math.round(alpha*(.98-transmission));
+            const radial=clamp(Math.hypot(nx*1.08,ny*1.08),0,1);
+            const clear=.055+(1-radial)*.075;
+            px[i+3]=Math.round(alpha*(1-clear));
           }
         }
 
@@ -926,12 +948,39 @@
 
         ctx.save();
         ctx.globalCompositeOperation='screen';
-        const glow=ctx.createRadialGradient(w*.40,h*.34,0,w*.47,h*.46,Math.max(w,h)*.40);
-        glow.addColorStop(0,rgba(t.accent,.30));
-        glow.addColorStop(.24,rgba(t.color,.18));
-        glow.addColorStop(.70,rgba(t.color,.055));
-        glow.addColorStop(1,'rgba(255,255,255,0)');
-        ctx.fillStyle=glow;
+        const bodyGlow=ctx.createRadialGradient(
+          w*.34,h*.24,0,
+          w*.48,h*.48,Math.max(w,h)*.62
+        );
+        bodyGlow.addColorStop(0,rgba(t.accent,.34));
+        bodyGlow.addColorStop(.24,rgba(t.accent,.15));
+        bodyGlow.addColorStop(.58,rgba(t.color,.065));
+        bodyGlow.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=bodyGlow;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation='screen';
+        const centre=ctx.createRadialGradient(
+          w*.46,h*.42,0,
+          w*.46,h*.42,Math.max(w,h)*.22
+        );
+        centre.addColorStop(0,'rgba(255,255,255,.25)');
+        centre.addColorStop(.42,rgba(t.accent,.12));
+        centre.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=centre;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation='screen';
+        const sheen=ctx.createLinearGradient(w*.18,h*.12,w*.72,h*.72);
+        sheen.addColorStop(0,'rgba(255,255,255,.24)');
+        sheen.addColorStop(.28,rgba(t.accent,.10));
+        sheen.addColorStop(.58,'rgba(255,255,255,.025)');
+        sheen.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=sheen;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
@@ -952,6 +1001,7 @@
       } catch {
       }
     }
+
     attachSvgNormalMap(index) {
       const texture=this.textures.get('gem-'+index);
       if(!texture||!texture.getSourceImage) return;
