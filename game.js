@@ -155,27 +155,30 @@
   };
 
   const tiers = [
+    // Progression is arranged from generally lower-value/common stones toward
+    // rarer, higher-value stones. Exact market value still varies by quality,
+    // origin, treatment, size and colour.
     {name:'Quartz',      cut:'Rose',          cutKey:'rose',       asset:'gems/20_rose.svg',          r:26,  score:1,   color:'#E7F0F4', accent:'#FFFFFF', dark:'#A7B4BC'},
     {name:'Citrine',     cut:'Trillion',      cutKey:'trillion',   asset:'gems/14_trillion.svg',      r:29,  score:3,   color:'#F2BC32', accent:'#FFF0A1', dark:'#B97718'},
-    {name:'Peridot',     cut:'Cushion',       cutKey:'cushion',    asset:'gems/07_cushion.svg',       r:32,  score:6,   color:'#99D64D', accent:'#DFF5A0', dark:'#619A31'},
-    {name:'Aquamarine',  cut:'Emerald',       cutKey:'emerald',    asset:'gems/09_emerald.svg',       r:35,  score:10,  color:'#6BD5E2', accent:'#D8FAFF', dark:'#3094A5'},
-    {name:'Amethyst',    cut:'Princess',      cutKey:'princess',   asset:'gems/02_princess.svg',      r:39,  score:15,  color:'#A968E5', accent:'#EFD7FF', dark:'#7141A3'},
-    {name:'Topaz',       cut:'Radiant',       cutKey:'radiant',    asset:'gems/05_radiant.svg',       r:43,  score:22,  color:'#F07945', accent:'#FFD1A6', dark:'#B4492F'},
-    {name:'Garnet',      cut:'Square',        cutKey:'square',     asset:'gems/08_square.svg',        r:47,  score:30,  color:'#C83E58', accent:'#FFB8C5', dark:'#7E2035'},
-    {name:'Tourmaline',  cut:'French',        cutKey:'french',     asset:'gems/29_french.svg',        r:52,  score:40,  color:'#E85A9B', accent:'#FFD0E4', dark:'#9D2E67'},
-    {name:'Sapphire',    cut:'Oval',          cutKey:'oval',       asset:'gems/22_oval.svg',          r:57,  score:52,  color:'#3A6FE0', accent:'#C0D6FF', dark:'#2549A1'},
-    {name:'Emerald',     cut:'Asscher',       cutKey:'asscher',    asset:'gems/23_asscher.svg',       r:62,  score:66,  color:'#22BC82', accent:'#AAF0D1', dark:'#137956'},
-    {name:'Ruby',        cut:'Pear',          cutKey:'pear',       asset:'gems/04_pear.svg',          r:68,  score:82,  color:'#E94063', accent:'#FFC1CF', dark:'#9B2944'},
-    {name:'Spinel',      cut:'Octagon',       cutKey:'octagon',    asset:'gems/24_octagon.svg',       r:74,  score:100, color:'#EA4D91', accent:'#FFD0E7', dark:'#9E2A64'},
+    {name:'Sunstone',    cut:'Cushion',       cutKey:'cushion',    asset:'gems/07_cushion.svg',       r:32,  score:6,   color:'#EF7659', accent:'#FFD0A6', dark:'#AA4938'},
+    {name:'Amethyst',    cut:'Emerald',       cutKey:'emerald',    asset:'gems/09_emerald.svg',       r:35,  score:10,  color:'#A968E5', accent:'#EFD7FF', dark:'#7141A3'},
+    {name:'Peridot',     cut:'Princess',      cutKey:'princess',   asset:'gems/02_princess.svg',      r:39,  score:15,  color:'#99D64D', accent:'#DFF5A0', dark:'#619A31'},
+    {name:'Garnet',      cut:'Radiant',       cutKey:'radiant',    asset:'gems/05_radiant.svg',       r:43,  score:22,  color:'#C83E58', accent:'#FFB8C5', dark:'#7E2035'},
+    {name:'Topaz',       cut:'Square',        cutKey:'square',     asset:'gems/08_square.svg',        r:47,  score:30,  color:'#F07945', accent:'#FFD1A6', dark:'#B4492F'},
+    {name:'Moonstone',   cut:'French',        cutKey:'french',     asset:'gems/29_french.svg',        r:52,  score:40,  color:'#B9C9F2', accent:'#FFFFFF', dark:'#7788BA'},
+    {name:'Zircon',      cut:'Oval',          cutKey:'oval',       asset:'gems/22_oval.svg',          r:57,  score:52,  color:'#55CFE2', accent:'#D9FBFF', dark:'#2D8EA3'},
+    {name:'Morganite',   cut:'Asscher',       cutKey:'asscher',    asset:'gems/23_asscher.svg',       r:62,  score:66,  color:'#F19A8E', accent:'#FFE0D8', dark:'#B95A55'},
+    {name:'Aquamarine',  cut:'Pear',          cutKey:'pear',       asset:'gems/04_pear.svg',          r:68,  score:82,  color:'#6BD5E2', accent:'#D8FAFF', dark:'#3094A5'},
+    {name:'Tourmaline',  cut:'Octagon',       cutKey:'octagon',    asset:'gems/24_octagon.svg',       r:74,  score:100, color:'#E85A9B', accent:'#FFD0E4', dark:'#9D2E67'},
     {name:'Tanzanite',   cut:'Eight Corners', cutKey:'octagon',    asset:'gems/15_eight_corners.svg', r:81,  score:122, color:'#665DDF', accent:'#D4D0FF', dark:'#3D3697'},
-    {name:'Morganite',   cut:'Rectangular',   cutKey:'rectangle',  asset:'gems/13_rectangular.svg',   r:88,  score:148, color:'#F19A8E', accent:'#FFE0D8', dark:'#B95A55'},
-    {name:'Zircon',      cut:'Step',          cutKey:'step',       asset:'gems/27_step.svg',          r:96,  score:178, color:'#55CFE2', accent:'#D9FBFF', dark:'#2D8EA3'},
-    {name:'Alexandrite', cut:'Scissor',       cutKey:'scissor',    asset:'gems/26_scissor.svg',       r:105, score:212, color:'#4FC6A8', accent:'#D5F7E9', dark:'#327D75'},
-    {name:'Moonstone',   cut:'Pendeloque',    cutKey:'pendeloque', asset:'gems/25_pendeloque.svg',    r:114, score:250, color:'#B9C9F2', accent:'#FFFFFF', dark:'#7788BA'},
-    {name:'Sunstone',    cut:'Trapeze',       cutKey:'trapeze',    asset:'gems/17_trapeze.svg',       r:124, score:292, color:'#EF7659', accent:'#FFD0A6', dark:'#AA4938'},
+    {name:'Spinel',      cut:'Rectangular',   cutKey:'rectangle',  asset:'gems/13_rectangular.svg',   r:88,  score:148, color:'#EA4D91', accent:'#FFD0E7', dark:'#9E2A64'},
+    {name:'Sapphire',    cut:'Step',          cutKey:'step',       asset:'gems/27_step.svg',          r:96,  score:178, color:'#3A6FE0', accent:'#C0D6FF', dark:'#2549A1'},
+    {name:'Emerald',     cut:'Scissor',       cutKey:'scissor',    asset:'gems/26_scissor.svg',       r:105, score:212, color:'#22BC82', accent:'#AAF0D1', dark:'#137956'},
+    {name:'Ruby',        cut:'Pendeloque',    cutKey:'pendeloque', asset:'gems/25_pendeloque.svg',    r:114, score:250, color:'#E94063', accent:'#FFC1CF', dark:'#9B2944'},
+    {name:'Alexandrite', cut:'Trapeze',       cutKey:'trapeze',    asset:'gems/17_trapeze.svg',       r:124, score:292, color:'#4FC6A8', accent:'#D5F7E9', dark:'#327D75'},
     {name:'Starstone',   cut:'Navette',       cutKey:'navette',    asset:'gems/21_navette.svg',       r:135, score:340, color:'#756CF0', accent:'#DED8FF', dark:'#493BA3'},
     {name:'Crownstone',  cut:'Brilliant',     cutKey:'brilliant',  asset:'gems/06_brilliant.svg',     r:147, score:400, color:'#F3AF37', accent:'#FFF1A8', dark:'#AA6C16'}
-  ];;;
+  ];;;;
 
   let svgGemUrls = [];
 
