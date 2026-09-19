@@ -591,3 +591,212 @@ body{
     box-shadow:none;
   }
 }
+
+
+/* Notification-first game header */
+.hud{
+  grid-template-columns:48px minmax(0,1fr) auto;
+  gap:10px;
+}
+.brand{display:none!important}
+.status-hud{
+  width:100%;
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  padding:7px 12px;
+  border-radius:17px;
+  opacity:0;
+  transform:translateY(-2px);
+}
+.status-hud.show{
+  opacity:1;
+  transform:translateY(0);
+}
+.status-icon{
+  width:30px;
+  height:30px;
+  flex:0 0 30px;
+  display:grid;
+  place-items:center;
+}
+.status-icon svg{
+  width:21px;
+  height:21px;
+  stroke:#ffd46d;
+}
+.status-icon canvas{
+  width:30px;
+  height:30px;
+  display:block;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.28));
+}
+.status-text{
+  min-width:0;
+  font-size:14px;
+  line-height:1.2;
+  font-weight:800;
+  letter-spacing:.025em;
+  text-align:left;
+}
+.status-hud:not(.show) .status-icon,
+.status-hud:not(.show) .status-text{display:none}
+
+@media(max-width:390px){
+  .hud{
+    grid-template-columns:44px minmax(0,1fr) 76px;
+    gap:7px;
+  }
+  .status-hud{
+    min-height:46px;
+    padding:6px 8px;
+    gap:6px;
+  }
+  .status-icon{
+    width:26px;
+    height:26px;
+    flex-basis:26px;
+  }
+  .status-icon canvas{
+    width:26px;
+    height:26px;
+  }
+}
+
+/* Gem Vault */
+.collection-overlay{
+  position:fixed;
+  inset:0;
+  z-index:45;
+  display:none;
+  overflow:hidden;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 18% 4%,rgba(199,63,181,.18),transparent 28%),
+    radial-gradient(circle at 88% 18%,rgba(116,73,218,.16),transparent 30%),
+    linear-gradient(180deg,#1a0a21 0%,#100713 100%);
+}
+.collection-overlay.visible{display:block}
+.collection-screen{
+  width:min(100%,560px);
+  height:100dvh;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.collection-header{
+  flex:0 0 auto;
+  min-height:calc(92px + env(safe-area-inset-top));
+  padding:calc(14px + env(safe-area-inset-top)) 14px 12px;
+  display:grid;
+  grid-template-columns:48px minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  border-bottom:1px solid rgba(255,216,126,.10);
+}
+.collection-header h2{
+  margin:3px 0 0;
+  font-size:28px;
+  line-height:1;
+  letter-spacing:-.035em;
+}
+.collection-back{
+  width:48px;
+  height:48px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border-radius:16px;
+  border:1px solid rgba(255,210,111,.25);
+  background:rgba(73,18,84,.70);
+}
+.collection-back svg{
+  width:24px;
+  height:24px;
+}
+.collection-progress{
+  min-width:66px;
+  text-align:right;
+  color:#ffd36c;
+  font-size:15px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+.gem-collection{
+  flex:1 1 auto;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:14px 14px calc(24px + env(safe-area-inset-bottom));
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.gem-card{
+  min-height:182px;
+  padding:14px 12px;
+  border-radius:22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  text-align:center;
+  background:
+    radial-gradient(circle at 50% 12%,rgba(255,255,255,.035),transparent 45%),
+    linear-gradient(180deg,rgba(60,18,71,.74),rgba(26,8,34,.86));
+  border:1px solid rgba(255,211,113,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 9px 24px rgba(0,0,0,.15);
+}
+.gem-card__art{
+  width:98px;
+  height:98px;
+  display:grid;
+  place-items:center;
+  margin-bottom:7px;
+}
+.gem-card__art canvas{
+  width:94px;
+  height:94px;
+  display:block;
+  filter:drop-shadow(0 7px 12px rgba(0,0,0,.28));
+}
+.gem-card strong{
+  font-size:16px;
+  line-height:1.15;
+  color:#f8ebf7;
+}
+.gem-card small{
+  margin-top:4px;
+  font-size:14px;
+  line-height:1.2;
+  color:#bcaac1;
+}
+.gem-card__value{
+  margin-top:7px;
+  color:#ffd36c;
+  font-size:15px;
+  font-weight:800;
+}
+.gem-card.locked{
+  background:linear-gradient(180deg,rgba(35,20,39,.72),rgba(20,12,23,.88));
+  border-color:rgba(255,255,255,.055);
+}
+.gem-card.locked .gem-card__art canvas{
+  opacity:.34;
+  filter:grayscale(1) brightness(.50) contrast(.92);
+}
+.gem-card.locked strong{
+  color:#756b79;
+  letter-spacing:.08em;
+}
+.gem-card.locked small,
+.gem-card.locked .gem-card__value{display:none}
+
+@media(min-width:520px){
+  .gem-collection{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
