@@ -800,3 +800,76 @@ body{
     grid-template-columns:repeat(3,minmax(0,1fr));
   }
 }
+
+
+/* Fitted jewellery-box collection presentation */
+.gem-collection{
+  gap:12px;
+}
+.gem-card{
+  min-height:196px;
+  padding:10px 9px 13px;
+  justify-content:flex-start;
+  background:
+    linear-gradient(145deg,rgba(74,42,78,.72),rgba(26,14,31,.96));
+  border:1px solid rgba(255,231,190,.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 -1px 0 rgba(0,0,0,.40),
+    0 10px 24px rgba(0,0,0,.18);
+}
+.gem-card__art{
+  width:100%;
+  height:128px;
+  margin:0 0 8px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:
+    linear-gradient(180deg,rgba(25,14,29,.94),rgba(12,7,15,.98));
+  border:1px solid rgba(255,233,198,.055);
+  box-shadow:
+    inset 0 9px 18px rgba(0,0,0,.58),
+    inset 0 -2px 4px rgba(255,255,255,.035),
+    0 1px 0 rgba(255,255,255,.025);
+}
+.gem-card__art canvas{
+  width:120px;
+  height:120px;
+  filter:none;
+}
+.gem-card__meta{
+  width:100%;
+  min-height:47px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.gem-card__meta strong{
+  font-size:16px;
+}
+.gem-card__meta small{
+  margin-top:3px;
+  font-size:14px;
+}
+.gem-card__meta .gem-card__value{
+  margin-top:5px;
+}
+.gem-card.locked{
+  justify-content:center;
+  background:
+    linear-gradient(145deg,rgba(45,31,48,.70),rgba(21,14,24,.96));
+}
+.gem-card.locked .gem-card__art{
+  margin-bottom:0;
+  background:
+    linear-gradient(180deg,rgba(26,19,29,.96),rgba(12,8,14,.99));
+  border-color:rgba(255,255,255,.035);
+}
+.gem-card.locked .gem-card__art canvas{
+  opacity:1;
+  filter:none;
+}
+.gem-card.locked .gem-card__meta{
+  display:none;
+}
