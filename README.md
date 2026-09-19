@@ -4,7 +4,9 @@ Gem Drop is a mobile-first physics merge game built with Phaser 3 and Matter Phy
 
 ## Gem rendering
 
-The gems use a lightweight 2D material system designed for mobile browsers:
+The gems use a lightweight 2D material system designed for mobile browsers. The active progression now uses distinct real-world-inspired cuts: Rose, Trillion, Cushion, Emerald, Princess, Radiant, Oval, Asscher, Pear, Navette and Brilliant.
+
+The rendering stack:
 
 - Procedurally generated gemstone albedo textures
 - Matching per-facet normal maps generated once at startup
@@ -16,7 +18,7 @@ The gems use a lightweight 2D material system designed for mobile browsers:
 - Canvas generation only at startup, avoiding per-frame texture uploads
 - Graceful non-WebGL fallback to the base procedural gem art
 
-Physics remain separate from the visuals. Each tier uses a chamfered polygon Matter body so the stones can tumble, land on flats and corners, wedge, settle and merge without making the visual facet complexity part of collision solving.
+Physics remain separate from the visuals. Each tier uses a convex Matter body matched to its gemstone silhouette so the stones can tumble, land on flats and corners, wedge, settle and merge without making the visual facet complexity part of collision solving.
 
 ## Controls
 
@@ -38,5 +40,5 @@ Physics remain separate from the visuals. Each tier uses a chamfered polygon Mat
 - Fixed 60 Hz simulation
 - WebGL Light2D normal-map rendering when available
 - Three shared scene lights
-- Chamfered polygon colliders
+- Cut-matched convex colliders
 - Inset physical walls plus a render mask to keep jewels inside the visible frame
