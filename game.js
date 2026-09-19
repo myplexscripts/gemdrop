@@ -65,6 +65,39 @@
     );
   }
 
+  function rgba(hex,alpha=1) {
+    const c=Phaser.Display.Color.HexStringToColor(hex);
+    return 'rgba('+c.red+','+c.green+','+c.blue+','+alpha+')';
+  }
+
+  function mixCss(aHex,bHex,t,alpha=1) {
+    const a=Phaser.Display.Color.HexStringToColor(aHex);
+    const b=Phaser.Display.Color.HexStringToColor(bHex);
+    const u=clamp(t,0,1);
+    const r=Math.round(a.red+(b.red-a.red)*u);
+    const g=Math.round(a.green+(b.green-a.green)*u);
+    const bl=Math.round(a.blue+(b.blue-a.blue)*u);
+    return 'rgba('+r+','+g+','+bl+','+alpha+')';
+  }
+
+  function normalCss(nx,ny,nz) {
+    const len=Math.hypot(nx,ny,nz)||1;
+    nx/=len;
+    ny/=len;
+    nz/=len;
+    const r=Math.round((nx*.5+.5)*255);
+    const g=Math.round((ny*.5+.5)*255);
+    const b=Math.round((nz*.5+.5)*255);
+    return 'rgb('+r+','+g+','+b+')';
+  }
+
+  function polygonPath(ctx,points) {
+    ctx.beginPath();
+    ctx.moveTo(points[0].x,points[0].y);
+    for(let i=1;i<points.length;i++) ctx.lineTo(points[i].x,points[i].y);
+    ctx.closePath();
+  }
+
   function unlockAudio() {
     if (!audioCtx) {
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
@@ -119,6 +152,10 @@
       this.powerUsed={tumble:false,cascade:false,prism:false};
       this.gemMaskShape=null;
       this.gemMask=null;
+      this.webglLighting=false;
+      this.keyLight=null;
+      this.fillLight=null;
+      this.rimLight=null;
       this.uiBound=false;
     }
 
@@ -134,6 +171,7 @@
       engine.gravity.scale=.001;
 
       this.makeTextures();
+      this.setupGemLighting();
       this.drawVaultBackdrop();
       this.createWorldWalls();
       this.createGemMask();
@@ -289,13 +327,52 @@
     }
 
     makeTextures() {
+      this.makeSparkleTexture();
       for(let i=0;i<tiers.length;i++) this.makeGemTexture(i);
+    }
+
+    makeSparkleTexture() {
+      const canvas=document.createElement('canvas');
+      canvas.width=64;
+      canvas.height=64;
+      const ctx=canvas.getContext('2d');
+      const cx=32;
+      const cy=32;
+
+      const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,18);
+      glow.addColorStop(0,'rgba(255,255,255,.98)');
+      glow.addColorStop(.18,'rgba(255,246,214,.86)');
+      glow.addColorStop(.48,'rgba(255,223,160,.26)');
+      glow.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=glow;
+      ctx.fillRect(0,0,64,64);
+
+      ctx.strokeStyle='rgba(255,255,255,.92)';
+      ctx.lineCap='round';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(32,6);
+      ctx.lineTo(32,58);
+      ctx.moveTo(6,32);
+      ctx.lineTo(58,32);
+      ctx.stroke();
+
+      ctx.strokeStyle='rgba(255,239,194,.56)';
+      ctx.lineWidth=1.4;
+      ctx.beginPath();
+      ctx.moveTo(15,15);
+      ctx.lineTo(49,49);
+      ctx.moveTo(49,15);
+      ctx.lineTo(15,49);
+      ctx.stroke();
+
+      this.textures.addCanvas('gem-sparkle',canvas);
     }
 
     makeGemTexture(index) {
       const t=tiers[index];
       const r=t.r;
-      const size=Math.ceil(r*2.12);
+      const size=Math.ceil(r*2.18);
       const cx=size/2;
       const cy=size/2;
       const R=r*ART_SCALE;
@@ -305,86 +382,255 @@
 
       for(let i=0;i<n;i++){
         const a=-Math.PI/2+(i/n)*Math.PI*2;
-        const wobble=1-(i%3===1?.018:0);
+        const wobble=1-(i%3===1?.016:0);
 
-        outer.push(new Phaser.Geom.Point(
-          cx+Math.cos(a)*R*wobble,
-          cy+Math.sin(a)*R*wobble
-        ));
+        outer.push({
+          x:cx+Math.cos(a)*R*wobble,
+          y:cy+Math.sin(a)*R*wobble
+        });
 
         const ia=a+t.twist;
-        inner.push(new Phaser.Geom.Point(
-          cx+Math.cos(ia)*R*t.table,
-          cy+Math.sin(ia)*R*t.table
-        ));
+        inner.push({
+          x:cx+Math.cos(ia)*R*t.table,
+          y:cy+Math.sin(ia)*R*t.table
+        });
       }
 
-      const g=this.make.graphics({x:0,y:0,add:false});
-      const dark=hexToInt(t.dark);
-      const color=hexToInt(t.color);
-      const accent=hexToInt(t.accent);
+      const canvas=document.createElement('canvas');
+      canvas.width=size;
+      canvas.height=size;
+      const ctx=canvas.getContext('2d');
 
-      const shadow=outer.map(p=>new Phaser.Geom.Point(p.x+2.5,p.y+4));
-      g.fillStyle(0x07030a,.34);
-      g.fillPoints(shadow,true);
+      ctx.save();
+      polygonPath(ctx,outer);
+      ctx.clip();
+
+      // Material body: saturated gem colour with a clearer core and deeper edges.
+      const body=ctx.createRadialGradient(cx,cy,R*.08,cx,cy,R*1.02);
+      body.addColorStop(0,rgba(t.accent,.90));
+      body.addColorStop(.22,rgba(t.color,.94));
+      body.addColorStop(.68,rgba(t.color,.91));
+      body.addColorStop(1,rgba(t.dark,.96));
+      ctx.fillStyle=body;
+      ctx.fillRect(0,0,size,size);
+
+      // Simulated light transmission. This stays subtle because real world
+      // directionality comes from the normal map and Light2D pipeline.
+      ctx.globalCompositeOperation='screen';
+      const transmission=ctx.createRadialGradient(cx,cy,R*.04,cx,cy,R*.62);
+      transmission.addColorStop(0,rgba(t.accent,.33));
+      transmission.addColorStop(.55,rgba(t.color,.12));
+      transmission.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=transmission;
+      ctx.fillRect(0,0,size,size);
+
+      // Coloured internal caustics.
+      for(let i=0;i<n;i+=2){
+        const p=inner[i];
+        ctx.fillStyle=rgba(t.accent,.08+(i%4)*.018);
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(p.x,p.y);
+        ctx.lineTo(outer[(i+1)%n].x,outer[(i+1)%n].y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.globalCompositeOperation='source-over';
+
+      // Outer facet ring. Colour variation describes material and cut rather
+      // than baking a fixed light direction into the sprite.
+      for(let i=0;i<n;i++){
+        const j=(i+1)%n;
+        const mixTarget=(i%3===0)?t.accent:((i%3===1)?t.dark:t.color);
+        ctx.fillStyle=mixCss(t.color,mixTarget,.26+(i%2)*.08,.23);
+        ctx.beginPath();
+        ctx.moveTo(outer[i].x,outer[i].y);
+        ctx.lineTo(outer[j].x,outer[j].y);
+        ctx.lineTo(inner[j].x,inner[j].y);
+        ctx.lineTo(inner[i].x,inner[i].y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Pavilion facets provide the dark / bright broken-up interior that makes
+      // cut stones look deep instead of like flat coloured polygons.
+      for(let i=0;i<n;i++){
+        const j=(i+1)%n;
+        ctx.fillStyle=(i%2===0)
+          ? mixCss(t.dark,t.color,.38,.31)
+          : mixCss(t.color,t.accent,.28,.20);
+        ctx.beginPath();
+        ctx.moveTo(inner[i].x,inner[i].y);
+        ctx.lineTo(inner[j].x,inner[j].y);
+        ctx.lineTo(cx,cy);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      const table=ctx.createRadialGradient(cx-R*.12,cy-R*.10,0,cx,cy,R*t.table);
+      table.addColorStop(0,rgba(t.accent,.56));
+      table.addColorStop(.45,rgba(t.color,.35));
+      table.addColorStop(1,rgba(t.dark,.25));
+      ctx.fillStyle=table;
+      polygonPath(ctx,inner);
+      ctx.fill();
+
+      // Refracted darker wedges.
+      ctx.globalCompositeOperation='multiply';
+      for(let i=1;i<n;i+=3){
+        const j=(i+2)%n;
+        ctx.fillStyle=rgba(t.dark,.12);
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(inner[i].x,inner[i].y);
+        ctx.lineTo(outer[j].x,outer[j].y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Fine facet borders catch additive lighting cleanly.
+      ctx.globalCompositeOperation='screen';
+      ctx.strokeStyle='rgba(255,255,255,.18)';
+      ctx.lineWidth=Math.max(1,r*.016);
+      for(let i=0;i<n;i++){
+        const j=(i+1)%n;
+        ctx.beginPath();
+        ctx.moveTo(inner[i].x,inner[i].y);
+        ctx.lineTo(outer[i].x,outer[i].y);
+        ctx.moveTo(inner[i].x,inner[i].y);
+        ctx.lineTo(inner[j].x,inner[j].y);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // Crisp polished girdle.
+      polygonPath(ctx,outer);
+      ctx.strokeStyle=rgba(t.accent,.48);
+      ctx.lineWidth=Math.max(1.4,r*.022);
+      ctx.stroke();
+
+      // Build a matching normal map. Every facet gets a different surface
+      // normal, allowing Phaser's fixed world lights to move across the cut
+      // while the Matter body rotates.
+      const normal=document.createElement('canvas');
+      normal.width=size;
+      normal.height=size;
+      const nctx=normal.getContext('2d');
+
+      polygonPath(nctx,outer);
+      nctx.fillStyle='rgb(128,128,255)';
+      nctx.fill();
 
       for(let i=0;i<n;i++){
         const j=(i+1)%n;
-        const angle=-Math.PI/2+((i+.5)/n)*Math.PI*2;
-        const light=Math.max(0,Math.cos(angle+2.35));
-        const face=light>.05
-          ? mixHex(t.color,t.accent,.12+light*.50)
-          : mixHex(t.color,t.dark,.16+Math.abs(Math.cos(angle-.8))*.18);
+        const a=-Math.PI/2+((i+.5)/n)*Math.PI*2+t.twist*.18;
+        const nx=Math.cos(a)*.58;
+        const ny=-Math.sin(a)*.58;
+        const nz=.76;
 
-        g.fillStyle(face,1);
-        g.fillPoints([outer[i],outer[j],inner[j],inner[i]],true);
+        nctx.fillStyle=normalCss(nx,ny,nz);
+        nctx.beginPath();
+        nctx.moveTo(outer[i].x,outer[i].y);
+        nctx.lineTo(outer[j].x,outer[j].y);
+        nctx.lineTo(inner[j].x,inner[j].y);
+        nctx.lineTo(inner[i].x,inner[i].y);
+        nctx.closePath();
+        nctx.fill();
       }
 
-      const centre=new Phaser.Geom.Point(cx,cy+r*.03);
       for(let i=0;i<n;i++){
         const j=(i+1)%n;
-        const light=(i%2===0)?.18:.05;
-        g.fillStyle(mixHex(t.dark,t.color,.38+light),.96);
-        g.fillPoints([inner[i],inner[j],centre],true);
+        const a=-Math.PI/2+((i+.5)/n)*Math.PI*2-t.twist*.34;
+        const alternator=(i%2===0)?1:-1;
+        const nx=Math.cos(a)*(.68+alternator*.05);
+        const ny=-Math.sin(a)*(.68-alternator*.04);
+        const nz=.56;
+
+        nctx.fillStyle=normalCss(nx,ny,nz);
+        nctx.beginPath();
+        nctx.moveTo(inner[i].x,inner[i].y);
+        nctx.lineTo(inner[j].x,inner[j].y);
+        nctx.lineTo(cx,cy);
+        nctx.closePath();
+        nctx.fill();
       }
 
-      g.fillStyle(mixHex(t.color,t.accent,.48),.86);
-      g.fillPoints(inner,true);
+      polygonPath(nctx,inner);
+      nctx.fillStyle=normalCss(0,0,1);
+      nctx.fill();
 
-      g.lineStyle(Math.max(1.2,r*.018),0xffffff,.16);
-      if(index%3===0){
-        for(let i=0;i<n;i+=2){
-          g.beginPath();
-          g.moveTo(inner[i].x,inner[i].y);
-          g.lineTo(outer[(i+2)%n].x,outer[(i+2)%n].y);
-          g.strokePath();
-        }
-      }else if(index%3===1){
-        const ring=inner.map(p=>new Phaser.Geom.Point(
-          cx+(p.x-cx)*.62,
-          cy+(p.y-cy)*.62
-        ));
-        g.strokePoints(ring,true);
-      }else{
-        for(let i=0;i<n;i+=3){
-          g.beginPath();
-          g.moveTo(cx,cy);
-          g.lineTo(outer[i].x,outer[i].y);
-          g.strokePath();
-        }
+      const texture=this.textures.addCanvas('gem-'+index,canvas);
+      if(texture){
+        texture.setDataSource(normal);
+        texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
       }
+    }
 
-      g.lineStyle(Math.max(1.4,r*.020),0xffffff,.44);
-      g.strokePoints(outer,true);
+    setupGemLighting() {
+      this.webglLighting=(this.game.renderer.type===Phaser.WEBGL);
 
-      g.lineStyle(Math.max(1,r*.013),accent,.38);
-      g.beginPath();
-      g.moveTo(cx-r*.28,cy-r*.48);
-      g.lineTo(cx+r*.18,cy-r*.32);
-      g.strokePath();
+      if(!this.webglLighting) return;
 
-      g.generateTexture('gem-'+index,size,size);
-      g.destroy();
+      this.lights.enable();
+      this.lights.setAmbientColor(0x49364f);
+
+      // Warm vault key light, cool violet fill, and a subtle pink lower rim.
+      // These remain fixed in world space while the gem normals rotate.
+      this.keyLight=this.lights.addLight(72,34,820,0xffe6b0,2.35);
+      this.fillLight=this.lights.addLight(590,410,660,0x8756ff,.72);
+      this.rimLight=this.lights.addLight(340,840,500,0xff4f9f,.34);
+    }
+
+    applyGemLighting(gameObject) {
+      if(this.webglLighting&&gameObject&&gameObject.setPipeline){
+        gameObject.setPipeline('Light2D');
+      }
+    }
+
+    createGemGlint(gem) {
+      if(!gem||!this.textures.exists('gem-sparkle')) return;
+
+      const glint=this.add.image(gem.x,gem.y,'gem-sparkle')
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(34+gem.tier*.01)
+        .setAlpha(0);
+
+      if(this.gemMask) glint.setMask(this.gemMask);
+
+      gem.glint=glint;
+      gem.opticSeed=Math.random()*Math.PI*2;
+    }
+
+    syncGemOptics(gem,time) {
+      if(!gem||!gem.active||!gem.body||!gem.glint||!gem.glint.active) return;
+
+      const t=tiers[gem.tier];
+      const lx=this.keyLight?this.keyLight.x:70;
+      const ly=this.keyLight?this.keyLight.y:30;
+      const lightAngle=Math.atan2(ly-gem.y,lx-gem.x);
+
+      // Sharp angle-dependent flashes. The highlight is world-oriented, so it
+      // does not look painted onto the rotating sprite.
+      const phase=(gem.rotation-lightAngle)*t.sides*2+gem.opticSeed;
+      const flash=Math.pow(Math.max(0,Math.cos(phase)),18);
+      const motion=clamp(Math.abs(gem.body.angularVelocity)*65+gem.body.speed*.08,.18,1);
+
+      const localLight=Phaser.Math.Angle.Wrap(lightAngle-gem.rotation);
+      const facetStep=(Math.PI*2)/t.sides;
+      const facetIndex=Math.round((localLight+Math.PI/2)/facetStep);
+      const localFacet=-Math.PI/2+facetIndex*facetStep;
+      const worldFacet=localFacet+gem.rotation;
+
+      gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.42;
+      gem.glint.y=gem.y+Math.sin(worldFacet)*t.r*.42;
+      gem.glint.rotation=0;
+      gem.glint.setScale(clamp(t.r/72,.55,2.15)*(.38+flash*.62));
+      gem.glint.setAlpha(clamp(.018+flash*(.48+.32*motion),0,.88));
+
+      const tintMix=.55+.20*Math.sin(time*.0014+gem.opticSeed);
+      gem.glint.setTint(mixHex(t.accent,'#ffffff',tintMix));
     }
 
     drawVaultBackdrop() {
@@ -483,6 +729,8 @@
       const x=clamp(this.targetX,min,max);
 
       this.preview=this.add.image(x,DROP_Y,'gem-'+this.currentTier).setDepth(32);
+      this.applyGemLighting(this.preview);
+      this.preview.setAlpha(.97);
       if(this.gemMask) this.preview.setMask(this.gemMask);
 
       if(animate){
@@ -539,10 +787,13 @@
       gem.merging=false;
       gem.born=this.time.now;
       gem.setDepth(10+tier*.01);
+      gem.setAlpha(.97);
+      this.applyGemLighting(gem);
 
       if(this.gemMask) gem.setMask(this.gemMask);
 
       this.gems.push(gem);
+      this.createGemGlint(gem);
       return gem;
     }
 
@@ -551,6 +802,9 @@
 
       const i=this.gems.indexOf(gem);
       if(i>=0) this.gems.splice(i,1);
+
+      if(gem.glint&&gem.glint.active) gem.glint.destroy();
+      gem.glint=null;
 
       if(gem.body) this.matter.world.remove(gem.body);
       gem.destroy();
@@ -1048,6 +1302,8 @@
         for(const gem of this.gems){
           if(!gem||!gem.active||!gem.body) continue;
 
+          this.syncGemOptics(gem,time);
+
           if(gem.body.isSleeping){
             Phaser.Physics.Matter.Matter.Sleeping.set(gem.body,false);
           }
@@ -1058,7 +1314,6 @@
             gem.body.bounds.min.y<LIMIT_Y
           ){
             high=true;
-            break;
           }
         }
 
@@ -1132,7 +1387,7 @@
   }
 
   const config={
-    type:Phaser.CANVAS,
+    type:Phaser.AUTO,
     parent:'game',
     width:W,
     height:H,
@@ -1160,7 +1415,8 @@
     render:{
       antialias:true,
       pixelArt:false,
-      roundPixels:false
+      roundPixels:false,
+      maxLights:3
     },
     scene:GameScene
   };
