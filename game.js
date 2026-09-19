@@ -379,6 +379,7 @@
       this.fillLight=null;
       this.rimLight=null;
       this.uiBound=false;
+      this.gemVisualBounds=[];
     }
 
     preload() {
@@ -829,10 +830,17 @@
       const source=texture&&texture.getSourceImage
         ? texture.getSourceImage()
         : null;
-      const maxDim=source
+
+      const fallback=source
         ? Math.max(source.width||384,source.height||384)
         : 384;
-      return (tiers[tier].r*2*ART_SCALE)/Math.max(1,maxDim);
+
+      const visible=this.gemVisualBounds[tier]||fallback;
+
+      // Scale the visible gemstone itself to the intended diameter. The SVGs
+      // contain generous transparent margins, so scaling against the full
+      // 384px canvas made every gem look much smaller than its physics body.
+      return (tiers[tier].r*2*ART_SCALE)/Math.max(1,visible);
     }
 
     sizeGemSprite(gameObject,tier) {
@@ -875,6 +883,32 @@
         ctx.globalCompositeOperation='destination-in';
         ctx.drawImage(source,0,0,w,h);
         ctx.restore();
+
+        const pixels=ctx.getImageData(0,0,w,h).data;
+        let minX=w;
+        let minY=h;
+        let maxX=-1;
+        let maxY=-1;
+
+        for(let y=0;y<h;y++){
+          for(let x=0;x<w;x++){
+            const alpha=pixels[(y*w+x)*4+3];
+            if(alpha<8) continue;
+            if(x<minX) minX=x;
+            if(x>maxX) maxX=x;
+            if(y<minY) minY=y;
+            if(y>maxY) maxY=y;
+          }
+        }
+
+        if(maxX>=minX&&maxY>=minY){
+          this.gemVisualBounds[index]=Math.max(
+            maxX-minX+1,
+            maxY-minY+1
+          );
+        }else{
+          this.gemVisualBounds[index]=Math.max(w,h);
+        }
 
         this.textures.remove(key);
         const coloured=this.textures.addCanvas(key,canvas);
