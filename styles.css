@@ -1182,3 +1182,71 @@ body{
     font-size:16px;
   }
 }
+
+
+/* === RECHARGEABLE POWERUPS 2026-09-20 === */
+.power-button{
+  --charge:1;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.power-button::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:0;
+  right:0;
+  bottom:0;
+  height:calc(var(--charge) * 100%);
+  border-radius:inherit;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,210,101,.16),
+      rgba(217,82,201,.20) 48%,
+      rgba(112,37,160,.34)
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255,237,181,.18),
+    0 -7px 20px rgba(225,89,204,.10);
+  transition:
+    height .42s cubic-bezier(.22,.8,.28,1),
+    background .24s ease,
+    opacity .24s ease;
+}
+.power-button::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:8px;
+  right:8px;
+  bottom:calc(var(--charge) * 100%);
+  height:1px;
+  background:rgba(255,220,132,.56);
+  box-shadow:0 0 9px rgba(255,190,78,.32);
+  opacity:calc(.18 + var(--charge) * .82);
+  transition:bottom .42s cubic-bezier(.22,.8,.28,1),opacity .24s ease;
+}
+.power-button>svg,
+.power-button>span{
+  position:relative;
+  z-index:1;
+}
+.power-button:disabled{
+  opacity:.72;
+  filter:saturate(.72) brightness(.86);
+}
+.power-button.charged{
+  opacity:1;
+  filter:none;
+}
+.power-button.charged::before{
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,221,127,.22),
+      rgba(223,92,204,.26) 48%,
+      rgba(122,45,171,.42)
+    );
+}

@@ -460,7 +460,7 @@
       this.limitJewels=[];
       this.statusTimer=null;
       this.statusKind='';
-      this.powerUsed={tumble:false,cascade:false,prism:false};
+      this.powerCharge={tumble:1,cascade:1,prism:1};
       this.gemMaskShape=null;
       this.gemMask=null;
       this.webglLighting=false;
@@ -710,7 +710,6 @@
     drawCollectionGem(canvas,tier,locked) {
       const ctx=canvas.getContext('2d');
       const t=tiers[tier];
-      const cut=CUTS[t.cutKey]||CUTS.brilliant;
       const w=canvas.width;
       const h=canvas.height;
       const cx=w/2;
@@ -721,97 +720,83 @@
       const firstR=tiers[0].r;
       const lastR=tiers[tiers.length-1].r;
       const sizeT=clamp((t.r-firstR)/(lastR-firstR),0,1);
-      const cavityScale=52+sizeT*12;
+      const cavityRadius=58+sizeT*10;
+      const exact=window.ReactiveGemSystem
+        ? window.ReactiveGemSystem.collisionShape(t.reactiveCut,cavityRadius)
+        : null;
 
-      const cavity=cut.verts.map(v=>({
-        x:cx+v[0]*cavityScale,
-        y:cy+v[1]*cavityScale
-      }));
-      const inner=cut.verts.map(v=>({
-        x:cx+v[0]*cavityScale*.90,
-        y:cy+v[1]*cavityScale*.90
-      }));
+      const shapePath=()=>{
+        if(exact&&exact.type==='circle'){
+          ctx.beginPath();
+          ctx.arc(cx,cy,exact.radius,0,Math.PI*2);
+          ctx.closePath();
+          return;
+        }
 
-      // Raised velvet lip around the made-to-measure recess.
-      ctx.save();
-      ctx.shadowColor='rgba(0,0,0,.62)';
-      ctx.shadowBlur=11;
-      ctx.shadowOffsetY=6;
-      polygonPath(ctx,cavity);
-      const lip=ctx.createLinearGradient(0,cy-cavityScale,0,cy+cavityScale);
-      lip.addColorStop(0,'rgba(91,51,96,.72)');
-      lip.addColorStop(.48,'rgba(39,20,44,.92)');
-      lip.addColorStop(1,'rgba(17,9,21,.98)');
-      ctx.fillStyle=lip;
+        const vertices=exact&&exact.vertices&&exact.vertices.length>=3
+          ? exact.vertices.map(v=>({x:cx+v.x,y:cy+v.y}))
+          : this.cutPoints(t.cutKey,cavityRadius,cx,cy);
+
+        polygonPath(ctx,vertices);
+      };
+
+      // The recess follows the actual SVG silhouette. It is simply a darker
+      // version of the tray surface with a soft inner shadow, rather than a
+      // decorative frame that uses a different cut.
+      shapePath();
+      ctx.fillStyle='rgba(13,5,18,.78)';
       ctx.fill();
+
+      ctx.save();
+      shapePath();
+      ctx.clip();
+
+      // Inner shadow: the wide stroked edge is clipped to the cavity so its
+      // shadow falls inward, exactly like a pressed jewellery inlay.
+      ctx.shadowColor='rgba(0,0,0,.88)';
+      ctx.shadowBlur=14;
+      ctx.shadowOffsetX=0;
+      ctx.shadowOffsetY=4;
+      ctx.lineWidth=12;
+      ctx.strokeStyle='rgba(0,0,0,.58)';
+      shapePath();
+      ctx.stroke();
+
+      const shade=ctx.createLinearGradient(0,cy-cavityRadius,0,cy+cavityRadius);
+      shade.addColorStop(0,'rgba(255,255,255,.025)');
+      shade.addColorStop(.42,'rgba(0,0,0,.02)');
+      shade.addColorStop(1,'rgba(0,0,0,.17)');
+      ctx.fillStyle=shade;
+      ctx.fillRect(0,0,w,h);
       ctx.restore();
 
-      // Inner depression. The top edge catches light while the lower edge falls
-      // away, making it read like a fitted jewellery presentation box.
-      polygonPath(ctx,inner);
-      const well=ctx.createLinearGradient(0,cy-cavityScale,0,cy+cavityScale);
-      well.addColorStop(0,'rgba(17,9,20,.90)');
-      well.addColorStop(.42,'rgba(25,13,29,.98)');
-      well.addColorStop(1,'rgba(7,4,10,1)');
-      ctx.fillStyle=well;
-      ctx.fill();
-
-      ctx.lineWidth=2.2;
-      ctx.strokeStyle='rgba(255,231,187,.12)';
-      polygonPath(ctx,cavity);
+      ctx.lineWidth=1.35;
+      ctx.strokeStyle='rgba(255,220,231,.075)';
+      shapePath();
       ctx.stroke();
 
-      ctx.lineWidth=1.5;
-      ctx.strokeStyle='rgba(0,0,0,.74)';
-      polygonPath(ctx,inner);
-      ctx.stroke();
-
-      // A locked entry is literally just the empty impression of that gem.
-      if(locked){
-        ctx.save();
-        polygonPath(ctx,inner);
-        ctx.clip();
-        const impression=ctx.createRadialGradient(
-          cx-cavityScale*.18,
-          cy-cavityScale*.22,
-          1,
-          cx,
-          cy,
-          cavityScale
-        );
-        impression.addColorStop(0,'rgba(88,72,91,.14)');
-        impression.addColorStop(.55,'rgba(42,34,46,.08)');
-        impression.addColorStop(1,'rgba(0,0,0,.18)');
-        ctx.fillStyle=impression;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-        return;
-      }
+      if(locked) return;
 
       if(window.ReactiveGemSystem){
-        const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,-14,256);
+        const source=window.ReactiveGemSystem.renderPreviewCanvas(
+          t.reactiveCut,
+          t.color,
+          0,
+          256
+        );
         const visualScale=window.ReactiveGemSystem.visualScale
           ? window.ReactiveGemSystem.visualScale(t.reactiveCut)
           : 1;
-        const max=cavityScale*1.92;
+        const max=cavityRadius*1.78;
         const scale=Math.min(max/source.width,max/source.height)*visualScale;
         const gw=source.width*scale;
         const gh=source.height*scale;
 
         ctx.save();
-        ctx.shadowColor='rgba(0,0,0,.62)';
-        ctx.shadowBlur=9;
-        ctx.shadowOffsetY=5;
-        ctx.drawImage(source,cx-gw/2,cy-gh/2-1,gw,gh);
-        ctx.restore();
-
-        ctx.save();
-        ctx.globalCompositeOperation='screen';
-        ctx.globalAlpha=.22;
-        ctx.strokeStyle=rgba(t.accent,.44);
-        ctx.lineWidth=1.3;
-        polygonPath(ctx,inner);
-        ctx.stroke();
+        ctx.shadowColor='rgba(0,0,0,.48)';
+        ctx.shadowBlur=7;
+        ctx.shadowOffsetY=4;
+        ctx.drawImage(source,cx-gw/2,cy-gh/2,gw,gh);
         ctx.restore();
       }
     }
@@ -1095,7 +1080,7 @@
       this.mergeWindow=0;
       this.mergeChain=0;
       this.discoveredCuts=new Set(this.unlockedTiers);
-      this.powerUsed={tumble:false,cascade:false,prism:false};
+      this.powerCharge={tumble:1,cascade:1,prism:1};
 
       scoreEl.textContent='$0';
       this.clearStatus();
@@ -1408,6 +1393,8 @@
         this.removeGem(a);
         this.removeGem(b);
 
+        this.rechargePowers(1);
+
         this.mergeChain=this.mergeWindow>0?this.mergeChain+1:1;
         this.mergeWindow=.70;
 
@@ -1551,7 +1538,7 @@
         canvas.height=40;
         const ctx=canvas.getContext('2d');
         const t=tiers[tier];
-        const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,-14,128);
+        const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,128);
         const scale=Math.min(34/source.width,34/source.height);
         const w=source.width*scale;
         const h=source.height*scale;
@@ -1625,80 +1612,128 @@
       return pairs;
     }
 
+    rechargePowers(amount=1) {
+      const gains={
+        tumble:.16,
+        cascade:.13,
+        prism:.10
+      };
+
+      for(const key of Object.keys(gains)){
+        this.powerCharge[key]=clamp(
+          (this.powerCharge[key]??1)+gains[key]*amount,
+          0,
+          1
+        );
+      }
+      this.updatePowerButtons();
+    }
+
     updatePowerButtons() {
       const active=this.running&&!this.paused;
       const canCascade=this.matchingPairs().length>0;
+      const buttons={
+        tumble:$('powerTumble'),
+        cascade:$('powerCascade'),
+        prism:$('powerPrism')
+      };
 
-      $('powerTumble').disabled=!active||this.powerUsed.tumble||this.gems.length===0;
-      $('powerCascade').disabled=!active||this.powerUsed.cascade||!canCascade;
-      $('powerPrism').disabled=!active||this.powerUsed.prism||!this.ready||this.currentTier>=tiers.length-1;
+      for(const [key,button] of Object.entries(buttons)){
+        const charge=clamp(this.powerCharge[key]??1,0,1);
+        button.style.setProperty('--charge',charge.toFixed(3));
+        button.dataset.charge=Math.round(charge*100);
+        button.setAttribute('aria-label',button.textContent.trim()+' '+Math.round(charge*100)+'% charged');
+        button.classList.toggle('charged',charge>=.999);
+      }
+
+      buttons.tumble.disabled=!active||(this.powerCharge.tumble??0)<.999||this.gems.length===0;
+      buttons.cascade.disabled=!active||(this.powerCharge.cascade??0)<.999||!canCascade;
+      buttons.prism.disabled=!active||(this.powerCharge.prism??0)<.999||!this.ready||this.currentTier>=tiers.length-1;
     }
 
     useTumble() {
-      if(!this.running||this.paused||this.powerUsed.tumble||!this.gems.length) return;
+      if(
+        !this.running||
+        this.paused||
+        (this.powerCharge.tumble??0)<.999||
+        !this.gems.length
+      ) return;
 
-      this.powerUsed.tumble=true;
+      this.powerCharge.tumble=0;
       const M=Phaser.Physics.Matter.Matter;
       const shell=document.querySelector('.play-shell');
-      const pulses=14;
-      const spacing=58;
+      const pulses=18;
+      const spacing=46;
 
       if(shell){
         shell.classList.remove('tumbling');
         void shell.offsetWidth;
         shell.classList.add('tumbling');
-        window.setTimeout(()=>shell.classList.remove('tumbling'),pulses*spacing+140);
+        window.setTimeout(()=>shell.classList.remove('tumbling'),pulses*spacing+180);
       }
 
-      // Alternate the effective direction of the whole basin. Repeated impulses
-      // make buried pieces actually trade places rather than merely wobble.
+      // A real tumble should substantially rearrange the pile, not merely make
+      // the sprites wobble. Alternate horizontal basin kicks with upward jolts
+      // and strong torque so pieces trade places and roll over one another.
       for(let p=0;p<pulses;p++){
         this.time.delayedCall(p*spacing,()=>{
           if(!this.running||this.paused) return;
 
           const direction=p%2===0?1:-1;
           const phase=Math.sin((p/(pulses-1))*Math.PI);
-          const strength=.00030+phase*.00018;
+          const horizontal=2.15+phase*2.65;
+          const liftPulse=p%3===0||p===pulses-2;
 
           for(const gem of this.gems){
             if(!gem||!gem.active||!gem.body) continue;
 
-            const mass=gem.body.mass;
-            const randomX=Phaser.Math.FloatBetween(.82,1.18);
-            const randomY=Phaser.Math.FloatBetween(.65,1.15);
-            const lift=(p%3===0?-.00020:-.000035)*randomY;
+            const vx=gem.body.velocity.x;
+            const vy=gem.body.velocity.y;
+            const xKick=direction*horizontal*Phaser.Math.FloatBetween(.76,1.22);
+            const yKick=liftPulse
+              ? -(1.75+phase*2.10)*Phaser.Math.FloatBetween(.72,1.18)
+              : Phaser.Math.FloatBetween(-.38,.42);
 
-            M.Body.applyForce(
-              gem.body,
-              gem.body.position,
-              {
-                x:direction*strength*randomX*mass,
-                y:lift*mass
-              }
-            );
+            M.Body.setVelocity(gem.body,{
+              x:clamp(vx+xKick,-7.1,7.1),
+              y:clamp(vy+yKick,-6.2,7.2)
+            });
 
             M.Body.setAngularVelocity(
               gem.body,
               clamp(
                 gem.body.angularVelocity+
-                direction*Phaser.Math.FloatBetween(.010,.024),
-                -.060,
-                .060
+                direction*Phaser.Math.FloatBetween(.038,.082),
+                -.14,
+                .14
               )
+            );
+
+            const mass=gem.body.mass;
+            M.Body.applyForce(
+              gem.body,
+              {
+                x:gem.body.position.x+Phaser.Math.FloatBetween(-16,16),
+                y:gem.body.position.y+Phaser.Math.FloatBetween(-12,12)
+              },
+              {
+                x:direction*(.00042+phase*.00034)*mass,
+                y:(liftPulse?-.00042:.00003)*mass
+              }
             );
           }
         });
       }
 
-      this.cameras.main.shake(pulses*spacing,.0062);
+      this.cameras.main.shake(pulses*spacing,.009);
       this.showStatus('TUMBLE!','reward',1200,'rotate-cw');
       tone(210,.14,.032,'triangle');
-      haptic([10,24,10,24,14]);
+      haptic([12,22,12,22,18]);
       this.updatePowerButtons();
     }
 
     useCascade() {
-      if(!this.running||this.paused||this.powerUsed.cascade) return;
+      if(!this.running||this.paused||(this.powerCharge.cascade??0)<.999) return;
 
       const pairs=this.matchingPairs();
       if(!pairs.length){
@@ -1707,7 +1742,7 @@
         return;
       }
 
-      this.powerUsed.cascade=true;
+      this.powerCharge.cascade=0;
 
       for(const pair of pairs){
         this.queueMerge(pair[0],pair[1]);
@@ -1724,12 +1759,12 @@
       if(
         !this.running||
         this.paused||
-        this.powerUsed.prism||
+        (this.powerCharge.prism??0)<.999||
         !this.ready||
         this.currentTier>=tiers.length-1
       ) return;
 
-      this.powerUsed.prism=true;
+      this.powerCharge.prism=0;
       this.currentTier=Math.min(this.currentTier+1,tiers.length-1);
       this.unlockTier(this.currentTier,true);
 
@@ -1804,7 +1839,7 @@
       if(!window.ReactiveGemSystem) return;
 
       const t=tiers[this.nextTier];
-      const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,-14,256);
+      const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,256);
       const maxW=nextPreview.width*.82;
       const maxH=nextPreview.height*.82;
       const scale=Math.min(maxW/source.width,maxH/source.height);
