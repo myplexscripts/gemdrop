@@ -25,7 +25,9 @@ class FacetedGem {
       { id: "f13", points: "299,247 256,282 311,333",                     n: { x:  0.17, y:  0.45, z: 0.88 }, hue: -4, sat: -1, base: 0.00 },
       { id: "f14", points: "131,329 201,333 256,468",                     n: { x: -0.40, y:  0.75, z: 0.52 }, hue:  0, sat: 0,  base: 0.02 },
       { id: "f15", points: "381,329 311,333 256,468",                     n: { x:  0.40, y:  0.75, z: 0.52 }, hue: -6, sat: 4,  base: 0.02 },
-      { id: "f16", points: "201,333 256,282 311,333 256,468",             n: { x:  0.00, y:  0.85, z: 0.52 }, hue: -1, sat: -2, base: 0.02 }
+      { id: "f16", points: "201,333 256,282 311,333 256,468",             n: { x:  0.00, y:  0.85, z: 0.52 }, hue: -1, sat: -2, base: 0.02 },
+      { id: "f17", points: "109,194 161,231 191.799,177.102",              n: { x: -0.76, y: -0.18, z: 0.63 }, hue: -5, sat: 2,  base: 0.03 },
+      { id: "f18", points: "403,194 351,231 320.201,177.102",              n: { x:  0.76, y: -0.18, z: 0.63 }, hue: -4, sat: 3,  base: 0.03 }
     ];
 
     this.facets = this.facets.map((facet) => ({
@@ -38,6 +40,7 @@ class FacetedGem {
     this.rotateGroup = this.el.querySelector("[data-role='rotate']");
     this.worldGlow = this.el.querySelector("[data-role='world-glow']");
     this.highlightLayer = this.el.querySelector("[data-role='facet-highlights']");
+    this.gemBase = this.el.querySelector("[data-role='gem-base']");
     this.facetEls = [...this.el.querySelectorAll("[data-role='facet']")];
     this.strokeEls = [...this.el.querySelectorAll("[data-role='facet-stroke']")];
 
@@ -133,6 +136,9 @@ class FacetedGem {
 
       <g data-role="rotate" filter="url(#outer-glow)">
         <g clip-path="url(#gem-clip)">
+          <path data-role="gem-base"
+            d="M256 42L345 90L403 194L381 329L256 468L131 329L109 194L167 90L256 42Z"
+            fill="hsl(272 90% 32%)"></path>
           <g data-role="facets"></g>
           <g data-role="facet-highlights"></g>
 
@@ -186,6 +192,7 @@ class FacetedGem {
     this.worldGlow.setAttribute("transform", `rotate(${-angle} 256 256)`);
 
     this.highlightLayer.innerHTML = "";
+    this.gemBase.setAttribute("fill", this.hsl(this.hue, Math.max(82, this.saturation), 34));
     const ns = "http://www.w3.org/2000/svg";
     const transmissionLight = this.normalize({ x: -this.light.x * 0.25, y: -this.light.y * 0.25, z: 1.0 });
 
