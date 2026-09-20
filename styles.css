@@ -985,3 +985,70 @@ body{
 @media(prefers-reduced-motion:reduce){
   .game-app::before{animation:none}
 }
+
+
+/* === FULL VIEWPORT + GEM FIT 2026-09-20 === */
+html,
+body{
+  width:100%;
+  height:100%;
+  height:100dvh;
+  min-height:100%;
+  margin:0;
+  overflow:hidden;
+}
+.game-app{
+  position:fixed!important;
+  inset:0!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:min(100%,560px)!important;
+  height:100vh!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:none!important;
+  margin:0!important;
+  overflow:hidden!important;
+}
+.hud{
+  width:84%!important;
+  max-width:470px!important;
+}
+.play-shell{
+  width:84%!important;
+  max-width:470px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+.aim-strip,
+.power-dock{
+  width:84%!important;
+  max-width:470px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+.power-dock{
+  flex:1 1 0!important;
+  min-height:84px!important;
+  align-items:end!important;
+  padding-bottom:max(18px,calc(10px + env(safe-area-inset-bottom)))!important;
+}
+@media(max-width:420px){
+  .hud{width:88%!important}
+  .play-shell,
+  .aim-strip,
+  .power-dock{width:88%!important}
+}
+@media(max-height:760px){
+  .hud{width:84%!important}
+  .play-shell{width:80%!important}
+  .aim-strip,
+  .power-dock{width:84%!important}
+}
+@media(min-width:561px){
+  .game-app{
+    height:100vh!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+  }
+}

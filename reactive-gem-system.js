@@ -227,6 +227,22 @@
 
     if(!raw.length) throw new Error('No facets found for '+name);
 
+    const allFacetPoints=[];
+    for(const el of clipped.querySelectorAll('polygon')){
+      const pts=pointsFromString(el.getAttribute('points'));
+      for(const p of pts) allFacetPoints.push(p);
+    }
+    let visualExtent=512;
+    if(allFacetPoints.length){
+      const xs=allFacetPoints.map(p=>p[0]);
+      const ys=allFacetPoints.map(p=>p[1]);
+      visualExtent=Math.max(
+        Math.max(...xs)-Math.min(...xs),
+        Math.max(...ys)-Math.min(...ys)
+      );
+    }
+    visualExtent=clamp(visualExtent,220,512);
+
     const fit=solveDirectional(raw);
     const residuals=raw.map(f=>{
       const a=f.angle*Math.PI/180;
@@ -261,6 +277,7 @@
       outer,
       facets,
       baseHue,
+      visualExtent,
       stepCut:!!CUTS[name].stepCut
     };
   }
@@ -378,6 +395,10 @@
     prepare,
     createDataCanvas,
     renderPreviewCanvas,
+    visualScale:name=>{
+      const model=models.get(name);
+      return model&&model.visualExtent?512/model.visualExtent:1;
+    },
     isStepCut:name=>!!CUTS[name]?.stepCut,
     collisionFor:name=>CUTS[name]?.collision||'brilliant'
   };
