@@ -157,27 +157,32 @@
   };
 
   const tiers = [
-    {name:'Quartz',      cut:'Rose',          cutKey:'rose',       asset:'gems/20_rose.svg',          r:36,  score:1,   color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
-    {name:'Citrine',     cut:'Trillion',      cutKey:'trillion',   asset:'gems/14_trillion.svg',      r:40,  score:3,   color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
-    {name:'Sunstone',    cut:'Cushion',       cutKey:'cushion',    asset:'gems/07_cushion.svg',       r:44,  score:6,   color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
-    {name:'Amethyst',    cut:'Emerald',       cutKey:'emerald',    asset:'gems/09_emerald.svg',       r:48,  score:10,  color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
-    {name:'Peridot',     cut:'Princess',      cutKey:'princess',   asset:'gems/02_princess.svg',      r:52,  score:15,  color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
-    {name:'Garnet',      cut:'Radiant',       cutKey:'radiant',    asset:'gems/05_radiant.svg',       r:57,  score:22,  color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
-    {name:'Topaz',       cut:'Square',        cutKey:'square',     asset:'gems/08_square.svg',        r:62,  score:30,  color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
-    {name:'Moonstone',   cut:'French',        cutKey:'french',     asset:'gems/29_french.svg',        r:67,  score:40,  color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
-    {name:'Zircon',      cut:'Oval',          cutKey:'oval',       asset:'gems/22_oval.svg',          r:72,  score:52,  color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
-    {name:'Morganite',   cut:'Asscher',       cutKey:'asscher',    asset:'gems/23_asscher.svg',       r:78,  score:66,  color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
-    {name:'Aquamarine',  cut:'Pear',          cutKey:'pear',       asset:'gems/04_pear.svg',          r:84,  score:82,  color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
-    {name:'Tourmaline',  cut:'Octagon',       cutKey:'octagon',    asset:'gems/24_octagon.svg',       r:91,  score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
-    {name:'Tanzanite',   cut:'Eight Corners', cutKey:'octagon',    asset:'gems/15_eight_corners.svg', r:98,  score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
-    {name:'Spinel',      cut:'Rectangular',   cutKey:'rectangle',  asset:'gems/13_rectangular.svg',   r:106, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
-    {name:'Sapphire',    cut:'Step',          cutKey:'step',       asset:'gems/27_step.svg',          r:114, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
-    {name:'Emerald',     cut:'Scissor',       cutKey:'scissor',    asset:'gems/26_scissor.svg',       r:123, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
-    {name:'Ruby',        cut:'Pendeloque',    cutKey:'pendeloque', asset:'gems/25_pendeloque.svg',    r:132, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
-    {name:'Alexandrite', cut:'Trapeze',       cutKey:'trapeze',    asset:'gems/17_trapeze.svg',       r:142, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
-    {name:'Starstone',   cut:'Navette',       cutKey:'navette',    asset:'gems/21_navette.svg',       r:153, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
-    {name:'Crownstone',  cut:'Brilliant',     cutKey:'brilliant',  asset:'gems/06_brilliant.svg',     r:165, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
+    {name:'Quartz',      cut:'Round',    cutKey:'brilliant', reactiveCut:'round',    r:36,  score:1,   color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
+    {name:'Citrine',     cut:'Oval',     cutKey:'oval',      reactiveCut:'oval',     r:40,  score:3,   color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
+    {name:'Sunstone',    cut:'Cushion',  cutKey:'cushion',   reactiveCut:'cushion',  r:44,  score:6,   color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
+    {name:'Amethyst',    cut:'Emerald',  cutKey:'emerald',   reactiveCut:'emerald',  r:48,  score:10,  color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
+    {name:'Peridot',     cut:'Pear',     cutKey:'pear',      reactiveCut:'pear',     r:52,  score:15,  color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
+    {name:'Garnet',      cut:'Marquise', cutKey:'navette',   reactiveCut:'marquise', r:57,  score:22,  color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
+    {name:'Topaz',       cut:'Round',    cutKey:'brilliant', reactiveCut:'round',    r:62,  score:30,  color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
+    {name:'Moonstone',   cut:'Oval',     cutKey:'oval',      reactiveCut:'oval',     r:67,  score:40,  color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
+    {name:'Zircon',      cut:'Cushion',  cutKey:'cushion',   reactiveCut:'cushion',  r:72,  score:52,  color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
+    {name:'Morganite',   cut:'Emerald',  cutKey:'emerald',   reactiveCut:'emerald',  r:78,  score:66,  color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
+    {name:'Aquamarine',  cut:'Pear',     cutKey:'pear',      reactiveCut:'pear',     r:84,  score:82,  color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
+    {name:'Tourmaline',  cut:'Marquise', cutKey:'navette',   reactiveCut:'marquise', r:91,  score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
+    {name:'Tanzanite',   cut:'Round',    cutKey:'brilliant', reactiveCut:'round',    r:98,  score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
+    {name:'Spinel',      cut:'Oval',     cutKey:'oval',      reactiveCut:'oval',     r:106, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
+    {name:'Sapphire',    cut:'Cushion',  cutKey:'cushion',   reactiveCut:'cushion',  r:114, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
+    {name:'Emerald',     cut:'Emerald',  cutKey:'emerald',   reactiveCut:'emerald',  r:123, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
+    {name:'Ruby',        cut:'Pear',     cutKey:'pear',      reactiveCut:'pear',     r:132, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
+    {name:'Alexandrite', cut:'Marquise', cutKey:'navette',   reactiveCut:'marquise', r:142, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
+    {name:'Starstone',   cut:'Round',    cutKey:'brilliant', reactiveCut:'round',    r:153, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
+    {name:'Crownstone',  cut:'Cushion',  cutKey:'cushion',   reactiveCut:'cushion',  r:165, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
+
+  function gemTextureKey(tier) {
+    const t=tiers[tier];
+    return 'reactive-gem-'+(t?t.reactiveCut:'round');
+  }
 
   function hueFromHex(hex) {
     const value=parseInt(hex.slice(1),16);
@@ -354,58 +359,49 @@
   }
 
   const GEM_FACET_FRAG_SHADER=[
-    '#define SHADER_NAME GEM_FACET_FS',
+    '#define SHADER_NAME GEM_REACTIVE_FACET_FS',
     '#ifdef GL_FRAGMENT_PRECISION_HIGH',
     'precision highp float;',
     '#else',
     'precision mediump float;',
     '#endif',
     'uniform sampler2D uMainSampler;',
-    'uniform vec2 uTexel;',
     'uniform vec3 uGemColor;',
     'uniform vec3 uDeepColor;',
     'uniform vec3 uAccentColor;',
     'uniform float uLightAngle;',
     'uniform float uTime;',
+    'uniform float uStepCut;',
     'varying vec2 outTexCoord;',
     'varying vec4 outTint;',
-    'float lum(vec4 c){ return dot(c.rgb,vec3(.2126,.7152,.0722)); }',
-    'float safeHeight(vec2 uv,float fallback){',
-    '  vec4 s=texture2D(uMainSampler,uv);',
-    '  return mix(fallback,lum(s),step(.02,s.a));',
-    '}',
     'void main(){',
     '  vec4 src=texture2D(uMainSampler,outTexCoord);',
     '  if(src.a<.015) discard;',
-    '  float h=lum(src);',
-    '  float hl=safeHeight(outTexCoord-vec2(uTexel.x*1.35,0.0),h);',
-    '  float hr=safeHeight(outTexCoord+vec2(uTexel.x*1.35,0.0),h);',
-    '  float hu=safeHeight(outTexCoord-vec2(0.0,uTexel.y*1.35),h);',
-    '  float hd=safeHeight(outTexCoord+vec2(0.0,uTexel.y*1.35),h);',
-    '  float avg=(hl+hr+hu+hd)*.25;',
-    '  float localDetail=clamp(.5+(h-avg)*2.6,0.0,1.0);',
-    '  float gx=(hr-hl)*5.4;',
-    '  float gy=(hd-hu)*5.4;',
-    '  vec3 normal=normalize(vec3(-gx,gy,.58));',
-    '  vec3 lightDir=normalize(vec3(cos(uLightAngle)*.72,sin(uLightAngle)*.72,.70));',
-    '  float ndl=dot(normal,lightDir);',
-    '  float diffuse=.72+.46*clamp(ndl*.5+.5,0.0,1.0);',
-    '  vec3 material=mix(uDeepColor,uGemColor,.68+.22*localDetail);',
-    '  material=mix(material,uAccentColor,smoothstep(.72,1.0,localDetail)*.24);',
-    '  float grad=clamp(abs(hr-hl)+abs(hd-hu),0.0,1.0);',
+    '  vec2 xy=src.rg*2.0-1.0;',
+    '  float zz=sqrt(max(.001,1.0-dot(xy,xy)));',
+    '  vec3 normal=normalize(vec3(xy,zz));',
+    '  vec3 lightDir=normalize(vec3(cos(uLightAngle)*.67,sin(uLightAngle)*.67,.74));',
+    '  vec3 tintLight=normalize(vec3(-cos(uLightAngle)*.16,-sin(uLightAngle)*.16,.97));',
+    '  float diffuse=max(dot(normal,lightDir),0.0);',
+    '  float facing=clamp(normal.z,0.0,1.0);',
+    '  float transmission=max(dot(normal,tintLight),0.0);',
+    '  float rim=pow(1.0-facing,1.15);',
+    '  float style=src.b;',
+    '  float energy=.22+(style-.52)*.78+diffuse*.34+transmission*.28+rim*.16+facing*.12;',
+    '  float low=smoothstep(.18,.56,energy);',
+    '  float high=smoothstep(.55,.88,energy);',
+    '  vec3 material=mix(uDeepColor,uGemColor,low);',
+    '  material=mix(material,uAccentColor,high*.72);',
     '  vec3 viewDir=vec3(0.0,0.0,1.0);',
-    '  vec3 halfDir=normalize(lightDir+viewDir);',
-    '  float spec=pow(max(dot(normal,halfDir),0.0),22.0);',
-    '  float crisp=pow(max(dot(normal,halfDir),0.0),70.0);',
-    '  float edgeSpark=pow(grad,1.25)*(.08+.06*sin(uTime*1.8+outTexCoord.x*31.0+outTexCoord.y*23.0));',
-    '  float radius=distance(outTexCoord,vec2(.5));',
-    '  float innerGlow=1.0-smoothstep(.10,.52,radius);',
-    '  vec3 color=material*diffuse;',
-    '  color+=uAccentColor*(spec*.54+crisp*.54);',
-    '  color+=uAccentColor*max(edgeSpark,0.0);',
-    '  color+=uGemColor*innerGlow*.075;',
-    '  color=mix(color,uAccentColor,grad*.055);',
-    '  gl_FragColor=vec4(color,src.a*.94);',
+    '  vec3 reflected=reflect(-lightDir,normal);',
+    '  float spec=pow(max(dot(reflected,viewDir),0.0),mix(18.0,16.0,uStepCut));',
+    '  float caustic=pow(transmission,mix(3.0,2.8,uStepCut))*.18;',
+    '  float flash=clamp(spec*1.15+caustic+diffuse*.03,0.0,mix(.34,.28,uStepCut));',
+    '  vec3 color=material;',
+    '  color=mix(color,uAccentColor,flash*.72);',
+    '  color+=uAccentColor*flash*.34;',
+    '  color*=.92+style*.16;',
+    '  gl_FragColor=vec4(color,src.a);',
     '}'
   ].join('\n');
 
@@ -421,12 +417,12 @@
       const d=gameObject&&gameObject.pipelineData?gameObject.pipelineData:null;
       if(!d) return;
 
-      this.set2f('uTexel',d.texelX||1/768,d.texelY||1/768);
       this.set3f('uGemColor',d.gemColor[0],d.gemColor[1],d.gemColor[2]);
       this.set3f('uDeepColor',d.deepColor[0],d.deepColor[1],d.deepColor[2]);
       this.set3f('uAccentColor',d.accentColor[0],d.accentColor[1],d.accentColor[2]);
       this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE-(gameObject.rotation||0));
       this.set1f('uTime',this.game.loop.time*.001);
+      this.set1f('uStepCut',d.stepCut?1:0);
     }
 
     onBatch(gameObject) {
@@ -474,14 +470,6 @@
     }
 
     preload() {
-      tiers.forEach((tier,index)=>{
-        this.load.svg(
-          'gem-'+index,
-          tier.asset,
-          {width:GEM_TEXTURE_SIZE,height:GEM_TEXTURE_SIZE}
-        );
-        this.load.text('gem-svg-'+index,tier.asset);
-      });
     }
 
     create() {
@@ -793,8 +781,8 @@
         return;
       }
 
-      if(this.textures.exists('gem-'+tier)){
-        const source=this.textures.get('gem-'+tier).getSourceImage();
+      if(window.ReactiveGemSystem){
+        const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,-14,256);
         const max=cavityScale*1.74;
         const scale=Math.min(max/source.width,max/source.height);
         const gw=source.width*scale;
@@ -807,7 +795,6 @@
         ctx.drawImage(source,cx-gw/2,cy-gh/2-1,gw,gh);
         ctx.restore();
 
-        // Tiny velvet reflection around a seated gem.
         ctx.save();
         ctx.globalCompositeOperation='screen';
         ctx.globalAlpha=.22;
@@ -872,9 +859,19 @@
     makeTextures() {
       this.makeSparkleTexture();
 
-      for(let i=0;i<tiers.length;i++){
-        this.measureGemBounds(i);
+      if(!window.ReactiveGemSystem){
+        throw new Error('ReactiveGemSystem is not available');
       }
+
+      for(const cutKey of Object.keys(window.ReactiveGemSystem.cuts)){
+        const key='reactive-gem-'+cutKey;
+        if(this.textures.exists(key)) continue;
+        const canvas=window.ReactiveGemSystem.createDataCanvas(cutKey,GEM_TEXTURE_SIZE);
+        const texture=this.textures.addCanvas(key,canvas);
+        if(texture) texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      }
+
+      for(let i=0;i<tiers.length;i++) this.gemVisualBounds[i]=GEM_TEXTURE_SIZE;
     }
 
     makeSparkleTexture() {
@@ -929,17 +926,7 @@
     }
 
     gemSpriteScale(tier) {
-      const texture=this.textures.get('gem-'+tier);
-      const source=texture&&texture.getSourceImage
-        ? texture.getSourceImage()
-        : null;
-
-      const fallback=source
-        ? Math.max(source.width||GEM_TEXTURE_SIZE,source.height||GEM_TEXTURE_SIZE)
-        : GEM_TEXTURE_SIZE;
-
-      const visible=this.gemVisualBounds[tier]||fallback;
-      return (tiers[tier].r*2*ART_SCALE)/Math.max(1,visible);
+      return (tiers[tier].r*2*ART_SCALE)/GEM_TEXTURE_SIZE;
     }
 
     sizeGemSprite(gameObject,tier) {
@@ -949,67 +936,7 @@
     }
 
     measureGemBounds(index) {
-      const texture=this.textures.get('gem-'+index);
-      const source=texture&&texture.getSourceImage
-        ? texture.getSourceImage()
-        : null;
-      const svgText=this.cache.text.get('gem-svg-'+index);
-
-      if(!source){
-        this.gemVisualBounds[index]=GEM_TEXTURE_SIZE;
-        return;
-      }
-
-      if(!svgText){
-        this.gemVisualBounds[index]=Math.max(source.width,source.height);
-        return;
-      }
-
-      try {
-        const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
-        const svg=doc.documentElement;
-        const vb=(svg.getAttribute('viewBox')||'0 0 512 512')
-          .trim()
-          .split(/[\s,]+/)
-          .map(Number);
-
-        const viewX=vb.length===4&&Number.isFinite(vb[0])?vb[0]:0;
-        const viewY=vb.length===4&&Number.isFinite(vb[1])?vb[1]:0;
-        const viewW=vb.length===4&&Number.isFinite(vb[2])&&vb[2]>0?vb[2]:512;
-        const viewH=vb.length===4&&Number.isFinite(vb[3])&&vb[3]>0?vb[3]:512;
-
-        let minX=Infinity;
-        let minY=Infinity;
-        let maxX=-Infinity;
-        let maxY=-Infinity;
-
-        for(const node of doc.querySelectorAll('polygon')){
-          if(node.closest('defs')) continue;
-
-          const values=(node.getAttribute('points')||'')
-            .trim()
-            .split(/[\s,]+/)
-            .map(Number)
-            .filter(Number.isFinite);
-
-          for(let i=0;i+1<values.length;i+=2){
-            minX=Math.min(minX,values[i]);
-            maxX=Math.max(maxX,values[i]);
-            minY=Math.min(minY,values[i+1]);
-            maxY=Math.max(maxY,values[i+1]);
-          }
-        }
-
-        if(Number.isFinite(minX)&&Number.isFinite(maxX)){
-          const pxW=((maxX-minX)/viewW)*source.width;
-          const pxH=((maxY-minY)/viewH)*source.height;
-          this.gemVisualBounds[index]=Math.max(pxW,pxH);
-        }else{
-          this.gemVisualBounds[index]=Math.max(source.width,source.height);
-        }
-      } catch {
-        this.gemVisualBounds[index]=Math.max(source.width,source.height);
-      }
+      this.gemVisualBounds[index]=GEM_TEXTURE_SIZE;
     }
 
     setupGemLighting() {
@@ -1025,7 +952,7 @@
       }
 
       const t=tiers[tier];
-      const texture=this.textures.get('gem-'+tier);
+      const texture=this.textures.get(gemTextureKey(tier));
       const source=texture&&texture.getSourceImage
         ? texture.getSourceImage()
         : null;
@@ -1036,6 +963,7 @@
         gemColor:hexToUnitRgb(t.color),
         deepColor:hexToUnitRgb(t.dark),
         accentColor:hexToUnitRgb(t.accent),
+        stepCut:t.reactiveCut==='emerald',
         texelX:1/w,
         texelY:1/h
       };
@@ -1050,7 +978,7 @@
       if(!gem||!gem.active) return;
 
       const scale=this.gemSpriteScale(gem.tier);
-      const shadow=this.add.image(gem.x,gem.y,'gem-'+gem.tier)
+      const shadow=this.add.image(gem.x,gem.y,gemTextureKey(gem.tier))
         .setTint(0x000000)
         .setAlpha(.16)
         .setDepth(7+gem.tier*.01)
@@ -1075,48 +1003,12 @@
     }
 
     createGemGlint(gem) {
-      if(!gem||!this.textures.exists('gem-sparkle')) return;
-
-      const glint=this.add.image(gem.x,gem.y,'gem-sparkle')
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(34+gem.tier*.01)
-        .setAlpha(0);
-
-      if(this.gemMask) glint.setMask(this.gemMask);
-
+      if(!gem) return;
       gem.sheen=null;
-      gem.glint=glint;
-      gem.opticSeed=Math.random()*Math.PI*2;
+      gem.glint=null;
     }
 
     syncGemOptics(gem,time) {
-      if(!gem||!gem.active||!gem.body||!gem.glint||!gem.glint.active) return;
-
-      const t=tiers[gem.tier];
-      const cut=CUTS[t.cutKey]||CUTS.brilliant;
-      const facetCount=cut.verts.length;
-      const lightAngle=GEM_WORLD_LIGHT_ANGLE;
-
-      const phase=(gem.rotation-lightAngle)*facetCount*2+gem.opticSeed;
-      const flash=Math.pow(Math.max(0,Math.cos(phase)),18);
-      const motion=clamp(
-        Math.abs(gem.body.angularVelocity)*52+gem.body.speed*.07,
-        .16,
-        1
-      );
-
-      const localLight=Phaser.Math.Angle.Wrap(lightAngle-gem.rotation);
-      const facetStep=(Math.PI*2)/facetCount;
-      const facetIndex=Math.round((localLight+Math.PI/2)/facetStep);
-      const localFacet=-Math.PI/2+facetIndex*facetStep;
-      const worldFacet=localFacet+gem.rotation;
-
-      gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.44;
-      gem.glint.y=gem.y+Math.sin(worldFacet)*t.r*.44;
-      gem.glint.rotation=0;
-      gem.glint.setScale(clamp(t.r/98,.30,1.08)*(.22+flash*.52));
-      gem.glint.setAlpha(clamp(.01+flash*(.50+.22*motion),0,.78));
-      gem.glint.setTint(mixHex(t.accent,'#ffffff',.84));
     }
 
     drawVaultBackdrop() {
@@ -1216,7 +1108,7 @@
       const max=W-WALL-t.r*COLLIDER_SCALE;
       const x=clamp(this.targetX,min,max);
 
-      this.preview=this.add.image(x,DROP_Y,'gem-'+this.currentTier).setDepth(32);
+      this.preview=this.add.image(x,DROP_Y,gemTextureKey(this.currentTier)).setDepth(32);
       this.preview.tier=this.currentTier;
       this.sizeGemSprite(this.preview,this.currentTier);
       this.applyGemLighting(this.preview,this.currentTier);
@@ -1237,7 +1129,7 @@
     createGem(x,y,tier) {
       const t=tiers[tier];
 
-      const gem=this.matter.add.image(x,y,'gem-'+tier,null,{
+      const gem=this.matter.add.image(x,y,gemTextureKey(tier),null,{
         label:'gem',
         restitution:.012,
         friction:.018,
@@ -1617,12 +1509,13 @@
     renderStatusIcon(icon='sparkles',tier=null) {
       statusIcon.innerHTML='';
 
-      if(icon==='gem'&&Number.isInteger(tier)&&this.textures.exists('gem-'+tier)){
+      if(icon==='gem'&&Number.isInteger(tier)&&window.ReactiveGemSystem){
         const canvas=document.createElement('canvas');
         canvas.width=40;
         canvas.height=40;
         const ctx=canvas.getContext('2d');
-        const source=this.textures.get('gem-'+tier).getSourceImage();
+        const t=tiers[tier];
+        const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,-14,128);
         const scale=Math.min(34/source.width,34/source.height);
         const w=source.width*scale;
         const h=source.height*scale;
@@ -1872,23 +1765,17 @@
     updateNextPreview() {
       const c=nextPreview.getContext('2d');
       c.clearRect(0,0,nextPreview.width,nextPreview.height);
+      if(!window.ReactiveGemSystem) return;
 
-      if(!this.textures.exists('gem-'+this.nextTier)) return;
-
-      const source=this.textures.get('gem-'+this.nextTier).getSourceImage();
+      const t=tiers[this.nextTier];
+      const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,-14,256);
       const maxW=nextPreview.width*.82;
       const maxH=nextPreview.height*.82;
       const scale=Math.min(maxW/source.width,maxH/source.height);
       const w=source.width*scale;
       const h=source.height*scale;
 
-      c.drawImage(
-        source,
-        (nextPreview.width-w)/2,
-        (nextPreview.height-h)/2,
-        w,
-        h
-      );
+      c.drawImage(source,(nextPreview.width-w)/2,(nextPreview.height-h)/2,w,h);
     }
 
     update(time,delta) {
