@@ -1,0 +1,107 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="gemClip">
+      <path d="M152 74L360 74L414 128L414 384L360 438L152 438L98 384L98 128L152 74Z"/>
+    </clipPath>
+
+    <radialGradient id="base" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(188 148) rotate(24) scale(250 210)">
+      <stop offset="0" stop-color="#C6F3FF"/>
+      <stop offset="0.18" stop-color="#8EE2FF"/>
+      <stop offset="0.40" stop-color="#4EBFFF"/>
+      <stop offset="0.64" stop-color="#2A88EA"/>
+      <stop offset="0.82" stop-color="#2248BE"/>
+      <stop offset="1" stop-color="#0A1B5E"/>
+    </radialGradient>
+
+    <radialGradient id="worldGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(190 150) rotate(22) scale(150 110)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"/>
+      <stop offset="0.30" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="worldBand" x1="94" y1="354" x2="404" y2="138" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0.42" stop-color="#FFFFFF" stop-opacity="0.03"/>
+      <stop offset="0.54" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="0.66" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="outerGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .20 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#outerGlow)">
+    <g clip-path="url(#gemClip)">
+      <path d="M152 74L360 74L414 128L414 384L360 438L152 438L98 384L98 128L152 74Z" fill="url(#base)"/>
+
+      <!-- top facets -->
+      <polygon points="152,74 256,116 118,154 98,128" fill="#BDF0FF"/>
+      <polygon points="360,74 394,108 256,116" fill="#5BBEF7"/>
+      <polygon points="360,74 414,128 394,154 256,116" fill="#2F7EE0"/>
+      <polygon points="118,154 256,116 202,188 126,224" fill="#8DE0FF"/>
+      <polygon points="394,154 256,116 310,188 386,224" fill="#3668D8"/>
+
+      <!-- left side facets -->
+      <polygon points="98,128 118,154 126,224 98,250" fill="#3F9AEE"/>
+      <polygon points="98,250 126,224 154,290 98,326" fill="#2A68D8"/>
+      <polygon points="98,326 154,290 160,364 98,384" fill="#173FAD"/>
+      <polygon points="98,384 160,364 152,438" fill="#102A7C"/>
+
+      <!-- right side facets -->
+      <polygon points="414,128 394,154 386,224 414,250" fill="#2345B7"/>
+      <polygon points="414,250 386,224 358,290 414,326" fill="#173697"/>
+      <polygon points="414,326 358,290 352,364 414,384" fill="#0F2A7A"/>
+      <polygon points="414,384 352,364 360,438" fill="#091B58"/>
+
+      <!-- lower facets -->
+      <polygon points="152,438 160,364 226,328 256,410" fill="#285EDA"/>
+      <polygon points="360,438 352,364 286,328 256,410" fill="#183AAB"/>
+      <polygon points="152,438 256,410 360,438" fill="#102A7B"/>
+
+      <!-- central facet structure -->
+      <polygon points="202,188 256,116 310,188 284,256 228,256" fill="#D7F8FF" fill-opacity="0.80"/>
+      <polygon points="202,188 228,256 192,306 154,290" fill="#73D3FF"/>
+      <polygon points="310,188 284,256 320,306 358,290" fill="#2459D1"/>
+      <polygon points="228,256 284,256 286,328 226,328" fill="#55C2FA" fill-opacity="0.82"/>
+      <polygon points="226,328 286,328 256,410" fill="#2A7BE7"/>
+
+      <!-- diagonal brilliant-cut cross facets -->
+      <polygon points="118,154 202,188 154,290 126,224" fill="#B1EFFF" fill-opacity="0.72"/>
+      <polygon points="394,154 310,188 358,290 386,224" fill="#173C9F" fill-opacity="0.76"/>
+      <polygon points="160,364 226,328 202,188 154,290" fill="#64C9FF" fill-opacity="0.42"/>
+      <polygon points="352,364 286,328 310,188 358,290" fill="#18378E" fill-opacity="0.48"/>
+      <polygon points="202,188 256,116 228,256" fill="#F3FEFF" fill-opacity="0.46"/>
+      <polygon points="310,188 256,116 284,256" fill="#9BE8FF" fill-opacity="0.22"/>
+      <polygon points="228,256 256,410 226,328" fill="#C5F5FF" fill-opacity="0.16"/>
+      <polygon points="284,256 256,410 286,328" fill="#0A2B83" fill-opacity="0.18"/>
+
+      <!-- extra layered transparent planes -->
+      <polygon points="164,104 250,88 320,100 278,166 202,168" fill="#FFFFFF" fill-opacity="0.10" style="mix-blend-mode:screen"/>
+      <polygon points="150,152 220,130 202,188 164,218 126,224" fill="#FFFFFF" fill-opacity="0.10" style="mix-blend-mode:screen"/>
+      <polygon points="204,208 256,176 308,208 284,256 228,256" fill="#FFFFFF" fill-opacity="0.08" style="mix-blend-mode:screen"/>
+      <polygon points="140,292 194,252 174,346 118,372" fill="#9DEAFF" fill-opacity="0.08"/>
+      <polygon points="318,252 372,292 394,372 338,346" fill="#061F68" fill-opacity="0.12"/>
+
+      <!-- soft lighting layers -->
+      <g style="mix-blend-mode:screen">
+        <ellipse cx="190" cy="150" rx="150" ry="110" transform="rotate(22 190 150)" fill="url(#worldGlow)"/>
+        <path d="M94 354L404 138L430 182L122 398Z" fill="url(#worldBand)"/>
+      </g>
+    </g>
+
+    <!-- very subtle facet seam layer -->
+    <g opacity="0.16">
+      <path d="M152 74L256 116L360 74" stroke="#D8F5FF" stroke-width="1.3"/>
+      <path d="M118 154L202 188L256 116L310 188L394 154" stroke="#D8F5FF" stroke-width="1.3"/>
+      <path d="M126 224L228 256L284 256L386 224" stroke="#D8F5FF" stroke-width="1.2"/>
+      <path d="M154 290L226 328L286 328L358 290" stroke="#D8F5FF" stroke-width="1.2"/>
+      <path d="M160 364L226 328L256 410L286 328L352 364" stroke="#D8F5FF" stroke-width="1.1"/>
+      <path d="M202 188L228 256L226 328" stroke="#D8F5FF" stroke-width="1.1"/>
+      <path d="M310 188L284 256L286 328" stroke="#D8F5FF" stroke-width="1.1"/>
+    </g>
+  </g>
+</svg>

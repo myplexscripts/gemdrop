@@ -1,3 +1,12 @@
-# Reactive gemstones
+# Active gem artwork
 
-Gem artwork is generated at runtime by `reactive-gem-system.js`. The previous baked SVG assets were removed. The locked six-cut geometry is retained and only the tier colour palette changes, while facet lighting reacts in world space as each gem rotates.
+The game uses exactly these six authored SVG cuts from the design session:
+
+1. Rectangular
+2. Circular Starcut
+3. Emerald Stepcut
+4. Rectangular Brilliant
+5. Heart
+6. Tanzanite
+
+The SVG geometry is parsed at runtime into the reactive facet-lighting system. The artwork geometry and facet layering are not regenerated. Gem tiers only change the material colour.

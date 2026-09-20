@@ -1,0 +1,116 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="gemClip">
+      <path d="M160 84L352 84L414 146L414 366L352 428L160 428L98 366L98 146L160 84Z"/>
+    </clipPath>
+
+    <linearGradient id="rimStroke" x1="116" y1="96" x2="390" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.84"/>
+      <stop offset="0.45" stop-color="#E7E5FC" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#BBB4F5" stop-opacity="0.64"/>
+    </linearGradient>
+
+    <radialGradient id="worldGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(206 166) rotate(18) scale(136 98)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.38"/>
+      <stop offset="0.28" stop-color="#FFFFFF" stop-opacity="0.11"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="worldBand" x1="112" y1="338" x2="392" y2="158" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.03"/>
+      <stop offset="0.54" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="0.66" stop-color="#FFFFFF" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="outerGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .24 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#outerGlow)">
+    <g clip-path="url(#gemClip)">
+      <path d="M160 84L352 84L414 146L414 366L352 428L160 428L98 366L98 146L160 84Z" fill="#1800EF"/>
+
+      <!-- primary facet structure -->
+      <polygon points="160,84 256,116 150,194 98,146" fill="#A79BFF"/>
+      <polygon points="352,84 362,194 256,116" fill="#7368FF"/>
+      <polygon points="352,84 414,146 362,194" fill="#6256FF"/>
+
+      <polygon points="150,194 256,116 228,206 132,238" fill="#8D7CFF"/>
+      <polygon points="362,194 256,116 284,206 380,238" fill="#4A3FFF"/>
+
+      <polygon points="132,238 228,206 216,306 128,322" fill="#5F4AFE"/>
+      <polygon points="380,238 284,206 296,306 384,322" fill="#3527FF"/>
+
+      <polygon points="128,322 216,306 160,428 98,366" fill="#4633FF"/>
+      <polygon points="384,322 296,306 352,428 414,366" fill="#2216FF"/>
+
+      <polygon points="228,206 256,116 284,206 256,254" fill="#B1A5FF"/>
+      <polygon points="228,206 256,254 216,306" fill="#7158FE"/>
+      <polygon points="284,206 256,254 296,306" fill="#4A37FE"/>
+      <polygon points="216,306 256,254 296,306 256,396" fill="#6754FE"/>
+      <polygon points="160,428 216,306 256,396" fill="#5B49FD"/>
+      <polygon points="352,428 296,306 256,396" fill="#3A2BFD"/>
+
+      <!-- secondary cut planes -->
+      <polygon points="160,84 220,104 202,148 140,140" fill="#9E90FF" fill-opacity="0.88"/>
+      <polygon points="352,84 372,140 310,148 292,104" fill="#7D72FF" fill-opacity="0.88"/>
+      <polygon points="98,146 150,194 130,214 98,212" fill="#4A3FFF" fill-opacity="0.84"/>
+      <polygon points="414,146 414,212 382,214 362,194" fill="#4135FF" fill-opacity="0.84"/>
+      <polygon points="98,366 128,322 152,366 128,404" fill="#302AFF" fill-opacity="0.82"/>
+      <polygon points="414,366 384,322 360,366 384,404" fill="#2620FF" fill-opacity="0.82"/>
+      <polygon points="132,238 228,206 202,232 154,254" fill="#B0A5FF" fill-opacity="0.74"/>
+      <polygon points="380,238 310,232 284,206 380,238" fill="#867CFF" fill-opacity="0.74"/>
+      <polygon points="228,206 256,254 236,274" fill="#9886FF" fill-opacity="0.72"/>
+      <polygon points="284,206 276,274 256,254" fill="#6C62FF" fill-opacity="0.72"/>
+      <polygon points="216,306 256,396 214,356" fill="#7D6CFF" fill-opacity="0.70"/>
+      <polygon points="296,306 298,356 256,396" fill="#5C4AFF" fill-opacity="0.70"/>
+
+      <!-- step-cut frame planes -->
+      <polygon points="188,118 324,118 348,142 348,370 324,394 188,394 164,370 164,142" fill="#5B45FF" fill-opacity="0.22"/>
+      <polygon points="206,136 306,136 330,160 330,352 306,376 206,376 182,352 182,160" fill="#8A7DFF" fill-opacity="0.16"/>
+      <polygon points="220,150 292,150 314,172 314,340 292,362 220,362 198,340 198,172" fill="#FFFFFF" fill-opacity="0.07"/>
+
+      <!-- lighting / glow layers -->
+      <g style="mix-blend-mode:screen">
+        <ellipse cx="206" cy="166" rx="136" ry="98" transform="rotate(18 206 166)" fill="url(#worldGlow)"/>
+        <path d="M112 338L392 158L416 198L142 378Z" fill="url(#worldBand)"/>
+      </g>
+
+      <!-- screen highlights -->
+      <polygon points="160,84 256,116 150,194 98,146" fill="#FFFFFF" fill-opacity="0.08" style="mix-blend-mode:screen"/>
+      <polygon points="150,194 256,116 228,206 132,238" fill="#FFFFFF" fill-opacity="0.08" style="mix-blend-mode:screen"/>
+      <polygon points="132,238 228,206 216,306 128,322" fill="#FFFFFF" fill-opacity="0.05" style="mix-blend-mode:screen"/>
+      <polygon points="228,206 256,116 284,206 256,254" fill="#FFFFFF" fill-opacity="0.12" style="mix-blend-mode:screen"/>
+      <polygon points="228,206 256,254 216,306" fill="#FFFFFF" fill-opacity="0.06" style="mix-blend-mode:screen"/>
+      <polygon points="132,238 202,232 154,254" fill="#FFFFFF" fill-opacity="0.10" style="mix-blend-mode:screen"/>
+      <polygon points="228,206 256,254 236,274" fill="#FFFFFF" fill-opacity="0.10" style="mix-blend-mode:screen"/>
+
+      <!-- glossy top plane -->
+      <polygon points="176,104 336,104 366,136 306,148 202,148 146,136" fill="#FFFFFF" fill-opacity="0.07" style="mix-blend-mode:screen"/>
+    </g>
+
+    <g opacity="0.22">
+      <path d="M160 84L256 116L150 194L98 146" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M352 84L256 116L362 194L414 146" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M150 194L228 206L132 238L150 194Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M362 194L284 206L380 238L362 194Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M132 238L228 206L216 306L128 322Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M380 238L284 206L296 306L384 322Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M228 206L256 116L284 206L256 254L228 206Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M228 206L256 254L216 306" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M284 206L256 254L296 306" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M216 306L256 254L296 306L256 396Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M98 366L128 322L216 306L160 428" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M414 366L384 322L296 306L352 428" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M188 118L324 118L348 142L348 370L324 394L188 394L164 370L164 142Z" fill="none" stroke="#CEC9F9" stroke-width="1.2"/>
+      <path d="M206 136L306 136L330 160L330 352L306 376L206 376L182 352L182 160Z" fill="none" stroke="#CEC9F9" stroke-width="1.2"/>
+    </g>
+
+    <path d="M160 84L352 84L414 146L414 366L352 428L160 428L98 366L98 146L160 84Z" fill="none" stroke="url(#rimStroke)" stroke-width="5.5" stroke-linejoin="round"/>
+  </g>
+</svg>

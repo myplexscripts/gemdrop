@@ -1,0 +1,120 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="gemClip">
+      <path d="M256 456C228 421 96 331 80 213C68 124 124 70 194 78C224 82 245 101 256 120C267 101 288 82 318 78C388 70 444 124 432 213C416 331 284 421 256 456Z"/>
+    </clipPath>
+
+    <linearGradient id="rimStroke" x1="92" y1="84" x2="420" y2="444" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.80"/>
+      <stop offset="0.48" stop-color="#E9E6FF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#BBB4F5" stop-opacity="0.60"/>
+    </linearGradient>
+
+    <radialGradient id="worldGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(176 150) rotate(24) scale(138 94)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.38"/>
+      <stop offset="0.28" stop-color="#FFFFFF" stop-opacity="0.11"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="worldBand" x1="90" y1="350" x2="406" y2="142" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.02"/>
+      <stop offset="0.53" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="0.64" stop-color="#FFFFFF" stop-opacity="0.03"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="outerGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .24 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#outerGlow)">
+    <g clip-path="url(#gemClip)">
+      <path d="M256 456C228 421 96 331 80 213C68 124 124 70 194 78C224 82 245 101 256 120C267 101 288 82 318 78C388 70 444 124 432 213C416 331 284 421 256 456Z" fill="#1600EC"/>
+
+      <!-- upper crown facets -->
+      <polygon points="256,120 194,78 124,102 168,176" fill="#A79BFF"/>
+      <polygon points="256,120 318,78 388,102 344,176" fill="#7368FF"/>
+      <polygon points="124,102 88,162 154,200 168,176" fill="#8672FF"/>
+      <polygon points="388,102 424,162 358,200 344,176" fill="#4A3FFF"/>
+
+      <!-- shoulder facets -->
+      <polygon points="168,176 256,120 216,220 154,200" fill="#8D7CFF"/>
+      <polygon points="344,176 256,120 296,220 358,200" fill="#3C2FFF"/>
+      <polygon points="88,162 80,222 142,248 154,200" fill="#5D48FF"/>
+      <polygon points="424,162 432,222 370,248 358,200" fill="#3025FF"/>
+
+      <!-- mid body -->
+      <polygon points="142,248 216,220 198,308 118,298" fill="#4F3AFF"/>
+      <polygon points="370,248 296,220 314,308 394,298" fill="#2E20FF"/>
+      <polygon points="216,220 256,120 296,220 256,272" fill="#9A87FE"/>
+      <polygon points="216,220 256,272 198,308" fill="#6C54FE"/>
+      <polygon points="296,220 256,272 314,308" fill="#3F2FFF"/>
+
+      <!-- lower pavilion -->
+      <polygon points="118,298 198,308 170,366 132,344" fill="#4230FF"/>
+      <polygon points="394,298 314,308 342,366 380,344" fill="#241AFF"/>
+      <polygon points="198,308 256,272 314,308 256,394" fill="#5E4BFD"/>
+      <polygon points="170,366 198,308 256,394 214,414" fill="#5544FF"/>
+      <polygon points="342,366 314,308 256,394 298,414" fill="#382AFF"/>
+      <polygon points="214,414 256,394 298,414 256,456" fill="#4637F6"/>
+
+      <!-- secondary cut planes -->
+      <polygon points="194,78 140,96 164,120" fill="#A696FF" fill-opacity="0.88"/>
+      <polygon points="318,78 348,120 372,96" fill="#7D72FF" fill-opacity="0.88"/>
+      <polygon points="88,162 154,200 118,206" fill="#4A3FFF" fill-opacity="0.84"/>
+      <polygon points="424,162 394,206 358,200" fill="#4135FF" fill-opacity="0.84"/>
+      <polygon points="80,222 142,248 108,266" fill="#302AFF" fill-opacity="0.82"/>
+      <polygon points="432,222 404,266 370,248" fill="#2620FF" fill-opacity="0.82"/>
+      <polygon points="132,344 198,308 170,366" fill="#5B49FF" fill-opacity="0.80"/>
+      <polygon points="380,344 342,366 314,308" fill="#463AFF" fill-opacity="0.80"/>
+      <polygon points="216,220 256,120 230,180" fill="#B0A5FF" fill-opacity="0.74"/>
+      <polygon points="296,220 282,180 256,120" fill="#867CFF" fill-opacity="0.74"/>
+      <polygon points="216,220 256,272 228,294" fill="#9886FF" fill-opacity="0.72"/>
+      <polygon points="296,220 284,294 256,272" fill="#6C62FF" fill-opacity="0.72"/>
+      <polygon points="170,366 214,414 184,390" fill="#7D6CFF" fill-opacity="0.68"/>
+      <polygon points="342,366 328,390 298,414" fill="#5C4AFF" fill-opacity="0.68"/>
+
+      <!-- screen-light layers -->
+      <g style="mix-blend-mode:screen">
+        <ellipse cx="176" cy="150" rx="138" ry="94" transform="rotate(24 176 150)" fill="url(#worldGlow)"/>
+        <path d="M90 350L406 142L432 184L122 392Z" fill="url(#worldBand)"/>
+      </g>
+
+      <!-- selective facet flashes -->
+      <polygon points="256,120 194,78 124,102 168,176" fill="#FFFFFF" fill-opacity="0.08" style="mix-blend-mode:screen"/>
+      <polygon points="168,176 256,120 216,220 154,200" fill="#FFFFFF" fill-opacity="0.08" style="mix-blend-mode:screen"/>
+      <polygon points="142,248 216,220 198,308 118,298" fill="#FFFFFF" fill-opacity="0.05" style="mix-blend-mode:screen"/>
+      <polygon points="216,220 256,120 296,220 256,272" fill="#FFFFFF" fill-opacity="0.12" style="mix-blend-mode:screen"/>
+      <polygon points="216,220 256,272 198,308" fill="#FFFFFF" fill-opacity="0.06" style="mix-blend-mode:screen"/>
+      <polygon points="216,220 256,120 230,180" fill="#FFFFFF" fill-opacity="0.12" style="mix-blend-mode:screen"/>
+      <polygon points="216,220 256,272 228,294" fill="#FFFFFF" fill-opacity="0.10" style="mix-blend-mode:screen"/>
+
+      <!-- subtle top gloss -->
+      <polygon points="122,104 194,82 256,120 188,146 146,140" fill="#FFFFFF" fill-opacity="0.06" style="mix-blend-mode:screen"/>
+      <polygon points="256,120 318,82 388,104 366,140 324,146" fill="#FFFFFF" fill-opacity="0.035" style="mix-blend-mode:screen"/>
+    </g>
+
+    <g opacity="0.22">
+      <path d="M256 120L194 78L124 102L168 176Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M256 120L318 78L388 102L344 176Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M124 102L88 162L154 200L168 176" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M388 102L424 162L358 200L344 176" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M168 176L256 120L216 220L154 200Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M344 176L256 120L296 220L358 200Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M142 248L216 220L198 308L118 298Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M370 248L296 220L314 308L394 298Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M216 220L256 120L296 220L256 272L216 220Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M216 220L256 272L198 308" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M296 220L256 272L314 308" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M198 308L256 272L314 308L256 394Z" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M170 366L198 308L256 394L214 414" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+      <path d="M342 366L314 308L256 394L298 414" fill="none" stroke="#CEC9F9" stroke-width="1.4"/>
+    </g>
+
+    <path d="M256 456C228 421 96 331 80 213C68 124 124 70 194 78C224 82 245 101 256 120C267 101 288 82 318 78C388 70 444 124 432 213C416 331 284 421 256 456Z" fill="none" stroke="url(#rimStroke)" stroke-width="5.5" stroke-linejoin="round"/>
+  </g>
+</svg>

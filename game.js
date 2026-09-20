@@ -157,26 +157,26 @@
   };
 
   const tiers = [
-    {name:'Quartz',      cut:'Round',    cutKey:'brilliant', reactiveCut:'round',    r:36,  score:1,   color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
-    {name:'Citrine',     cut:'Oval',     cutKey:'oval',      reactiveCut:'oval',     r:40,  score:3,   color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
-    {name:'Sunstone',    cut:'Cushion',  cutKey:'cushion',   reactiveCut:'cushion',  r:44,  score:6,   color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
-    {name:'Amethyst',    cut:'Emerald',  cutKey:'emerald',   reactiveCut:'emerald',  r:48,  score:10,  color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
-    {name:'Peridot',     cut:'Pear',     cutKey:'pear',      reactiveCut:'pear',     r:52,  score:15,  color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
-    {name:'Garnet',      cut:'Marquise', cutKey:'navette',   reactiveCut:'marquise', r:57,  score:22,  color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
-    {name:'Topaz',       cut:'Round',    cutKey:'brilliant', reactiveCut:'round',    r:62,  score:30,  color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
-    {name:'Moonstone',   cut:'Oval',     cutKey:'oval',      reactiveCut:'oval',     r:67,  score:40,  color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
-    {name:'Zircon',      cut:'Cushion',  cutKey:'cushion',   reactiveCut:'cushion',  r:72,  score:52,  color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
-    {name:'Morganite',   cut:'Emerald',  cutKey:'emerald',   reactiveCut:'emerald',  r:78,  score:66,  color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
-    {name:'Aquamarine',  cut:'Pear',     cutKey:'pear',      reactiveCut:'pear',     r:84,  score:82,  color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
-    {name:'Tourmaline',  cut:'Marquise', cutKey:'navette',   reactiveCut:'marquise', r:91,  score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
-    {name:'Tanzanite',   cut:'Round',    cutKey:'brilliant', reactiveCut:'round',    r:98,  score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
-    {name:'Spinel',      cut:'Oval',     cutKey:'oval',      reactiveCut:'oval',     r:106, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
-    {name:'Sapphire',    cut:'Cushion',  cutKey:'cushion',   reactiveCut:'cushion',  r:114, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
-    {name:'Emerald',     cut:'Emerald',  cutKey:'emerald',   reactiveCut:'emerald',  r:123, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
-    {name:'Ruby',        cut:'Pear',     cutKey:'pear',      reactiveCut:'pear',     r:132, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
-    {name:'Alexandrite', cut:'Marquise', cutKey:'navette',   reactiveCut:'marquise', r:142, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
-    {name:'Starstone',   cut:'Round',    cutKey:'brilliant', reactiveCut:'round',    r:153, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
-    {name:'Crownstone',  cut:'Cushion',  cutKey:'cushion',   reactiveCut:'cushion',  r:165, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
+    {name:'Quartz', cut:'Rectangular', cutKey:'rectangle', reactiveCut:'rectangular', r:36, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
+    {name:'Citrine', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:40, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
+    {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'emerald', reactiveCut:'emerald_stepcut', r:44, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
+    {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'rectangle', reactiveCut:'rectangular_brilliant', r:48, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
+    {name:'Peridot', cut:'Heart', cutKey:'heart', reactiveCut:'heart', r:52, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
+    {name:'Garnet', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:57, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
+    {name:'Topaz', cut:'Rectangular', cutKey:'rectangle', reactiveCut:'rectangular', r:62, score:30, color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
+    {name:'Moonstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:67, score:40, color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
+    {name:'Zircon', cut:'Emerald Stepcut', cutKey:'emerald', reactiveCut:'emerald_stepcut', r:72, score:52, color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
+    {name:'Morganite', cut:'Rectangular Brilliant', cutKey:'rectangle', reactiveCut:'rectangular_brilliant', r:78, score:66, color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
+    {name:'Aquamarine', cut:'Heart', cutKey:'heart', reactiveCut:'heart', r:84, score:82, color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
+    {name:'Tourmaline', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:91, score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
+    {name:'Tanzanite', cut:'Rectangular', cutKey:'rectangle', reactiveCut:'rectangular', r:98, score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
+    {name:'Spinel', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:106, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
+    {name:'Sapphire', cut:'Emerald Stepcut', cutKey:'emerald', reactiveCut:'emerald_stepcut', r:114, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
+    {name:'Emerald', cut:'Rectangular Brilliant', cutKey:'rectangle', reactiveCut:'rectangular_brilliant', r:123, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
+    {name:'Ruby', cut:'Heart', cutKey:'heart', reactiveCut:'heart', r:132, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
+    {name:'Alexandrite', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:142, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
+    {name:'Starstone', cut:'Rectangular', cutKey:'rectangle', reactiveCut:'rectangular', r:153, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
+    {name:'Crownstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:165, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
   function gemTextureKey(tier) {
@@ -470,6 +470,10 @@
     }
 
     preload() {
+      if(!window.ReactiveGemSystem) throw new Error('ReactiveGemSystem is not available');
+      for(const [cutKey,cut] of Object.entries(window.ReactiveGemSystem.cuts)){
+        this.load.text('reactive-src-'+cutKey,cut.asset);
+      }
     }
 
     create() {
@@ -859,13 +863,15 @@
     makeTextures() {
       this.makeSparkleTexture();
 
-      if(!window.ReactiveGemSystem){
-        throw new Error('ReactiveGemSystem is not available');
+      const sources={};
+      for(const cutKey of Object.keys(window.ReactiveGemSystem.cuts)){
+        sources[cutKey]=this.cache.text.get('reactive-src-'+cutKey);
       }
+      window.ReactiveGemSystem.prepare(sources);
 
       for(const cutKey of Object.keys(window.ReactiveGemSystem.cuts)){
         const key='reactive-gem-'+cutKey;
-        if(this.textures.exists(key)) continue;
+        if(this.textures.exists(key)) this.textures.remove(key);
         const canvas=window.ReactiveGemSystem.createDataCanvas(cutKey,GEM_TEXTURE_SIZE);
         const texture=this.textures.addCanvas(key,canvas);
         if(texture) texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
@@ -963,7 +969,7 @@
         gemColor:hexToUnitRgb(t.color),
         deepColor:hexToUnitRgb(t.dark),
         accentColor:hexToUnitRgb(t.accent),
-        stepCut:t.reactiveCut==='emerald',
+        stepCut:window.ReactiveGemSystem.isStepCut(t.reactiveCut),
         texelX:1/w,
         texelY:1/h
       };
