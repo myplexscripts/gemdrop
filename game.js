@@ -219,6 +219,7 @@
 
   let dingWindowStartedAt = 0;
   let dingVoicesInWindow = 0;
+  let crystalNoiseBuffer = null;
 
   // ding.ogg is recorded at E6. These are exact natural-note offsets from E6.
   const GEM_NOTE_SET = [
@@ -375,23 +376,33 @@
     if(audioCtx){
       if(audioCtx.state==='suspended') audioCtx.resume();
       setupGemAudioBus();
-      loadDing();
     }
   }
 
+  function getCrystalNoiseBuffer() {
+    if(crystalNoiseBuffer) return crystalNoiseBuffer;
+
+    const length=Math.max(1,Math.floor(audioCtx.sampleRate*.05));
+    const buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
+    const data=buffer.getChannelData(0);
+    let smooth=0;
+
+    for(let i=0;i<length;i++){
+      const white=Math.random()*2-1;
+      smooth=smooth*.14+white*.86;
+      data[i]=smooth*Math.pow(1-i/length,5.1);
+    }
+
+    crystalNoiseBuffer=buffer;
+    return buffer;
+  }
+
   function playGemDing(tier,impact=1,x=W/2) {
-    if(
-      !audioCtx||
-      !dingBuffer||
-      !gemAudioMaster||
-      audioCtx.state!=='running'
-    ) return;
+    if(!audioCtx||!gemAudioMaster||audioCtx.state!=='running') return;
 
     const now=performance.now();
 
-    // Let a small cluster through together so piles can make chords,
-    // but stop dense physics bursts from becoming a wall of sound.
-    if(now-dingWindowStartedAt>42){
+    if(now-dingWindowStartedAt>48){
       dingWindowStartedAt=now;
       dingVoicesInWindow=0;
     }
@@ -400,53 +411,127 @@
     dingVoicesInWindow++;
 
     const note=gemNoteForTier(tier);
-    const playbackRate=playbackRateForSemitones(note.semitones);
-    const strength=clamp((impact-.45)/4.8,0,1);
-    const volume=.20+strength*.48;
+    const noteHz=1318.510*Math.pow(2,note.semitones/12);
+    const strength=clamp((impact-.45)/4.6,0,1);
+    const t=audioCtx.currentTime;
+    const ring=.34+strength*.34;
 
-    const source=audioCtx.createBufferSource();
-    const gain=audioCtx.createGain();
-    const lowpass=audioCtx.createBiquadFilter();
-    const warmth=audioCtx.createBiquadFilter();
-
-    source.buffer=dingBuffer;
-    source.playbackRate.value=playbackRate;
-
-    lowpass.type='lowpass';
-    lowpass.frequency.value=11900;
-    lowpass.Q.value=.18;
-
-    warmth.type='peaking';
-    warmth.frequency.value=850;
-    warmth.Q.value=.7;
-    warmth.gain.value=1.9;
-
-    gain.gain.value=volume;
-
-    source.connect(lowpass);
-    lowpass.connect(warmth);
-    warmth.connect(gain);
-
+    const voice=audioCtx.createGain();
+    const pan=typeof audioCtx.createStereoPanner==='function'
+      ? audioCtx.createStereoPanner()
+      : null;
     const dryGain=audioCtx.createGain();
     const wetGain=audioCtx.createGain();
-    dryGain.gain.value=1;
-    wetGain.gain.value=.13;
 
-    if(typeof audioCtx.createStereoPanner==='function'){
-      const pan=audioCtx.createStereoPanner();
-      pan.pan.value=clamp((x/W)*2-1,-.78,.78);
-      gain.connect(pan);
+    voice.gain.setValueAtTime(.0001,t);
+    voice.gain.exponentialRampToValueAtTime(.34+strength*.32,t+.0018);
+    voice.gain.exponentialRampToValueAtTime(.0001,t+ring);
+
+    dryGain.gain.value=1;
+    wetGain.gain.value=.22+strength*.10;
+
+    if(pan){
+      pan.pan.value=clamp((x/W)*2-1,-.82,.82);
+      voice.connect(pan);
       pan.connect(dryGain);
       pan.connect(wetGain);
     }else{
-      gain.connect(dryGain);
-      gain.connect(wetGain);
+      voice.connect(dryGain);
+      voice.connect(wetGain);
     }
 
     dryGain.connect(gemAudioDry);
     wetGain.connect(gemAudioWet);
 
-    source.start();
+    const strike=audioCtx.createBufferSource();
+    const strikeHP=audioCtx.createBiquadFilter();
+    const strikeBP=audioCtx.createBiquadFilter();
+    const strikeGain=audioCtx.createGain();
+
+    strike.buffer=getCrystalNoiseBuffer();
+    strikeHP.type='highpass';
+    strikeHP.frequency.value=2400;
+    strikeBP.type='bandpass';
+    strikeBP.frequency.value=5100+strength*2100;
+    strikeBP.Q.value=1.3;
+
+    strikeGain.gain.setValueAtTime(.20+strength*.28,t);
+    strikeGain.gain.exponentialRampToValueAtTime(.0001,t+.016+strength*.012);
+
+    strike.connect(strikeHP);
+    strikeHP.connect(strikeBP);
+    strikeBP.connect(strikeGain);
+    strikeGain.connect(voice);
+    strike.start(t);
+    strike.stop(t+.05);
+
+    const modes=[
+      {ratio:1.000,level:.54,life:1.00},
+      {ratio:2.318,level:.205,life:.62},
+      {ratio:3.887,level:.102,life:.43},
+      {ratio:5.421,level:.050,life:.30},
+      {ratio:7.146,level:.024,life:.21}
+    ];
+
+    for(let i=0;i<modes.length;i++){
+      const mode=modes[i];
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+      const resonator=audioCtx.createBiquadFilter();
+
+      const imperfect=i===0?1:1+(Math.random()-.5)*.0065;
+      const startHz=noteHz*mode.ratio*imperfect;
+      const endHz=startHz*(i===0?1:.997-Math.random()*.0015);
+      const life=ring*mode.life*(.90+Math.random()*.14);
+
+      osc.type='sine';
+      osc.frequency.setValueAtTime(startHz,t);
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(80,endHz),
+        t+.026+i*.004
+      );
+
+      resonator.type='bandpass';
+      resonator.frequency.value=Math.min(15000,startHz);
+      resonator.Q.value=2.7+i*.9;
+
+      gain.gain.setValueAtTime(.0001,t);
+      gain.gain.exponentialRampToValueAtTime(
+        mode.level*(.76+strength*.42),
+        t+.0012+i*.0003
+      );
+      gain.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.035,life));
+
+      osc.connect(resonator);
+      resonator.connect(gain);
+      gain.connect(voice);
+
+      osc.start(t);
+      osc.stop(t+Math.max(.05,life)+.025);
+    }
+
+    const ice=audioCtx.createOscillator();
+    const iceGain=audioCtx.createGain();
+    const iceDelay=audioCtx.createDelay(.08);
+    const iceHP=audioCtx.createBiquadFilter();
+
+    ice.type='sine';
+    ice.frequency.value=Math.min(14500,noteHz*8.08);
+    iceHP.type='highpass';
+    iceHP.frequency.value=6500;
+    iceDelay.delayTime.value=.020+Math.random()*.014;
+
+    iceGain.gain.setValueAtTime(.0001,t);
+    iceGain.gain.exponentialRampToValueAtTime(.014+strength*.016,t+.014);
+    iceGain.gain.exponentialRampToValueAtTime(.0001,t+.34+strength*.12);
+
+    ice.connect(iceHP);
+    iceHP.connect(iceDelay);
+    iceDelay.connect(iceGain);
+    iceGain.connect(gemAudioWet);
+
+    ice.start(t);
+    ice.stop(t+.50);
   }
 
   function tone(freq,duration=.055,volume=.022,type='sine') {
