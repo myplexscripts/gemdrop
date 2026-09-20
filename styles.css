@@ -897,3 +897,91 @@ body{
 @media(prefers-reduced-motion:reduce){
   .play-shell.tumbling{animation:none!important}
 }
+
+
+/* === GEM FRAME SCENE 2026-09-19 === */
+.game-app{
+  background:
+    radial-gradient(ellipse at 18% 12%,rgba(112,52,168,.58) 0%,rgba(71,25,111,.28) 28%,transparent 52%),
+    radial-gradient(ellipse at 82% 20%,rgba(97,41,150,.50) 0%,rgba(48,17,78,.24) 30%,transparent 54%),
+    radial-gradient(ellipse at 28% 55%,rgba(88,36,139,.42) 0%,rgba(42,13,72,.20) 30%,transparent 58%),
+    radial-gradient(ellipse at 76% 72%,rgba(124,50,166,.38) 0%,rgba(49,15,80,.18) 28%,transparent 56%),
+    radial-gradient(ellipse at 50% 98%,rgba(77,30,126,.42) 0%,transparent 48%),
+    linear-gradient(180deg,#250b3d 0%,#170723 48%,#0c0414 100%);
+}
+.game-app::before{
+  z-index:0;
+  opacity:.72;
+  background-image:
+    radial-gradient(circle,rgba(255,255,255,.78) 0 1px,transparent 1.6px),
+    radial-gradient(circle,rgba(207,157,255,.70) 0 1px,transparent 1.5px),
+    radial-gradient(circle,rgba(255,210,244,.52) 0 1.2px,transparent 1.8px),
+    radial-gradient(circle,rgba(151,103,255,.45) 0 .9px,transparent 1.5px);
+  background-size:97px 131px,151px 183px,211px 257px,263px 319px;
+  background-position:17px 29px,73px 11px,29px 97px,143px 61px;
+  animation:gemDustDrift 18s linear infinite;
+}
+.game-app::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+  background:url("gem-frame.webp") center/100% 100% no-repeat;
+}
+.hud,
+.aim-strip,
+.power-dock{
+  position:relative;
+  z-index:8;
+}
+.hud{
+  width:80%;
+  max-width:448px;
+  margin-left:auto;
+  margin-right:auto;
+  padding-left:0;
+  padding-right:0;
+}
+.play-shell{
+  z-index:3;
+  width:76%;
+  max-width:426px;
+  margin-left:auto;
+  margin-right:auto;
+  border:0;
+  border-radius:18px;
+  background:rgba(22,6,35,.16);
+  box-shadow:none;
+}
+.play-shell::before{display:none}
+.frame-jewel{display:none}
+#game{
+  border-radius:18px;
+}
+.aim-strip,
+.power-dock{
+  width:76%;
+  max-width:426px;
+  margin-left:auto;
+  margin-right:auto;
+}
+.aim-strip{
+  padding-left:8px;
+  padding-right:8px;
+}
+@keyframes gemDustDrift{
+  from{background-position:17px 29px,73px 11px,29px 97px,143px 61px}
+  to{background-position:17px -102px,73px -172px,29px -160px,143px -258px}
+}
+@media(max-width:420px){
+  .hud{width:82%}
+  .play-shell,.aim-strip,.power-dock{width:78%}
+}
+@media(max-height:720px){
+  .play-shell{width:68%}
+  .aim-strip,.power-dock{width:72%}
+}
+@media(prefers-reduced-motion:reduce){
+  .game-app::before{animation:none}
+}

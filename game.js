@@ -157,29 +157,26 @@
   };
 
   const tiers = [
-    // Progression is arranged from generally lower-value/common stones toward
-    // rarer, higher-value stones. Exact market value still varies by quality,
-    // origin, treatment, size and colour.
-    {name:'Quartz',      cut:'Rose',          cutKey:'rose',       asset:'gems/20_rose.svg',          r:36,  score:1,   color:'#E7F0F4', accent:'#FFFFFF', dark:'#A7B4BC'},
-    {name:'Citrine',     cut:'Trillion',      cutKey:'trillion',   asset:'gems/14_trillion.svg',      r:40,  score:3,   color:'#F2BC32', accent:'#FFF0A1', dark:'#B97718'},
-    {name:'Sunstone',    cut:'Cushion',       cutKey:'cushion',    asset:'gems/07_cushion.svg',       r:44,  score:6,   color:'#EF7659', accent:'#FFD0A6', dark:'#AA4938'},
-    {name:'Amethyst',    cut:'Emerald',       cutKey:'emerald',    asset:'gems/09_emerald.svg',       r:48,  score:10,  color:'#A968E5', accent:'#EFD7FF', dark:'#7141A3'},
-    {name:'Peridot',     cut:'Princess',      cutKey:'princess',   asset:'gems/02_princess.svg',      r:52,  score:15,  color:'#99D64D', accent:'#DFF5A0', dark:'#619A31'},
-    {name:'Garnet',      cut:'Radiant',       cutKey:'radiant',    asset:'gems/05_radiant.svg',       r:57,  score:22,  color:'#C83E58', accent:'#FFB8C5', dark:'#7E2035'},
-    {name:'Topaz',       cut:'Square',        cutKey:'square',     asset:'gems/08_square.svg',        r:62,  score:30,  color:'#F07945', accent:'#FFD1A6', dark:'#B4492F'},
-    {name:'Moonstone',   cut:'French',        cutKey:'french',     asset:'gems/29_french.svg',        r:67,  score:40,  color:'#B9C9F2', accent:'#FFFFFF', dark:'#7788BA'},
-    {name:'Zircon',      cut:'Oval',          cutKey:'oval',       asset:'gems/22_oval.svg',          r:72,  score:52,  color:'#55CFE2', accent:'#D9FBFF', dark:'#2D8EA3'},
-    {name:'Morganite',   cut:'Asscher',       cutKey:'asscher',    asset:'gems/23_asscher.svg',       r:78,  score:66,  color:'#F19A8E', accent:'#FFE0D8', dark:'#B95A55'},
-    {name:'Aquamarine',  cut:'Pear',          cutKey:'pear',       asset:'gems/04_pear.svg',          r:84,  score:82,  color:'#6BD5E2', accent:'#D8FAFF', dark:'#3094A5'},
-    {name:'Tourmaline',  cut:'Octagon',       cutKey:'octagon',    asset:'gems/24_octagon.svg',       r:91,  score:100, color:'#E85A9B', accent:'#FFD0E4', dark:'#9D2E67'},
-    {name:'Tanzanite',   cut:'Eight Corners', cutKey:'octagon',    asset:'gems/15_eight_corners.svg', r:98,  score:122, color:'#665DDF', accent:'#D4D0FF', dark:'#3D3697'},
-    {name:'Spinel',      cut:'Rectangular',   cutKey:'rectangle',  asset:'gems/13_rectangular.svg',   r:106,  score:148, color:'#EA4D91', accent:'#FFD0E7', dark:'#9E2A64'},
-    {name:'Sapphire',    cut:'Step',          cutKey:'step',       asset:'gems/27_step.svg',          r:114,  score:178, color:'#3A6FE0', accent:'#C0D6FF', dark:'#2549A1'},
-    {name:'Emerald',     cut:'Scissor',       cutKey:'scissor',    asset:'gems/26_scissor.svg',       r:123, score:212, color:'#22BC82', accent:'#AAF0D1', dark:'#137956'},
-    {name:'Ruby',        cut:'Pendeloque',    cutKey:'pendeloque', asset:'gems/25_pendeloque.svg',    r:132, score:250, color:'#E94063', accent:'#FFC1CF', dark:'#9B2944'},
-    {name:'Alexandrite', cut:'Trapeze',       cutKey:'trapeze',    asset:'gems/17_trapeze.svg',       r:142, score:292, color:'#4FC6A8', accent:'#D5F7E9', dark:'#327D75'},
-    {name:'Starstone',   cut:'Navette',       cutKey:'navette',    asset:'gems/21_navette.svg',       r:153, score:340, color:'#756CF0', accent:'#DED8FF', dark:'#493BA3'},
-    {name:'Crownstone',  cut:'Brilliant',     cutKey:'brilliant',  asset:'gems/06_brilliant.svg',     r:165, score:400, color:'#F3AF37', accent:'#FFF1A8', dark:'#AA6C16'}
+    {name:'Quartz',      cut:'Rose',          cutKey:'rose',       asset:'gems/20_rose.svg',          r:36,  score:1,   color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
+    {name:'Citrine',     cut:'Trillion',      cutKey:'trillion',   asset:'gems/14_trillion.svg',      r:40,  score:3,   color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
+    {name:'Sunstone',    cut:'Cushion',       cutKey:'cushion',    asset:'gems/07_cushion.svg',       r:44,  score:6,   color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
+    {name:'Amethyst',    cut:'Emerald',       cutKey:'emerald',    asset:'gems/09_emerald.svg',       r:48,  score:10,  color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
+    {name:'Peridot',     cut:'Princess',      cutKey:'princess',   asset:'gems/02_princess.svg',      r:52,  score:15,  color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
+    {name:'Garnet',      cut:'Radiant',       cutKey:'radiant',    asset:'gems/05_radiant.svg',       r:57,  score:22,  color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
+    {name:'Topaz',       cut:'Square',        cutKey:'square',     asset:'gems/08_square.svg',        r:62,  score:30,  color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
+    {name:'Moonstone',   cut:'French',        cutKey:'french',     asset:'gems/29_french.svg',        r:67,  score:40,  color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
+    {name:'Zircon',      cut:'Oval',          cutKey:'oval',       asset:'gems/22_oval.svg',          r:72,  score:52,  color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
+    {name:'Morganite',   cut:'Asscher',       cutKey:'asscher',    asset:'gems/23_asscher.svg',       r:78,  score:66,  color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
+    {name:'Aquamarine',  cut:'Pear',          cutKey:'pear',       asset:'gems/04_pear.svg',          r:84,  score:82,  color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
+    {name:'Tourmaline',  cut:'Octagon',       cutKey:'octagon',    asset:'gems/24_octagon.svg',       r:91,  score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
+    {name:'Tanzanite',   cut:'Eight Corners', cutKey:'octagon',    asset:'gems/15_eight_corners.svg', r:98,  score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
+    {name:'Spinel',      cut:'Rectangular',   cutKey:'rectangle',  asset:'gems/13_rectangular.svg',   r:106, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
+    {name:'Sapphire',    cut:'Step',          cutKey:'step',       asset:'gems/27_step.svg',          r:114, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
+    {name:'Emerald',     cut:'Scissor',       cutKey:'scissor',    asset:'gems/26_scissor.svg',       r:123, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
+    {name:'Ruby',        cut:'Pendeloque',    cutKey:'pendeloque', asset:'gems/25_pendeloque.svg',    r:132, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
+    {name:'Alexandrite', cut:'Trapeze',       cutKey:'trapeze',    asset:'gems/17_trapeze.svg',       r:142, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
+    {name:'Starstone',   cut:'Navette',       cutKey:'navette',    asset:'gems/21_navette.svg',       r:153, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
+    {name:'Crownstone',  cut:'Brilliant',     cutKey:'brilliant',  asset:'gems/06_brilliant.svg',     r:165, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
   function hueFromHex(hex) {
@@ -1124,7 +1121,7 @@
 
     drawVaultBackdrop() {
       const bg=this.add.graphics().setDepth(0);
-      bg.fillStyle(0x15091c,.76);
+      bg.fillStyle(0x15091c,.20);
       bg.fillRect(0,0,W,H);
 
       bg.fillStyle(0x552063,.045);
@@ -1132,14 +1129,14 @@
 
       const rails=this.add.graphics().setDepth(18);
 
-      rails.fillGradientStyle(0xffdd7a,0xf2a433,0xb13f61,0x6f2253,1);
+      rails.fillGradientStyle(0xffdd7a,0xf2a433,0xb13f61,0x6f2253,.28);
       rails.fillRect(FRAME_WALL-8,18,8,FRAME_FLOOR-18);
       rails.fillRect(W-FRAME_WALL,18,8,FRAME_FLOOR-18);
 
-      rails.fillGradientStyle(0xffed9e,0xffbd3f,0xb13f61,0x6a1f52,1);
+      rails.fillGradientStyle(0xffed9e,0xffbd3f,0xb13f61,0x6a1f52,.28);
       rails.fillRect(FRAME_WALL,FRAME_FLOOR,W-FRAME_WALL*2,10);
 
-      rails.lineStyle(2,0xffd666,.34);
+      rails.lineStyle(2,0xffd666,.14);
       rails.strokeRect(FRAME_WALL,19,W-FRAME_WALL*2,FRAME_FLOOR-19);
 
       const sparkleColors=[0xffc65b,0xf36ac8,0xa46cff];
