@@ -1115,42 +1115,23 @@
     }
 
     setupGemLighting() {
-      this.webglLighting=(this.game.renderer.type===Phaser.WEBGL);
-      if(!this.webglLighting) return;
-
-      this.lights.enable();
-      this.lights.setAmbientColor(0x3f3547);
-
-      this.keyLight=this.lights.addLight(70,-34,1480,0xfff0d0,1.58);
-      this.fillLight=this.lights.addLight(635,270,1280,0xa990ff,.32);
-      this.rimLight=this.lights.addLight(320,880,980,0xff78b8,.18);
+      // Lighting is deliberately object-local, not world-position based.
+      // Every gem gets the same illumination no matter where it sits.
+      this.webglLighting=false;
+      this.keyLight=null;
+      this.fillLight=null;
+      this.rimLight=null;
     }
 
     applyGemLighting(gameObject) {
-      if(this.webglLighting&&gameObject&&gameObject.setPipeline){
-        gameObject.setPipeline('Light2D');
+      if(gameObject&&gameObject.resetPipeline){
+        gameObject.resetPipeline();
       }
     }
 
     animateGemLights(time) {
-      if(!this.webglLighting) return;
-
-      const phase=time*.00035;
-
-      if(this.keyLight){
-        this.keyLight.x=70+Math.cos(phase)*54;
-        this.keyLight.y=-34+Math.sin(phase*.73)*26;
-      }
-
-      if(this.fillLight){
-        this.fillLight.x=635+Math.cos(phase*.61+2.1)*42;
-        this.fillLight.y=270+Math.sin(phase*.48+1.2)*36;
-      }
-
-      if(this.rimLight){
-        this.rimLight.x=320+Math.cos(phase*.44+4.2)*72;
-        this.rimLight.y=880+Math.sin(phase*.38+2.8)*34;
-      }
+      // Kept for the update loop. Gem lighting animation is handled per gem
+      // in syncGemOptics so board position can never darken a jewel.
     }
 
     createGemShadow(gem) {
