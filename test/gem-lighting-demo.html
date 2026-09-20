@@ -109,11 +109,7 @@
       <input id="rotation" type="range" min="-180" max="180" value="0" />
       <button id="toggleSpin">Start auto rotate</button>
 
-      <p>
-        This version removes the baked light and dark side. Each facet has its own simulated normal, so
-        every face brightens or darkens independently as the gem rotates. The fixed reflection is only a
-        subtle world-space overlay clipped inside the gem.
-      </p>
+      <p>The stuck black facets have been fixed. Side facets now keep a coloured transmission fill and can brighten as they rotate instead of staying permanently black.</p>
       <p class="small">
         Reuse in Gemdrop by importing <code>gem-component.js</code> and creating
         <code>new FacetedGem().mount(target)</code>.
