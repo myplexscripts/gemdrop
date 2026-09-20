@@ -192,6 +192,89 @@
     }
   }
 
+
+  function pathToPhysicsPoints(d, curveSteps=18) {
+    const tokens=String(d||'').match(/[A-Za-z]|-?(?:\d*\.)?\d+(?:e[-+]?\d+)?/gi)||[];
+    const points=[];
+    let i=0;
+    let command='';
+    let x=0,y=0,startX=0,startY=0;
+
+    const number=()=>Number(tokens[i++]);
+    const push=(px,py)=>{
+      const last=points[points.length-1];
+      if(!last||Math.hypot(last[0]-px,last[1]-py)>.01) points.push([px,py]);
+    };
+    const cubic=(p0,p1,p2,p3,t)=>{
+      const u=1-t;
+      return [
+        u*u*u*p0[0]+3*u*u*t*p1[0]+3*u*t*t*p2[0]+t*t*t*p3[0],
+        u*u*u*p0[1]+3*u*u*t*p1[1]+3*u*t*t*p2[1]+t*t*t*p3[1]
+      ];
+    };
+
+    while(i<tokens.length){
+      if(/[A-Za-z]/.test(tokens[i])) command=tokens[i++].toUpperCase();
+      if(!command) break;
+
+      if(command==='M'){
+        x=number(); y=number(); startX=x; startY=y; push(x,y);
+        command='L';
+      }else if(command==='L'){
+        x=number(); y=number(); push(x,y);
+      }else if(command==='H'){
+        x=number(); push(x,y);
+      }else if(command==='V'){
+        y=number(); push(x,y);
+      }else if(command==='C'){
+        const p0=[x,y];
+        const p1=[number(),number()];
+        const p2=[number(),number()];
+        const p3=[number(),number()];
+        for(let step=1;step<=curveSteps;step++){
+          const p=cubic(p0,p1,p2,p3,step/curveSteps);
+          push(p[0],p[1]);
+        }
+        x=p3[0]; y=p3[1];
+      }else if(command==='Z'){
+        push(startX,startY);
+        command='';
+      }else{
+        throw new Error('Unsupported SVG path command for gem collision: '+command);
+      }
+    }
+
+    if(points.length>2){
+      const first=points[0],last=points[points.length-1];
+      if(Math.hypot(first[0]-last[0],first[1]-last[1])<.01) points.pop();
+    }
+    return points;
+  }
+
+  function outerPhysicsPoints(outer) {
+    if(outer.type==='circle') return null;
+    if(outer.type==='polygon') return outer.points.map(p=>[p[0],p[1]]);
+    return pathToPhysicsPoints(outer.d,20);
+  }
+
+  function outerMetrics(outer) {
+    if(outer.type==='circle'){
+      return {
+        minX:outer.cx-outer.r,
+        maxX:outer.cx+outer.r,
+        minY:outer.cy-outer.r,
+        maxY:outer.cy+outer.r,
+        extent:outer.r*2
+      };
+    }
+    const pts=outerPhysicsPoints(outer);
+    const xs=pts.map(p=>p[0]);
+    const ys=pts.map(p=>p[1]);
+    const minX=Math.min(...xs),maxX=Math.max(...xs);
+    const minY=Math.min(...ys),maxY=Math.max(...ys);
+    return {minX,maxX,minY,maxY,extent:Math.max(maxX-minX,maxY-minY)};
+  }
+
   function parseModel(name, text) {
     const doc=new DOMParser().parseFromString(text,'image/svg+xml');
     const outer=parseOuter(doc);
@@ -227,21 +310,9 @@
 
     if(!raw.length) throw new Error('No facets found for '+name);
 
-    const allFacetPoints=[];
-    for(const el of clipped.querySelectorAll('polygon')){
-      const pts=pointsFromString(el.getAttribute('points'));
-      for(const p of pts) allFacetPoints.push(p);
-    }
-    let visualExtent=512;
-    if(allFacetPoints.length){
-      const xs=allFacetPoints.map(p=>p[0]);
-      const ys=allFacetPoints.map(p=>p[1]);
-      visualExtent=Math.max(
-        Math.max(...xs)-Math.min(...xs),
-        Math.max(...ys)-Math.min(...ys)
-      );
-    }
-    visualExtent=clamp(visualExtent,220,512);
+    const metrics=outerMetrics(outer);
+    const visualExtent=clamp(metrics.extent,220,512);
+    const collisionPoints=outerPhysicsPoints(outer);
 
     const fit=solveDirectional(raw);
     const residuals=raw.map(f=>{
@@ -278,6 +349,7 @@
       facets,
       baseHue,
       visualExtent,
+      collisionPoints,
       stepCut:!!CUTS[name].stepCut
     };
   }
@@ -398,6 +470,21 @@
     visualScale:name=>{
       const model=models.get(name);
       return model&&model.visualExtent?512/model.visualExtent:1;
+    },
+    collisionShape:(name,radius)=>{
+      const model=models.get(name);
+      if(!model) return null;
+      if(model.outer.type==='circle'){
+        return {type:'circle',radius};
+      }
+      const scale=(radius*2)/model.visualExtent;
+      return {
+        type:'vertices',
+        vertices:model.collisionPoints.map(p=>({
+          x:(p[0]-256)*scale,
+          y:(p[1]-256)*scale
+        }))
+      };
     },
     isStepCut:name=>!!CUTS[name]?.stepCut,
     collisionFor:name=>CUTS[name]?.collision||'brilliant'

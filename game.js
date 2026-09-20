@@ -12,7 +12,7 @@
   const DROP_Y = 72;
   const LIMIT_Y = 146;
   const DROP_DELAY = 300;
-  const COLLIDER_SCALE = 0.94;
+  const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
   const RENDER_SCALE = 2;
   const GEM_TEXTURE_SIZE = 768;
@@ -156,6 +156,8 @@
     }
   };
 
+  // 20 progression tiers. Only these six authored cuts are reused;
+  // progression beyond six is colour + size, never new gem geometry.
   const tiers = [
     {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:42, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
     {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:46, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
@@ -447,6 +449,7 @@
       this.targetX=W/2;
       this.preview=null;
       this.lastDropAt=0;
+      this.dropGateGem=null;
       this.dangerTime=0;
       this.mergeWindow=0;
       this.mergeChain=0;
@@ -488,7 +491,7 @@
       engine.positionIterations=10;
       engine.velocityIterations=8;
       engine.constraintIterations=2;
-      engine.gravity.y=1.14;
+      engine.gravity.y=1.32;
       engine.gravity.scale=.001;
 
       if(this.game.renderer.type===Phaser.WEBGL){
@@ -1087,6 +1090,7 @@
       this.pointerHeld=false;
       this.targetX=W/2;
       this.lastDropAt=0;
+      this.dropGateGem=null;
       this.dangerTime=0;
       this.mergeWindow=0;
       this.mergeChain=0;
@@ -1107,6 +1111,7 @@
       for(const gem of [...this.gems]) this.removeGem(gem);
       this.gems.length=0;
       this.pendingMerges.length=0;
+      this.dropGateGem=null;
 
       if(this.preview){
         this.preview.destroy();
@@ -1158,30 +1163,46 @@
 
       this.sizeGemSprite(gem,tier);
 
-      const cutVerts=this.cutPoints(t.cutKey,t.r*COLLIDER_SCALE);
-
-      gem.setBody(
-        {
-          type:'fromVertices',
-          verts:cutVerts
-        },
-        {
-          restitution:.012,
-          friction:.018,
-          frictionStatic:.075,
-          frictionAir:.004,
-          density:.00115,
-          sleepThreshold:0,
-          slop:.035
-        }
+      const exactShape=window.ReactiveGemSystem.collisionShape(
+        t.reactiveCut,
+        t.r*COLLIDER_SCALE
       );
 
-      gem.setBounce(.012);
-      gem.setFriction(.018,.004,.075);
-      gem.setDensity(.00115);
+      const bodyOptions={
+        restitution:.006,
+        friction:.032,
+        frictionStatic:.022,
+        frictionAir:.0028,
+        density:.0012,
+        sleepThreshold:0,
+        slop:.018
+      };
+
+      if(exactShape&&exactShape.type==='circle'){
+        gem.setCircle(exactShape.radius,bodyOptions);
+      }else if(exactShape&&exactShape.vertices&&exactShape.vertices.length>=3){
+        gem.setBody(
+          {
+            type:'fromVertices',
+            verts:exactShape.vertices
+          },
+          bodyOptions
+        );
+      }else{
+        const cutVerts=this.cutPoints(t.cutKey,t.r*COLLIDER_SCALE);
+        gem.setBody({type:'fromVertices',verts:cutVerts},bodyOptions);
+      }
+
+      gem.setBounce(.006);
+      gem.setFriction(.032,.0028,.022);
+      gem.setDensity(.0012);
       gem.setSleepThreshold(0);
-      gem.setAngle(Phaser.Math.FloatBetween(-5,5));
-      gem.setAngularVelocity(Phaser.Math.FloatBetween(-.0035,.0035));
+
+      // Real gems are never released with mathematically perfect balance.
+      let releaseAngle=Phaser.Math.FloatBetween(-7.5,7.5);
+      if(Math.abs(releaseAngle)<1.6) releaseAngle=releaseAngle<0?-1.6:1.6;
+      gem.setAngle(releaseAngle);
+      gem.setAngularVelocity(Phaser.Math.FloatBetween(-.006,.006));
 
       gem.isGem=true;
       gem.tier=tier;
@@ -1251,6 +1272,7 @@
 
       this.lastDropAt=this.time.now;
       this.ready=false;
+      this.dropGateGem=gem;
 
       tone(180,.04,.015,'triangle');
       haptic(5);
@@ -1263,12 +1285,6 @@
       this.updateNextPreview();
       this.updateAimHandle();
       this.updatePowerButtons();
-
-      this.time.delayedCall(DROP_DELAY,()=>{
-        if(!this.running) return;
-        this.ready=true;
-        this.createDropPreview(true);
-      });
     }
 
     onCollisionStart(event) {
@@ -1382,6 +1398,7 @@
 
         const tier=a.tier;
         const next=tier+1;
+        const gateInMerge=this.dropGateGem===a||this.dropGateGem===b;
         const x=(a.x+b.x)/2;
         const y=(a.y+b.y)/2;
         const vx=(a.body.velocity.x+b.body.velocity.x)*.32;
@@ -1403,10 +1420,12 @@
           this.cameras.main.shake(100,.0038);
           tone(760,.15,.042,'sine');
           haptic([14,17,22]);
+          if(gateInMerge) this.dropGateGem=null;
           continue;
         }
 
         const gem=this.createGem(x,y,next);
+        if(gateInMerge) this.dropGateGem=gem;
         gem.setVelocity(vx,vy);
         gem.setAngularVelocity(clamp(av,-.025,.025));
 
@@ -1798,6 +1817,27 @@
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
       this.animateGemLights(time);
+
+      if(this.running&&!this.paused&&!this.ready&&!this.dropGateGem&&time-this.lastDropAt>=DROP_DELAY){
+        this.ready=true;
+        this.createDropPreview(true);
+      }
+
+      if(this.running&&!this.paused&&!this.ready&&this.dropGateGem){
+        const gate=this.dropGateGem;
+        if(!gate.active||!gate.body){
+          this.dropGateGem=null;
+          this.ready=true;
+          this.createDropPreview(true);
+        }else if(
+          time-this.lastDropAt>=90 &&
+          gate.body.bounds.min.y>LIMIT_Y+2
+        ){
+          this.dropGateGem=null;
+          this.ready=true;
+          this.createDropPreview(true);
+        }
+      }
 
       if(this.running&&!this.paused){
         this.scanForRestingMatches();
