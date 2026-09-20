@@ -901,9 +901,9 @@
       // Direction-neutral gemstone material. Facet identity comes from the
       // SVG's light/mid/dark/deep roles, while world lighting stays dynamic.
       const body=ctx.createRadialGradient(w*.5,h*.5,0,w*.5,h*.5,w*.54);
-      body.addColorStop(0,css(blend(base,accent,.30)));
-      body.addColorStop(.48,css(base));
-      body.addColorStop(1,css(blend(base,deep,.42)));
+      body.addColorStop(0,css(blend(base,accent,.46)));
+      body.addColorStop(.48,css(blend(base,accent,.16)));
+      body.addColorStop(1,css(blend(base,deep,.18)));
       ctx.fillStyle=body;
       ctx.fillRect(0,0,w,h);
 
@@ -975,13 +975,13 @@
       };
 
       const materialForFill=fill=>{
-        if(fill.includes('#flash')) return blend(accent,white,.48);
-        if(fill.includes('#light')) return blend(base,accent,.62);
-        if(fill.includes('#tableglass')) return blend(base,accent,.50);
-        if(fill.includes('#table')) return blend(base,accent,.28);
-        if(fill.includes('#deep')) return blend(deep,base,.18);
-        if(fill.includes('#dark')) return blend(deep,base,.42);
-        if(fill.includes('#mid')) return blend(base,accent,.06);
+        if(fill.includes('#flash')) return blend(accent,white,.68);
+        if(fill.includes('#light')) return blend(base,accent,.78);
+        if(fill.includes('#tableglass')) return blend(base,accent,.62);
+        if(fill.includes('#table')) return blend(base,accent,.38);
+        if(fill.includes('#deep')) return blend(deep,base,.08);
+        if(fill.includes('#dark')) return blend(deep,base,.28);
+        if(fill.includes('#mid')) return blend(base,accent,.12);
         if(fill==='#fff'||fill==='white') return blend(accent,white,.58);
         if(fill==='#000'||fill==='black') return blend(deep,base,.10);
         return base;
@@ -1008,7 +1008,7 @@
         // Preserve the authored cut hierarchy without preserving its baked
         // light direction. Every facet is now a clean jewel-coloured plane.
         let facetColour=materialForFill(poly.fill);
-        const tinyVariation=(hash-.5)*.12;
+        const tinyVariation=(hash-.5)*.20;
 
         if(tinyVariation<0){
           facetColour=blend(facetColour,deep,Math.abs(tinyVariation)*.55);
@@ -1017,14 +1017,14 @@
         }
 
         ctx.save();
-        ctx.globalAlpha=clamp(.66+poly.opacity*.24,.66,.92);
+        ctx.globalAlpha=clamp(.86+poly.opacity*.10,.86,.97);
         ctx.fillStyle=css(facetColour);
         drawPoly(ctx,poly.pts);
         ctx.fill();
 
         // Fine polished facet junctions at supersampled resolution.
-        ctx.globalAlpha=.12;
-        ctx.strokeStyle=css(blend(facetColour,accent,.50));
+        ctx.globalAlpha=.18;
+        ctx.strokeStyle=css(blend(facetColour,accent,.66));
         ctx.lineWidth=Math.max(.7,w/1200);
         ctx.stroke();
         ctx.restore();
@@ -1037,7 +1037,7 @@
           poly.fill.includes('#dark') ? .055 : 0;
 
         const jitter=(hash-.5)*.34;
-        const tilt=clamp(.22+dist*.56+jitter*.22,.15,.82);
+        const tilt=clamp(.30+dist*.58+jitter*.24,.22,.88);
         const facetAngle=angle+jitter+fillBias;
 
         let nx=Math.cos(facetAngle)*tilt;
@@ -1060,8 +1060,8 @@
         w*.5,h*.5,0,
         w*.5,h*.5,w*.33
       );
-      transmission.addColorStop(0,'rgba(255,255,255,.16)');
-      transmission.addColorStop(.36,rgba(t.accent,.10));
+      transmission.addColorStop(0,'rgba(255,255,255,.24)');
+      transmission.addColorStop(.36,rgba(t.accent,.15));
       transmission.addColorStop(1,'rgba(255,255,255,0)');
       ctx.fillStyle=transmission;
       ctx.fillRect(0,0,w,h);
@@ -1115,23 +1115,34 @@
     }
 
     setupGemLighting() {
-      // Lighting is deliberately object-local, not world-position based.
-      // Every gem gets the same illumination no matter where it sits.
-      this.webglLighting=false;
-      this.keyLight=null;
-      this.fillLight=null;
-      this.rimLight=null;
+      this.webglLighting=(this.game.renderer.type===Phaser.WEBGL);
+      if(!this.webglLighting) return;
+
+      this.lights.enable();
+      this.lights.setAmbientColor(0x9b8ca4);
+
+      this.keyLight=this.lights.addLight(
+        -9000,-11000,32000,0xfff2d9,1.72
+      );
+      this.fillLight=this.lights.addLight(
+        10500,8500,34000,0xb8a7ff,.52
+      );
+      this.rimLight=this.lights.addLight(
+        8500,-9500,32000,0xff8fc8,.30
+      );
     }
 
     applyGemLighting(gameObject) {
-      if(gameObject&&gameObject.resetPipeline){
+      if(this.webglLighting&&gameObject&&gameObject.setPipeline){
+        gameObject.setPipeline('Light2D');
+      }else if(gameObject&&gameObject.resetPipeline){
         gameObject.resetPipeline();
       }
     }
 
     animateGemLights(time) {
-      // Kept for the update loop. Gem lighting animation is handled per gem
-      // in syncGemOptics so board position can never darken a jewel.
+      // Fixed in world-space. Because these lights are extremely distant and
+      // huge, every gem gets effectively the same illumination everywhere.
     }
 
     createGemShadow(gem) {
@@ -1167,7 +1178,8 @@
       const sheen=this.add.image(gem.x,gem.y,'gem-'+gem.tier)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(33+gem.tier*.01)
-        .setAlpha(0);
+        .setAlpha(0)
+        .resetPipeline();
 
       this.sizeGemSprite(sheen,gem.tier);
 
