@@ -345,6 +345,97 @@
     try { if (navigator.vibrate) navigator.vibrate(value); } catch {}
   }
 
+  const GEM_WORLD_LIGHT_ANGLE=-Math.PI*.32;
+
+  function hexToUnitRgb(hex) {
+    const value=parseInt(hex.slice(1),16);
+    return [
+      ((value>>16)&255)/255,
+      ((value>>8)&255)/255,
+      (value&255)/255
+    ];
+  }
+
+  const GEM_FACET_FRAG_SHADER=[
+    '#define SHADER_NAME GEM_FACET_FS',
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+    'precision highp float;',
+    '#else',
+    'precision mediump float;',
+    '#endif',
+    'uniform sampler2D uMainSampler;',
+    'uniform vec2 uTexel;',
+    'uniform vec3 uGemColor;',
+    'uniform vec3 uDeepColor;',
+    'uniform vec3 uAccentColor;',
+    'uniform float uLightAngle;',
+    'uniform float uTime;',
+    'varying vec2 outTexCoord;',
+    'varying vec4 outTint;',
+    'float lum(vec4 c){ return dot(c.rgb,vec3(.2126,.7152,.0722)); }',
+    'float safeHeight(vec2 uv,float fallback){',
+    '  vec4 s=texture2D(uMainSampler,uv);',
+    '  return mix(fallback,lum(s),step(.02,s.a));',
+    '}',
+    'void main(){',
+    '  vec4 src=texture2D(uMainSampler,outTexCoord);',
+    '  if(src.a<.015) discard;',
+    '  float h=lum(src);',
+    '  float hl=safeHeight(outTexCoord-vec2(uTexel.x*1.35,0.0),h);',
+    '  float hr=safeHeight(outTexCoord+vec2(uTexel.x*1.35,0.0),h);',
+    '  float hu=safeHeight(outTexCoord-vec2(0.0,uTexel.y*1.35),h);',
+    '  float hd=safeHeight(outTexCoord+vec2(0.0,uTexel.y*1.35),h);',
+    '  float avg=(hl+hr+hu+hd)*.25;',
+    '  float localDetail=clamp(.5+(h-avg)*2.6,0.0,1.0);',
+    '  float gx=(hr-hl)*5.4;',
+    '  float gy=(hd-hu)*5.4;',
+    '  vec3 normal=normalize(vec3(-gx,gy,.58));',
+    '  vec3 lightDir=normalize(vec3(cos(uLightAngle)*.72,sin(uLightAngle)*.72,.70));',
+    '  float ndl=dot(normal,lightDir);',
+    '  float diffuse=.72+.46*clamp(ndl*.5+.5,0.0,1.0);',
+    '  vec3 material=mix(uDeepColor,uGemColor,.68+.22*localDetail);',
+    '  material=mix(material,uAccentColor,smoothstep(.72,1.0,localDetail)*.24);',
+    '  float grad=clamp(abs(hr-hl)+abs(hd-hu),0.0,1.0);',
+    '  vec3 viewDir=vec3(0.0,0.0,1.0);',
+    '  vec3 halfDir=normalize(lightDir+viewDir);',
+    '  float spec=pow(max(dot(normal,halfDir),0.0),22.0);',
+    '  float crisp=pow(max(dot(normal,halfDir),0.0),70.0);',
+    '  float edgeSpark=pow(grad,1.25)*(.08+.06*sin(uTime*1.8+outTexCoord.x*31.0+outTexCoord.y*23.0));',
+    '  float radius=distance(outTexCoord,vec2(.5));',
+    '  float innerGlow=1.0-smoothstep(.10,.52,radius);',
+    '  vec3 color=material*diffuse;',
+    '  color+=uAccentColor*(spec*.54+crisp*.54);',
+    '  color+=uAccentColor*max(edgeSpark,0.0);',
+    '  color+=uGemColor*innerGlow*.075;',
+    '  color=mix(color,uAccentColor,grad*.055);',
+    '  gl_FragColor=vec4(color,src.a*.94);',
+    '}'
+  ].join('\n');
+
+  class GemFacetPipeline extends Phaser.Renderer.WebGL.Pipelines.SinglePipeline {
+    constructor(game) {
+      super({game,fragShader:GEM_FACET_FRAG_SHADER});
+    }
+
+    onBind(gameObject) {
+      this.flush();
+      super.onBind(gameObject);
+
+      const d=gameObject&&gameObject.pipelineData?gameObject.pipelineData:null;
+      if(!d) return;
+
+      this.set2f('uTexel',d.texelX||1/768,d.texelY||1/768);
+      this.set3f('uGemColor',d.gemColor[0],d.gemColor[1],d.gemColor[2]);
+      this.set3f('uDeepColor',d.deepColor[0],d.deepColor[1],d.deepColor[2]);
+      this.set3f('uAccentColor',d.accentColor[0],d.accentColor[1],d.accentColor[2]);
+      this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE-(gameObject.rotation||0));
+      this.set1f('uTime',this.game.loop.time*.001);
+    }
+
+    onBatch(gameObject) {
+      if(gameObject) this.flush();
+    }
+  }
   class GameScene extends Phaser.Scene {
     constructor() {
       super('GameScene');
@@ -382,6 +473,7 @@
       this.rimLight=null;
       this.uiBound=false;
       this.gemVisualBounds=[];
+      this.gemPipeline=null;
     }
 
     preload() {
@@ -409,6 +501,13 @@
       engine.constraintIterations=2;
       engine.gravity.y=1.14;
       engine.gravity.scale=.001;
+
+      if(this.game.renderer.type===Phaser.WEBGL){
+        this.gemPipeline=this.renderer.pipelines.add(
+          'GemFacet',
+          new GemFacetPipeline(this.game)
+        );
+      }
 
       this.makeTextures();
       this.setupGemLighting();
@@ -775,10 +874,9 @@
 
     makeTextures() {
       this.makeSparkleTexture();
-      this.makeSheenTexture();
 
       for(let i=0;i<tiers.length;i++){
-        this.buildSvgGemTexture(i);
+        this.measureGemBounds(i);
       }
     }
 
@@ -821,24 +919,6 @@
       if(texture) texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
     }
 
-    makeSheenTexture() {
-      const canvas=document.createElement('canvas');
-      canvas.width=192;
-      canvas.height=192;
-      const ctx=canvas.getContext('2d');
-
-      const glow=ctx.createRadialGradient(96,96,0,96,96,90);
-      glow.addColorStop(0,'rgba(255,255,255,.50)');
-      glow.addColorStop(.18,'rgba(255,255,255,.25)');
-      glow.addColorStop(.48,'rgba(255,255,255,.07)');
-      glow.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=glow;
-      ctx.fillRect(0,0,192,192);
-
-      const texture=this.textures.addCanvas('gem-sheen',canvas);
-      if(texture) texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
-    }
-
     cutPoints(cutKey,scale,cx=0,cy=0) {
       const cut=CUTS[cutKey]||CUTS.brilliant;
       return cut.verts.map(v=>({x:cx+v[0]*scale,y:cy+v[1]*scale}));
@@ -871,152 +951,99 @@
       return scale;
     }
 
-    buildSvgGemTexture(index) {
-      const key='gem-'+index;
-      const texture=this.textures.get(key);
-      if(!texture||!texture.getSourceImage) return;
+    measureGemBounds(index) {
+      const texture=this.textures.get('gem-'+index);
+      const source=texture&&texture.getSourceImage
+        ? texture.getSourceImage()
+        : null;
+      const svgText=this.cache.text.get('gem-svg-'+index);
 
-      const source=texture.getSourceImage();
-      if(!source) return;
+      if(!source){
+        this.gemVisualBounds[index]=GEM_TEXTURE_SIZE;
+        return;
+      }
 
-      const t=tiers[index];
-      const w=source.width||GEM_TEXTURE_SIZE;
-      const h=source.height||GEM_TEXTURE_SIZE;
-
-      const canvas=document.createElement('canvas');
-      canvas.width=w;
-      canvas.height=h;
-      const ctx=canvas.getContext('2d',{willReadFrequently:true});
-      ctx.drawImage(source,0,0,w,h);
-
-      const toRgb=hex=>{
-        const v=parseInt(hex.slice(1),16);
-        return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
-      };
-
-      const lerp=(a,b,u)=>a+(b-a)*u;
-      const mix=(a,b,u)=>({
-        r:Math.round(lerp(a.r,b.r,u)),
-        g:Math.round(lerp(a.g,b.g,u)),
-        b:Math.round(lerp(a.b,b.b,u))
-      });
-
-      const deep=toRgb(t.dark);
-      const base=toRgb(t.color);
-      const accent=toRgb(t.accent);
-      const white={r:255,g:255,b:255};
+      if(!svgText){
+        this.gemVisualBounds[index]=Math.max(source.width,source.height);
+        return;
+      }
 
       try {
-        const image=ctx.getImageData(0,0,w,h);
-        const px=image.data;
+        const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
+        const svg=doc.documentElement;
+        const vb=(svg.getAttribute('viewBox')||'0 0 512 512')
+          .trim()
+          .split(/[\s,]+/)
+          .map(Number);
 
-        let minX=w;
-        let minY=h;
-        let maxX=-1;
-        let maxY=-1;
+        const viewX=vb.length===4&&Number.isFinite(vb[0])?vb[0]:0;
+        const viewY=vb.length===4&&Number.isFinite(vb[1])?vb[1]:0;
+        const viewW=vb.length===4&&Number.isFinite(vb[2])&&vb[2]>0?vb[2]:512;
+        const viewH=vb.length===4&&Number.isFinite(vb[3])&&vb[3]>0?vb[3]:512;
 
-        for(let y=0;y<h;y++){
-          for(let x=0;x<w;x++){
-            const i=(y*w+x)*4;
-            const alpha=px[i+3];
-            if(alpha<5) continue;
+        let minX=Infinity;
+        let minY=Infinity;
+        let maxX=-Infinity;
+        let maxY=-Infinity;
 
-            if(x<minX) minX=x;
-            if(x>maxX) maxX=x;
-            if(y<minY) minY=y;
-            if(y>maxY) maxY=y;
+        for(const node of doc.querySelectorAll('polygon')){
+          if(node.closest('defs')) continue;
 
-            // Preserve every gradient and facet from the authored SVG, but
-            // lift its darkest values so it reads as crystal instead of metal.
-            const rawLum=(px[i]*.2126+px[i+1]*.7152+px[i+2]*.0722)/255;
-            const lum=.16+.84*Math.pow(rawLum,.72);
+          const values=(node.getAttribute('points')||'')
+            .trim()
+            .split(/[\s,]+/)
+            .map(Number)
+            .filter(Number.isFinite);
 
-            let c;
-            if(lum<.34){
-              const u=clamp((lum-.16)/.18,0,1);
-              c=mix(mix(deep,base,.22),mix(deep,base,.62),u);
-            }else if(lum<.66){
-              const u=(lum-.34)/.32;
-              c=mix(mix(deep,base,.62),mix(base,accent,.18),u);
-            }else if(lum<.88){
-              const u=(lum-.66)/.22;
-              c=mix(mix(base,accent,.18),mix(base,accent,.72),u);
-            }else{
-              const u=(lum-.88)/.12;
-              c=mix(mix(base,accent,.72),mix(accent,white,.62),u);
-            }
-
-            // Retain tiny local differences from the original SVG so fine
-            // facets do not collapse into broad flat colour blocks.
-            const local=(px[i]-px[i+2])/255;
-            if(local>0.05) c=mix(c,accent,clamp(local*.10,0,.08));
-            if(local<-0.05) c=mix(c,deep,clamp(-local*.07,0,.06));
-
-            px[i]=c.r;
-            px[i+1]=c.g;
-            px[i+2]=c.b;
-
-            // Crystal body, not fully opaque plastic.
-            const nx=x/w-.5;
-            const ny=y/h-.5;
-            const radial=clamp(Math.hypot(nx,ny),0,.71)/.71;
-            const clarity=.035+(1-radial)*.055;
-            px[i+3]=Math.round(alpha*(1-clarity));
+          for(let i=0;i+1<values.length;i+=2){
+            minX=Math.min(minX,values[i]);
+            maxX=Math.max(maxX,values[i]);
+            minY=Math.min(minY,values[i+1]);
+            maxY=Math.max(maxY,values[i+1]);
           }
         }
 
-        ctx.putImageData(image,0,0);
-
-        // Direction-neutral internal transmission. Dynamic highlights are
-        // separate overlays, so this never creates dark board corners.
-        ctx.save();
-        ctx.globalCompositeOperation='screen';
-
-        const core=ctx.createRadialGradient(
-          w*.50,h*.48,0,
-          w*.50,h*.50,Math.max(w,h)*.34
-        );
-        core.addColorStop(0,'rgba(255,255,255,.18)');
-        core.addColorStop(.30,rgba(t.accent,.11));
-        core.addColorStop(.72,rgba(t.color,.035));
-        core.addColorStop(1,'rgba(255,255,255,0)');
-        ctx.fillStyle=core;
-        ctx.fillRect(0,0,w,h);
-
-        ctx.restore();
-
-        // Reapply the original SVG alpha exactly.
-        ctx.save();
-        ctx.globalCompositeOperation='destination-in';
-        ctx.drawImage(source,0,0,w,h);
-        ctx.restore();
-
-        this.gemVisualBounds[index]=maxX>=minX&&maxY>=minY
-          ? Math.max(maxX-minX+1,maxY-minY+1)
-          : Math.max(w,h);
+        if(Number.isFinite(minX)&&Number.isFinite(maxX)){
+          const pxW=((maxX-minX)/viewW)*source.width;
+          const pxH=((maxY-minY)/viewH)*source.height;
+          this.gemVisualBounds[index]=Math.max(pxW,pxH);
+        }else{
+          this.gemVisualBounds[index]=Math.max(source.width,source.height);
+        }
       } catch {
-        this.gemVisualBounds[index]=Math.max(w,h);
-      }
-
-      this.textures.remove(key);
-      const detailed=this.textures.addCanvas(key,canvas);
-
-      if(detailed){
-        detailed.setFilter(Phaser.Textures.FilterMode.LINEAR);
+        this.gemVisualBounds[index]=Math.max(source.width,source.height);
       }
     }
 
     setupGemLighting() {
-      this.webglLighting=false;
-      this.keyLight=null;
-      this.fillLight=null;
-      this.rimLight=null;
+      this.webglLighting=!!this.gemPipeline;
     }
 
-    applyGemLighting(gameObject) {
-      if(gameObject&&gameObject.resetPipeline){
-        gameObject.resetPipeline();
+    applyGemLighting(gameObject,tier=gameObject&&gameObject.tier) {
+      if(!gameObject) return;
+
+      if(!this.gemPipeline||tier===undefined||tier===null){
+        if(gameObject.resetPipeline) gameObject.resetPipeline();
+        return;
       }
+
+      const t=tiers[tier];
+      const texture=this.textures.get('gem-'+tier);
+      const source=texture&&texture.getSourceImage
+        ? texture.getSourceImage()
+        : null;
+      const w=source&&source.width?source.width:GEM_TEXTURE_SIZE;
+      const h=source&&source.height?source.height:GEM_TEXTURE_SIZE;
+
+      gameObject.pipelineData={
+        gemColor:hexToUnitRgb(t.color),
+        deepColor:hexToUnitRgb(t.dark),
+        accentColor:hexToUnitRgb(t.accent),
+        texelX:1/w,
+        texelY:1/h
+      };
+
+      gameObject.setPipeline(this.gemPipeline);
     }
 
     animateGemLights(time) {
@@ -1053,22 +1080,14 @@
     createGemGlint(gem) {
       if(!gem||!this.textures.exists('gem-sparkle')) return;
 
-      const sheen=this.add.image(gem.x,gem.y,'gem-sheen')
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(33+gem.tier*.01)
-        .setAlpha(0);
-
       const glint=this.add.image(gem.x,gem.y,'gem-sparkle')
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(34+gem.tier*.01)
         .setAlpha(0);
 
-      if(this.gemMask){
-        sheen.setMask(this.gemMask);
-        glint.setMask(this.gemMask);
-      }
+      if(this.gemMask) glint.setMask(this.gemMask);
 
-      gem.sheen=sheen;
+      gem.sheen=null;
       gem.glint=glint;
       gem.opticSeed=Math.random()*Math.PI*2;
     }
@@ -1077,31 +1096,17 @@
       if(!gem||!gem.active||!gem.body||!gem.glint||!gem.glint.active) return;
 
       const t=tiers[gem.tier];
-      const lightAngle=-Math.PI*.32;
       const cut=CUTS[t.cutKey]||CUTS.brilliant;
       const facetCount=cut.verts.length;
+      const lightAngle=GEM_WORLD_LIGHT_ANGLE;
 
       const phase=(gem.rotation-lightAngle)*facetCount*2+gem.opticSeed;
-      const flash=Math.pow(Math.max(0,Math.cos(phase)),16);
+      const flash=Math.pow(Math.max(0,Math.cos(phase)),18);
       const motion=clamp(
-        Math.abs(gem.body.angularVelocity)*48+gem.body.speed*.07,
-        .15,
+        Math.abs(gem.body.angularVelocity)*52+gem.body.speed*.07,
+        .16,
         1
       );
-
-      if(gem.sheen&&gem.sheen.active){
-        const sweep=.5+.5*Math.cos(
-          (gem.rotation-lightAngle)*2+gem.opticSeed*.45
-        );
-        const travel=t.r*(.12+.18*sweep);
-
-        gem.sheen.x=gem.x+Math.cos(lightAngle)*travel;
-        gem.sheen.y=gem.y+Math.sin(lightAngle)*travel;
-        gem.sheen.rotation=0;
-        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.84));
-        gem.sheen.setScale(clamp(t.r/105,.30,1.35));
-        gem.sheen.setAlpha(.035+.065*sweep+.045*motion);
-      }
 
       const localLight=Phaser.Math.Angle.Wrap(lightAngle-gem.rotation);
       const facetStep=(Math.PI*2)/facetCount;
@@ -1109,12 +1114,12 @@
       const localFacet=-Math.PI/2+facetIndex*facetStep;
       const worldFacet=localFacet+gem.rotation;
 
-      gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.45;
-      gem.glint.y=gem.y+Math.sin(worldFacet)*t.r*.45;
+      gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.44;
+      gem.glint.y=gem.y+Math.sin(worldFacet)*t.r*.44;
       gem.glint.rotation=0;
-      gem.glint.setScale(clamp(t.r/96,.34,1.15)*(.25+flash*.58));
-      gem.glint.setAlpha(clamp(.018+flash*(.60+.24*motion),0,.90));
-      gem.glint.setTint(mixHex(t.accent,'#ffffff',.82));
+      gem.glint.setScale(clamp(t.r/98,.30,1.08)*(.22+flash*.52));
+      gem.glint.setAlpha(clamp(.01+flash*(.50+.22*motion),0,.78));
+      gem.glint.setTint(mixHex(t.accent,'#ffffff',.84));
     }
 
     drawVaultBackdrop() {
@@ -1215,8 +1220,9 @@
       const x=clamp(this.targetX,min,max);
 
       this.preview=this.add.image(x,DROP_Y,'gem-'+this.currentTier).setDepth(32);
+      this.preview.tier=this.currentTier;
       this.sizeGemSprite(this.preview,this.currentTier);
-      this.applyGemLighting(this.preview);
+      this.applyGemLighting(this.preview,this.currentTier);
       this.preview.setAlpha(1);
       if(this.gemMask) this.preview.setMask(this.gemMask);
 
@@ -1278,7 +1284,7 @@
       gem.lastDingAt=0;
       gem.setDepth(10+tier*.01);
       gem.setAlpha(1);
-      this.applyGemLighting(gem);
+      this.applyGemLighting(gem,tier);
 
       if(this.gemMask) gem.setMask(this.gemMask);
 
@@ -2003,7 +2009,7 @@
   }
 
   const config={
-    type:Phaser.AUTO,
+    type:Phaser.WEBGL,
     parent:'game',
     width:W*RENDER_SCALE,
     height:H*RENDER_SCALE,
