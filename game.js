@@ -896,17 +896,17 @@
       const base=toRgb(t.color);
       const accent=toRgb(t.accent);
       const deep=toRgb(t.dark);
+      const white={r:255,g:255,b:255};
 
-      // Material colour only. This is deliberately radially symmetric so the
-      // direction of the light comes entirely from the live lighting pass.
-      const body=ctx.createRadialGradient(w*.5,h*.5,0,w*.5,h*.5,w*.53);
-      body.addColorStop(0,css(blend(base,accent,.18)));
-      body.addColorStop(.58,css(base));
-      body.addColorStop(1,css(blend(base,deep,.30)));
+      // Direction-neutral gemstone material. Facet identity comes from the
+      // SVG's light/mid/dark/deep roles, while world lighting stays dynamic.
+      const body=ctx.createRadialGradient(w*.5,h*.5,0,w*.5,h*.5,w*.54);
+      body.addColorStop(0,css(blend(base,accent,.30)));
+      body.addColorStop(.48,css(base));
+      body.addColorStop(1,css(blend(base,deep,.42)));
       ctx.fillStyle=body;
       ctx.fillRect(0,0,w,h);
 
-      // Default normal points out of the screen. Facet polygons overwrite it.
       nctx.fillStyle='rgb(128,128,255)';
       nctx.fillRect(0,0,w,h);
 
@@ -933,6 +933,7 @@
           }
 
           polygons=[...doc.querySelectorAll('polygon')]
+            .filter(node=>!node.closest('defs'))
             .map((node,polyIndex)=>{
               const values=(node.getAttribute('points')||'')
                 .trim()
@@ -945,7 +946,12 @@
                 pts.push({x:values[i],y:values[i+1]});
               }
 
-              return {pts,polyIndex};
+              return {
+                pts,
+                polyIndex,
+                fill:(node.getAttribute('fill')||'').toLowerCase(),
+                opacity:clamp(Number(node.getAttribute('opacity')||1),0,1)
+              };
             })
             .filter(poly=>poly.pts.length>=3);
         } catch {
@@ -968,6 +974,19 @@
         context.closePath();
       };
 
+      const materialForFill=fill=>{
+        if(fill.includes('#flash')) return blend(accent,white,.48);
+        if(fill.includes('#light')) return blend(base,accent,.62);
+        if(fill.includes('#tableglass')) return blend(base,accent,.50);
+        if(fill.includes('#table')) return blend(base,accent,.28);
+        if(fill.includes('#deep')) return blend(deep,base,.18);
+        if(fill.includes('#dark')) return blend(deep,base,.42);
+        if(fill.includes('#mid')) return blend(base,accent,.06);
+        if(fill==='#fff'||fill==='white') return blend(accent,white,.58);
+        if(fill==='#000'||fill==='black') return blend(deep,base,.10);
+        return base;
+      };
+
       for(const poly of polygons){
         let px=0;
         let py=0;
@@ -982,48 +1001,74 @@
         const dy=py-cy;
         const dist=clamp(Math.hypot(dx,dy)/maxRadius,0,1);
         const angle=Math.atan2(dy,dx);
-
-        // Subtle static albedo variation gives the cut readable facet
-        // boundaries without pre-baking a light direction.
         const hash=.5+.5*Math.sin(
           (index+1)*12.9898+(poly.polyIndex+1)*78.233
         );
-        const variation=(hash-.5)*.22;
 
-        let facetColour;
-        if(variation<0){
-          facetColour=blend(base,deep,Math.abs(variation)*.58);
+        // Preserve the authored cut hierarchy without preserving its baked
+        // light direction. Every facet is now a clean jewel-coloured plane.
+        let facetColour=materialForFill(poly.fill);
+        const tinyVariation=(hash-.5)*.12;
+
+        if(tinyVariation<0){
+          facetColour=blend(facetColour,deep,Math.abs(tinyVariation)*.55);
         }else{
-          facetColour=blend(base,accent,variation*.74);
+          facetColour=blend(facetColour,accent,tinyVariation*.48);
         }
 
         ctx.save();
-        ctx.globalAlpha=.18+.11*hash;
+        ctx.globalAlpha=clamp(.66+poly.opacity*.24,.66,.92);
         ctx.fillStyle=css(facetColour);
         drawPoly(ctx,poly.pts);
         ctx.fill();
+
+        // Fine polished facet junctions at supersampled resolution.
+        ctx.globalAlpha=.12;
+        ctx.strokeStyle=css(blend(facetColour,accent,.50));
+        ctx.lineWidth=Math.max(.7,w/1200);
+        ctx.stroke();
         ctx.restore();
 
-        // Each SVG facet gets a real surface direction. Rotation and moving
-        // lights now change its brightness live instead of using baked shading.
-        const jitter=(hash-.5)*.22;
-        const tilt=clamp(.12+dist*.58+jitter*.16,.08,.72);
-        const tangentAngle=angle+(hash-.5)*.42;
+        // Facet normals point in distinct 3D directions. These normals rotate
+        // with the gem and react to the moving key/fill/rim lights live.
+        const fillBias=
+          poly.fill.includes('#light')||poly.fill.includes('#flash') ? -.10 :
+          poly.fill.includes('#deep') ? .10 :
+          poly.fill.includes('#dark') ? .055 : 0;
 
-        let nx=Math.cos(tangentAngle)*tilt;
-        let ny=-Math.sin(tangentAngle)*tilt;
-        const nz=Math.sqrt(Math.max(.16,1-nx*nx-ny*ny));
+        const jitter=(hash-.5)*.34;
+        const tilt=clamp(.22+dist*.56+jitter*.22,.15,.82);
+        const facetAngle=angle+jitter+fillBias;
+
+        let nx=Math.cos(facetAngle)*tilt;
+        let ny=-Math.sin(facetAngle)*tilt;
+        let nz=Math.sqrt(Math.max(.08,1-nx*nx-ny*ny));
         const len=Math.hypot(nx,ny,nz)||1;
         nx/=len;
         ny/=len;
+        nz/=len;
 
-        nctx.fillStyle=normalCss(nx,ny,nz/len);
+        nctx.fillStyle=normalCss(nx,ny,nz);
         drawPoly(nctx,poly.pts);
         nctx.fill();
       }
 
-      // Use only the original SVG alpha. Its old highlights and shadows are
-      // intentionally discarded.
+      // Gentle internal transmission, still direction-neutral.
+      ctx.save();
+      ctx.globalCompositeOperation='screen';
+      const transmission=ctx.createRadialGradient(
+        w*.5,h*.5,0,
+        w*.5,h*.5,w*.33
+      );
+      transmission.addColorStop(0,'rgba(255,255,255,.16)');
+      transmission.addColorStop(.36,rgba(t.accent,.10));
+      transmission.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=transmission;
+      ctx.fillRect(0,0,w,h);
+      ctx.restore();
+
+      // Keep only the SVG silhouette. None of its original directional
+      // gradients, highlights or shadows survive into the colour texture.
       ctx.save();
       ctx.globalCompositeOperation='destination-in';
       ctx.drawImage(maskCanvas,0,0,w,h);
@@ -1034,7 +1079,6 @@
       nctx.drawImage(maskCanvas,0,0,w,h);
       nctx.restore();
 
-      // Measure the actual visible cut, ignoring transparent SVG padding.
       try {
         const data=mctx.getImageData(0,0,w,h).data;
         let minX=w;
@@ -1075,11 +1119,11 @@
       if(!this.webglLighting) return;
 
       this.lights.enable();
-      this.lights.setAmbientColor(0x62586d);
+      this.lights.setAmbientColor(0x3f3547);
 
-      this.keyLight=this.lights.addLight(70,-34,1480,0xfff1d2,1.20);
-      this.fillLight=this.lights.addLight(635,270,1280,0xa990ff,.46);
-      this.rimLight=this.lights.addLight(320,880,980,0xff78b8,.26);
+      this.keyLight=this.lights.addLight(70,-34,1480,0xfff0d0,1.58);
+      this.fillLight=this.lights.addLight(635,270,1280,0xa990ff,.32);
+      this.rimLight=this.lights.addLight(320,880,980,0xff78b8,.18);
     }
 
     applyGemLighting(gameObject) {
@@ -1190,16 +1234,12 @@
       const worldFacet=localFacet+gem.rotation;
 
       if(gem.sheen&&gem.sheen.active){
-        const sheenAngle=lightAngle+.10*Math.sin(time*.0011+gem.opticSeed);
-        const baseScale=this.gemSpriteScale(gem.tier);
-        const pulse=.035+.018*Math.sin(time*.0018+gem.opticSeed);
-
-        gem.sheen.x=gem.x+Math.cos(sheenAngle)*t.r*.035;
-        gem.sheen.y=gem.y+Math.sin(sheenAngle)*t.r*.035;
+        gem.sheen.x=gem.x;
+        gem.sheen.y=gem.y;
         gem.sheen.rotation=gem.rotation;
-        gem.sheen.setScale(baseScale*1.012);
-        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.78));
-        gem.sheen.setAlpha(pulse);
+        gem.sheen.setScale(this.gemSpriteScale(gem.tier));
+        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.82));
+        gem.sheen.setAlpha(.010+.012*flash);
       }
 
       gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.46;
