@@ -564,7 +564,7 @@
     createGemMask() {
       this.gemMaskShape=this.make.graphics({x:0,y:0,add:false});
       this.gemMaskShape.fillStyle(0xffffff,1);
-      this.gemMaskShape.fillRect(WALL,20,W-WALL*2,FLOOR-20);
+      this.gemMaskShape.fillRect(WALL,16,W-WALL*2,FRAME_FLOOR+20);
       this.gemMask=this.gemMaskShape.createGeometryMask();
     }
 
@@ -718,7 +718,7 @@
       const firstR=tiers[0].r;
       const lastR=tiers[tiers.length-1].r;
       const sizeT=clamp((t.r-firstR)/(lastR-firstR),0,1);
-      const cavityScale=31+sizeT*14;
+      const cavityScale=52+sizeT*12;
 
       const cavity=cut.verts.map(v=>({
         x:cx+v[0]*cavityScale,
@@ -787,8 +787,11 @@
 
       if(window.ReactiveGemSystem){
         const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,-14,256);
-        const max=cavityScale*1.74;
-        const scale=Math.min(max/source.width,max/source.height);
+        const visualScale=window.ReactiveGemSystem.visualScale
+          ? window.ReactiveGemSystem.visualScale(t.reactiveCut)
+          : 1;
+        const max=cavityScale*1.92;
+        const scale=Math.min(max/source.width,max/source.height)*visualScale;
         const gw=source.width*scale;
         const gh=source.height*scale;
 
@@ -830,8 +833,8 @@
         art.className='gem-card__art';
 
         const canvas=document.createElement('canvas');
-        canvas.width=128;
-        canvas.height=128;
+        canvas.width=192;
+        canvas.height=192;
         canvas.setAttribute('aria-hidden','true');
         art.appendChild(canvas);
 

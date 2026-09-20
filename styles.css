@@ -1052,3 +1052,133 @@ body{
     min-height:100dvh!important;
   }
 }
+
+
+/* === PLAY AREA + GEM SHOWCASE 2026-09-20 === */
+.hud{
+  min-height:calc(92px + env(safe-area-inset-top))!important;
+  padding-top:calc(10px + env(safe-area-inset-top))!important;
+  padding-bottom:8px!important;
+}
+.play-shell{
+  width:92%!important;
+  max-width:515px!important;
+}
+.aim-strip{
+  width:88%!important;
+  max-width:492px!important;
+  flex-basis:72px!important;
+  min-height:72px!important;
+  max-height:72px!important;
+  margin-top:6px!important;
+}
+.power-dock{
+  width:88%!important;
+  max-width:492px!important;
+  min-height:76px!important;
+  padding-top:5px!important;
+}
+@media(max-width:420px){
+  .hud{width:90%!important}
+  .play-shell{width:92%!important}
+  .aim-strip,
+  .power-dock{width:88%!important}
+}
+@media(max-height:760px){
+  .hud{
+    min-height:calc(86px + env(safe-area-inset-top))!important;
+  }
+  .play-shell{width:88%!important}
+  .aim-strip,
+  .power-dock{width:86%!important}
+}
+
+/* Gem Showcase */
+.collection-header{
+  min-height:calc(88px + env(safe-area-inset-top));
+  padding-bottom:10px;
+}
+.collection-header h2{
+  font-size:30px;
+}
+.gem-collection{
+  padding:12px 12px calc(28px + env(safe-area-inset-bottom));
+  gap:12px;
+  align-items:start;
+}
+.gem-card{
+  min-height:282px;
+  padding:10px;
+  border-radius:24px;
+}
+.gem-card__art{
+  width:100%;
+  height:192px;
+  margin:0 0 10px;
+  border-radius:20px;
+}
+.gem-card__art canvas{
+  width:184px;
+  height:184px;
+}
+.gem-card__meta{
+  width:100%;
+  min-height:58px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:
+    "name value"
+    "cut cut";
+  align-items:center;
+  column-gap:8px;
+  row-gap:3px;
+  padding:0 4px 2px;
+  text-align:left;
+}
+.gem-card__meta strong{
+  grid-area:name;
+  min-width:0;
+  font-size:17px;
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.gem-card__meta small{
+  grid-area:cut;
+  margin:0;
+  min-width:0;
+  font-size:13px;
+  line-height:1.2;
+  color:#bcaac1;
+  white-space:normal;
+}
+.gem-card__meta .gem-card__value{
+  grid-area:value;
+  margin:0;
+  font-size:17px;
+  line-height:1;
+  text-align:right;
+}
+.gem-card.locked{
+  min-height:218px;
+}
+.gem-card.locked .gem-card__art{
+  height:196px;
+}
+@media(max-width:380px){
+  .gem-card{
+    min-height:264px;
+  }
+  .gem-card__art{
+    height:174px;
+  }
+  .gem-card__art canvas{
+    width:166px;
+    height:166px;
+  }
+  .gem-card__meta strong,
+  .gem-card__meta .gem-card__value{
+    font-size:16px;
+  }
+}
