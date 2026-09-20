@@ -775,6 +775,7 @@
 
     makeTextures() {
       this.makeSparkleTexture();
+      this.makeSheenTexture();
 
       for(let i=0;i<tiers.length;i++){
         this.buildSvgGemTexture(i);
@@ -820,6 +821,24 @@
       if(texture) texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
     }
 
+    makeSheenTexture() {
+      const canvas=document.createElement('canvas');
+      canvas.width=192;
+      canvas.height=192;
+      const ctx=canvas.getContext('2d');
+
+      const glow=ctx.createRadialGradient(96,96,0,96,96,90);
+      glow.addColorStop(0,'rgba(255,255,255,.50)');
+      glow.addColorStop(.18,'rgba(255,255,255,.25)');
+      glow.addColorStop(.48,'rgba(255,255,255,.07)');
+      glow.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=glow;
+      ctx.fillRect(0,0,192,192);
+
+      const texture=this.textures.addCanvas('gem-sheen',canvas);
+      if(texture) texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
+
     cutPoints(cutKey,scale,cx=0,cy=0) {
       const cut=CUTS[cutKey]||CUTS.brilliant;
       return cut.verts.map(v=>({x:cx+v[0]*scale,y:cy+v[1]*scale}));
@@ -858,291 +877,149 @@
       if(!texture||!texture.getSourceImage) return;
 
       const source=texture.getSourceImage();
-      const svgText=this.cache.text.get('gem-svg-'+index);
       if(!source) return;
 
       const t=tiers[index];
       const w=source.width||GEM_TEXTURE_SIZE;
       const h=source.height||GEM_TEXTURE_SIZE;
 
-      const maskCanvas=document.createElement('canvas');
-      maskCanvas.width=w;
-      maskCanvas.height=h;
-      const mctx=maskCanvas.getContext('2d',{willReadFrequently:true});
-      mctx.drawImage(source,0,0,w,h);
-
       const canvas=document.createElement('canvas');
       canvas.width=w;
       canvas.height=h;
-      const ctx=canvas.getContext('2d');
-
-      const normal=document.createElement('canvas');
-      normal.width=w;
-      normal.height=h;
-      const nctx=normal.getContext('2d');
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      ctx.drawImage(source,0,0,w,h);
 
       const toRgb=hex=>{
         const v=parseInt(hex.slice(1),16);
         return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
       };
 
-      const blend=(a,b,u)=>({
-        r:Math.round(a.r+(b.r-a.r)*u),
-        g:Math.round(a.g+(b.g-a.g)*u),
-        b:Math.round(a.b+(b.b-a.b)*u)
+      const lerp=(a,b,u)=>a+(b-a)*u;
+      const mix=(a,b,u)=>({
+        r:Math.round(lerp(a.r,b.r,u)),
+        g:Math.round(lerp(a.g,b.g,u)),
+        b:Math.round(lerp(a.b,b.b,u))
       });
 
-      const css=c=>'rgb('+c.r+','+c.g+','+c.b+')';
+      const deep=toRgb(t.dark);
       const base=toRgb(t.color);
       const accent=toRgb(t.accent);
-      const deep=toRgb(t.dark);
       const white={r:255,g:255,b:255};
 
-      // Direction-neutral gemstone material. Facet identity comes from the
-      // SVG's light/mid/dark/deep roles, while world lighting stays dynamic.
-      const body=ctx.createRadialGradient(w*.5,h*.5,0,w*.5,h*.5,w*.54);
-      body.addColorStop(0,css(blend(base,accent,.46)));
-      body.addColorStop(.48,css(blend(base,accent,.16)));
-      body.addColorStop(1,css(blend(base,deep,.18)));
-      ctx.fillStyle=body;
-      ctx.fillRect(0,0,w,h);
-
-      nctx.fillStyle='rgb(128,128,255)';
-      nctx.fillRect(0,0,w,h);
-
-      let viewX=0;
-      let viewY=0;
-      let viewW=512;
-      let viewH=512;
-      let polygons=[];
-
-      if(svgText){
-        try {
-          const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
-          const svg=doc.documentElement;
-          const vb=(svg.getAttribute('viewBox')||'0 0 512 512')
-            .trim()
-            .split(/[\s,]+/)
-            .map(Number);
-
-          if(vb.length===4&&vb.every(Number.isFinite)){
-            viewX=vb[0];
-            viewY=vb[1];
-            viewW=vb[2]||512;
-            viewH=vb[3]||512;
-          }
-
-          polygons=[...doc.querySelectorAll('polygon')]
-            .filter(node=>!node.closest('defs'))
-            .map((node,polyIndex)=>{
-              const values=(node.getAttribute('points')||'')
-                .trim()
-                .split(/[\s,]+/)
-                .map(Number)
-                .filter(Number.isFinite);
-
-              const pts=[];
-              for(let i=0;i+1<values.length;i+=2){
-                pts.push({x:values[i],y:values[i+1]});
-              }
-
-              return {
-                pts,
-                polyIndex,
-                fill:(node.getAttribute('fill')||'').toLowerCase(),
-                opacity:clamp(Number(node.getAttribute('opacity')||1),0,1)
-              };
-            })
-            .filter(poly=>poly.pts.length>=3);
-        } catch {
-          polygons=[];
-        }
-      }
-
-      const sx=w/viewW;
-      const sy=h/viewH;
-      const cx=viewX+viewW*.5;
-      const cy=viewY+viewH*.5;
-      const maxRadius=Math.hypot(viewW*.5,viewH*.5);
-
-      const drawPoly=(context,pts)=>{
-        context.beginPath();
-        context.moveTo((pts[0].x-viewX)*sx,(pts[0].y-viewY)*sy);
-        for(let i=1;i<pts.length;i++){
-          context.lineTo((pts[i].x-viewX)*sx,(pts[i].y-viewY)*sy);
-        }
-        context.closePath();
-      };
-
-      const materialForFill=fill=>{
-        if(fill.includes('#flash')) return blend(accent,white,.68);
-        if(fill.includes('#light')) return blend(base,accent,.78);
-        if(fill.includes('#tableglass')) return blend(base,accent,.62);
-        if(fill.includes('#table')) return blend(base,accent,.38);
-        if(fill.includes('#deep')) return blend(deep,base,.08);
-        if(fill.includes('#dark')) return blend(deep,base,.28);
-        if(fill.includes('#mid')) return blend(base,accent,.12);
-        if(fill==='#fff'||fill==='white') return blend(accent,white,.58);
-        if(fill==='#000'||fill==='black') return blend(deep,base,.10);
-        return base;
-      };
-
-      for(const poly of polygons){
-        let px=0;
-        let py=0;
-        for(const p of poly.pts){
-          px+=p.x;
-          py+=p.y;
-        }
-        px/=poly.pts.length;
-        py/=poly.pts.length;
-
-        const dx=px-cx;
-        const dy=py-cy;
-        const dist=clamp(Math.hypot(dx,dy)/maxRadius,0,1);
-        const angle=Math.atan2(dy,dx);
-        const hash=.5+.5*Math.sin(
-          (index+1)*12.9898+(poly.polyIndex+1)*78.233
-        );
-
-        // Preserve the authored cut hierarchy without preserving its baked
-        // light direction. Every facet is now a clean jewel-coloured plane.
-        let facetColour=materialForFill(poly.fill);
-        const tinyVariation=(hash-.5)*.20;
-
-        if(tinyVariation<0){
-          facetColour=blend(facetColour,deep,Math.abs(tinyVariation)*.55);
-        }else{
-          facetColour=blend(facetColour,accent,tinyVariation*.48);
-        }
-
-        ctx.save();
-        ctx.globalAlpha=clamp(.86+poly.opacity*.10,.86,.97);
-        ctx.fillStyle=css(facetColour);
-        drawPoly(ctx,poly.pts);
-        ctx.fill();
-
-        // Fine polished facet junctions at supersampled resolution.
-        ctx.globalAlpha=.18;
-        ctx.strokeStyle=css(blend(facetColour,accent,.66));
-        ctx.lineWidth=Math.max(.7,w/1200);
-        ctx.stroke();
-        ctx.restore();
-
-        // Facet normals point in distinct 3D directions. These normals rotate
-        // with the gem and react to the moving key/fill/rim lights live.
-        const fillBias=
-          poly.fill.includes('#light')||poly.fill.includes('#flash') ? -.10 :
-          poly.fill.includes('#deep') ? .10 :
-          poly.fill.includes('#dark') ? .055 : 0;
-
-        const jitter=(hash-.5)*.34;
-        const tilt=clamp(.30+dist*.58+jitter*.24,.22,.88);
-        const facetAngle=angle+jitter+fillBias;
-
-        let nx=Math.cos(facetAngle)*tilt;
-        let ny=-Math.sin(facetAngle)*tilt;
-        let nz=Math.sqrt(Math.max(.08,1-nx*nx-ny*ny));
-        const len=Math.hypot(nx,ny,nz)||1;
-        nx/=len;
-        ny/=len;
-        nz/=len;
-
-        nctx.fillStyle=normalCss(nx,ny,nz);
-        drawPoly(nctx,poly.pts);
-        nctx.fill();
-      }
-
-      // Gentle internal transmission, still direction-neutral.
-      ctx.save();
-      ctx.globalCompositeOperation='screen';
-      const transmission=ctx.createRadialGradient(
-        w*.5,h*.5,0,
-        w*.5,h*.5,w*.33
-      );
-      transmission.addColorStop(0,'rgba(255,255,255,.24)');
-      transmission.addColorStop(.36,rgba(t.accent,.15));
-      transmission.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=transmission;
-      ctx.fillRect(0,0,w,h);
-      ctx.restore();
-
-      // Keep only the SVG silhouette. None of its original directional
-      // gradients, highlights or shadows survive into the colour texture.
-      ctx.save();
-      ctx.globalCompositeOperation='destination-in';
-      ctx.drawImage(maskCanvas,0,0,w,h);
-      ctx.restore();
-
-      nctx.save();
-      nctx.globalCompositeOperation='destination-in';
-      nctx.drawImage(maskCanvas,0,0,w,h);
-      nctx.restore();
-
       try {
-        const data=mctx.getImageData(0,0,w,h).data;
+        const image=ctx.getImageData(0,0,w,h);
+        const px=image.data;
+
         let minX=w;
         let minY=h;
         let maxX=-1;
         let maxY=-1;
-        const stride=2;
 
-        for(let y=0;y<h;y+=stride){
-          for(let x=0;x<w;x+=stride){
-            const alpha=data[(y*w+x)*4+3];
-            if(alpha<8) continue;
+        for(let y=0;y<h;y++){
+          for(let x=0;x<w;x++){
+            const i=(y*w+x)*4;
+            const alpha=px[i+3];
+            if(alpha<5) continue;
+
             if(x<minX) minX=x;
             if(x>maxX) maxX=x;
             if(y<minY) minY=y;
             if(y>maxY) maxY=y;
+
+            // Preserve every gradient and facet from the authored SVG, but
+            // lift its darkest values so it reads as crystal instead of metal.
+            const rawLum=(px[i]*.2126+px[i+1]*.7152+px[i+2]*.0722)/255;
+            const lum=.16+.84*Math.pow(rawLum,.72);
+
+            let c;
+            if(lum<.34){
+              const u=clamp((lum-.16)/.18,0,1);
+              c=mix(mix(deep,base,.22),mix(deep,base,.62),u);
+            }else if(lum<.66){
+              const u=(lum-.34)/.32;
+              c=mix(mix(deep,base,.62),mix(base,accent,.18),u);
+            }else if(lum<.88){
+              const u=(lum-.66)/.22;
+              c=mix(mix(base,accent,.18),mix(base,accent,.72),u);
+            }else{
+              const u=(lum-.88)/.12;
+              c=mix(mix(base,accent,.72),mix(accent,white,.62),u);
+            }
+
+            // Retain tiny local differences from the original SVG so fine
+            // facets do not collapse into broad flat colour blocks.
+            const local=(px[i]-px[i+2])/255;
+            if(local>0.05) c=mix(c,accent,clamp(local*.10,0,.08));
+            if(local<-0.05) c=mix(c,deep,clamp(-local*.07,0,.06));
+
+            px[i]=c.r;
+            px[i+1]=c.g;
+            px[i+2]=c.b;
+
+            // Crystal body, not fully opaque plastic.
+            const nx=x/w-.5;
+            const ny=y/h-.5;
+            const radial=clamp(Math.hypot(nx,ny),0,.71)/.71;
+            const clarity=.035+(1-radial)*.055;
+            px[i+3]=Math.round(alpha*(1-clarity));
           }
         }
 
+        ctx.putImageData(image,0,0);
+
+        // Direction-neutral internal transmission. Dynamic highlights are
+        // separate overlays, so this never creates dark board corners.
+        ctx.save();
+        ctx.globalCompositeOperation='screen';
+
+        const core=ctx.createRadialGradient(
+          w*.50,h*.48,0,
+          w*.50,h*.50,Math.max(w,h)*.34
+        );
+        core.addColorStop(0,'rgba(255,255,255,.18)');
+        core.addColorStop(.30,rgba(t.accent,.11));
+        core.addColorStop(.72,rgba(t.color,.035));
+        core.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=core;
+        ctx.fillRect(0,0,w,h);
+
+        ctx.restore();
+
+        // Reapply the original SVG alpha exactly.
+        ctx.save();
+        ctx.globalCompositeOperation='destination-in';
+        ctx.drawImage(source,0,0,w,h);
+        ctx.restore();
+
         this.gemVisualBounds[index]=maxX>=minX&&maxY>=minY
-          ? Math.max(maxX-minX+stride,maxY-minY+stride)
+          ? Math.max(maxX-minX+1,maxY-minY+1)
           : Math.max(w,h);
       } catch {
         this.gemVisualBounds[index]=Math.max(w,h);
       }
 
       this.textures.remove(key);
-      const coloured=this.textures.addCanvas(key,canvas);
+      const detailed=this.textures.addCanvas(key,canvas);
 
-      if(coloured){
-        coloured.setDataSource(normal);
-        coloured.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      if(detailed){
+        detailed.setFilter(Phaser.Textures.FilterMode.LINEAR);
       }
     }
 
     setupGemLighting() {
-      this.webglLighting=(this.game.renderer.type===Phaser.WEBGL);
-      if(!this.webglLighting) return;
-
-      this.lights.enable();
-      this.lights.setAmbientColor(0x9b8ca4);
-
-      this.keyLight=this.lights.addLight(
-        -9000,-11000,32000,0xfff2d9,1.72
-      );
-      this.fillLight=this.lights.addLight(
-        10500,8500,34000,0xb8a7ff,.52
-      );
-      this.rimLight=this.lights.addLight(
-        8500,-9500,32000,0xff8fc8,.30
-      );
+      this.webglLighting=false;
+      this.keyLight=null;
+      this.fillLight=null;
+      this.rimLight=null;
     }
 
     applyGemLighting(gameObject) {
-      if(this.webglLighting&&gameObject&&gameObject.setPipeline){
-        gameObject.setPipeline('Light2D');
-      }else if(gameObject&&gameObject.resetPipeline){
+      if(gameObject&&gameObject.resetPipeline){
         gameObject.resetPipeline();
       }
     }
 
     animateGemLights(time) {
-      // Fixed in world-space. Because these lights are extremely distant and
-      // huge, every gem gets effectively the same illumination everywhere.
     }
 
     createGemShadow(gem) {
@@ -1163,25 +1040,23 @@
     syncGemShadow(gem) {
       if(!gem||!gem.active||!gem.shadow||!gem.shadow.active) return;
 
-      const shadowAngle=.72*Math.PI;
-      const offset=clamp(gem.tier*.23+3,3,10);
+      const angle=.72*Math.PI;
+      const speed=gem.body?Math.abs(gem.body.angularVelocity):0;
+      const offset=clamp(gem.tier*.20+3+speed*20,3,10);
 
-      gem.shadow.x=gem.x+Math.cos(shadowAngle)*offset;
-      gem.shadow.y=gem.y+Math.sin(shadowAngle)*offset+2;
+      gem.shadow.x=gem.x+Math.cos(angle)*offset;
+      gem.shadow.y=gem.y+Math.sin(angle)*offset+2;
       gem.shadow.rotation=gem.rotation;
-      gem.shadow.setAlpha(.13);
+      gem.shadow.setAlpha(.11+clamp(speed*2,0,.035));
     }
 
     createGemGlint(gem) {
       if(!gem||!this.textures.exists('gem-sparkle')) return;
 
-      const sheen=this.add.image(gem.x,gem.y,'gem-'+gem.tier)
+      const sheen=this.add.image(gem.x,gem.y,'gem-sheen')
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(33+gem.tier*.01)
-        .setAlpha(0)
-        .resetPipeline();
-
-      this.sizeGemSprite(sheen,gem.tier);
+        .setAlpha(0);
 
       const glint=this.add.image(gem.x,gem.y,'gem-sparkle')
         .setBlendMode(Phaser.BlendModes.ADD)
@@ -1203,16 +1078,30 @@
 
       const t=tiers[gem.tier];
       const lightAngle=-Math.PI*.32;
-
       const cut=CUTS[t.cutKey]||CUTS.brilliant;
       const facetCount=cut.verts.length;
+
       const phase=(gem.rotation-lightAngle)*facetCount*2+gem.opticSeed;
-      const flash=Math.pow(Math.max(0,Math.cos(phase)),18);
+      const flash=Math.pow(Math.max(0,Math.cos(phase)),16);
       const motion=clamp(
-        Math.abs(gem.body.angularVelocity)*65+gem.body.speed*.08,
-        .18,
+        Math.abs(gem.body.angularVelocity)*48+gem.body.speed*.07,
+        .15,
         1
       );
+
+      if(gem.sheen&&gem.sheen.active){
+        const sweep=.5+.5*Math.cos(
+          (gem.rotation-lightAngle)*2+gem.opticSeed*.45
+        );
+        const travel=t.r*(.12+.18*sweep);
+
+        gem.sheen.x=gem.x+Math.cos(lightAngle)*travel;
+        gem.sheen.y=gem.y+Math.sin(lightAngle)*travel;
+        gem.sheen.rotation=0;
+        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.84));
+        gem.sheen.setScale(clamp(t.r/105,.30,1.35));
+        gem.sheen.setAlpha(.035+.065*sweep+.045*motion);
+      }
 
       const localLight=Phaser.Math.Angle.Wrap(lightAngle-gem.rotation);
       const facetStep=(Math.PI*2)/facetCount;
@@ -1220,29 +1109,12 @@
       const localFacet=-Math.PI/2+facetIndex*facetStep;
       const worldFacet=localFacet+gem.rotation;
 
-      if(gem.sheen&&gem.sheen.active){
-        const localPhase=gem.rotation-lightAngle;
-        const sweep=.5+.5*Math.cos(localPhase*2+gem.opticSeed*.35);
-        const offset=t.r*(.018+.018*sweep);
-
-        gem.sheen.x=gem.x+Math.cos(lightAngle)*offset;
-        gem.sheen.y=gem.y+Math.sin(lightAngle)*offset;
-        gem.sheen.rotation=gem.rotation;
-        gem.sheen.setScale(this.gemSpriteScale(gem.tier)*1.006);
-        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.86));
-        gem.sheen.setAlpha(.028+.035*flash+.018*sweep);
-      }
-
-      gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.46;
-      gem.glint.y=gem.y+Math.sin(worldFacet)*t.r*.46;
+      gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.45;
+      gem.glint.y=gem.y+Math.sin(worldFacet)*t.r*.45;
       gem.glint.rotation=0;
-
-      const glintScale=clamp(t.r/92,.42,1.18);
-      gem.glint.setScale(glintScale*(.22+flash*.52));
-      gem.glint.setAlpha(clamp(.012+flash*(.62+.26*motion),0,.92));
-
-      const tintMix=.68+.18*Math.sin(time*.0014+gem.opticSeed);
-      gem.glint.setTint(mixHex(t.accent,'#ffffff',tintMix));
+      gem.glint.setScale(clamp(t.r/96,.34,1.15)*(.25+flash*.58));
+      gem.glint.setAlpha(clamp(.018+flash*(.60+.24*motion),0,.90));
+      gem.glint.setTint(mixHex(t.accent,'#ffffff',.82));
     }
 
     drawVaultBackdrop() {
