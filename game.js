@@ -207,28 +207,28 @@
   }
 
   let audioCtx = null;
-  let dingBuffer = null;
-  let dingLoadPromise = null;
 
   let gemAudioMaster = null;
   let gemAudioDry = null;
   let gemAudioWet = null;
   let gemAudioConvolver = null;
+  let gemAudioPreDelay = null;
   let gemAudioToneBus = null;
   let gemAudioCompressor = null;
+  let gemStrikeNoise = null;
 
   let dingWindowStartedAt = 0;
   let dingVoicesInWindow = 0;
 
-  // ding.ogg is recorded at E6. These are exact natural-note offsets from E6.
+  // Each gem tier maps to a real natural note. The note repeats every seven tiers.
   const GEM_NOTE_SET = [
-    { name:'A5', semitones:-7 },
-    { name:'B5', semitones:-5 },
-    { name:'C6', semitones:-4 },
-    { name:'D6', semitones:-2 },
-    { name:'E6', semitones:0 },
-    { name:'F6', semitones:1 },
-    { name:'G6', semitones:3 }
+    { name:'A5', hz:880.000 },
+    { name:'B5', hz:987.767 },
+    { name:'C6', hz:1046.502 },
+    { name:'D6', hz:1174.659 },
+    { name:'E6', hz:1318.510 },
+    { name:'F6', hz:1396.913 },
+    { name:'G6', hz:1567.982 }
   ];
 
   function clamp(v,min,max) {
@@ -287,7 +287,7 @@
     ctx.closePath();
   }
 
-  function makeGemImpulse(seconds=1.45,decay=3.4) {
+  function makeGemImpulse(seconds=1.9,decay=3.8) {
     if(!audioCtx) return null;
 
     const length=Math.max(1,Math.floor(audioCtx.sampleRate*seconds));
@@ -295,11 +295,39 @@
 
     for(let channel=0;channel<2;channel++){
       const data=buffer.getChannelData(channel);
+      let smooth=0;
+
       for(let i=0;i<length;i++){
-        data[i]=(Math.random()*2-1)*Math.pow(1-i/length,decay);
+        const white=Math.random()*2-1;
+        smooth=smooth*.18+white*.82;
+
+        // A cold, airy reverb tail with less low-frequency mud.
+        const envelope=Math.pow(1-i/length,decay);
+        const shimmer=0.72+Math.sin(i*.019+channel)*.08;
+        data[i]=smooth*envelope*shimmer*.72;
       }
     }
 
+    return buffer;
+  }
+
+  function makeGemStrikeNoise() {
+    if(!audioCtx) return null;
+    if(gemStrikeNoise) return gemStrikeNoise;
+
+    const length=Math.floor(audioCtx.sampleRate*.045);
+    const buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
+    const data=buffer.getChannelData(0);
+    let smooth=0;
+
+    for(let i=0;i<length;i++){
+      const white=Math.random()*2-1;
+      smooth=smooth*.12+white*.88;
+      const t=i/length;
+      data[i]=smooth*Math.pow(1-t,4.8);
+    }
+
+    gemStrikeNoise=buffer;
     return buffer;
   }
 
@@ -308,6 +336,7 @@
 
     gemAudioDry=audioCtx.createGain();
     gemAudioWet=audioCtx.createGain();
+    gemAudioPreDelay=audioCtx.createDelay(.12);
     gemAudioConvolver=audioCtx.createConvolver();
     gemAudioToneBus=audioCtx.createBiquadFilter();
     gemAudioCompressor=audioCtx.createDynamicsCompressor();
@@ -315,22 +344,25 @@
 
     gemAudioConvolver.buffer=makeGemImpulse();
 
-    gemAudioToneBus.type='lowpass';
-    gemAudioToneBus.frequency.value=11250;
-    gemAudioToneBus.Q.value=.2;
+    gemAudioToneBus.type='highshelf';
+    gemAudioToneBus.frequency.value=4800;
+    gemAudioToneBus.gain.value=1.8;
 
-    gemAudioCompressor.threshold.value=-22;
-    gemAudioCompressor.knee.value=18;
-    gemAudioCompressor.ratio.value=3.2;
-    gemAudioCompressor.attack.value=.004;
-    gemAudioCompressor.release.value=.16;
+    gemAudioPreDelay.delayTime.value=.026;
 
-    gemAudioDry.gain.value=.918;
-    gemAudioWet.gain.value=.164;
-    gemAudioMaster.gain.value=1.08;
+    gemAudioCompressor.threshold.value=-18;
+    gemAudioCompressor.knee.value=20;
+    gemAudioCompressor.ratio.value=3;
+    gemAudioCompressor.attack.value=.003;
+    gemAudioCompressor.release.value=.19;
+
+    gemAudioDry.gain.value=.88;
+    gemAudioWet.gain.value=.30;
+    gemAudioMaster.gain.value=.94;
 
     gemAudioDry.connect(gemAudioToneBus);
-    gemAudioWet.connect(gemAudioConvolver);
+    gemAudioWet.connect(gemAudioPreDelay);
+    gemAudioPreDelay.connect(gemAudioConvolver);
     gemAudioConvolver.connect(gemAudioToneBus);
     gemAudioToneBus.connect(gemAudioCompressor);
     gemAudioCompressor.connect(gemAudioMaster);
@@ -341,32 +373,6 @@
     return GEM_NOTE_SET[Math.abs(tier)%GEM_NOTE_SET.length];
   }
 
-  function playbackRateForSemitones(semitones) {
-    return Math.pow(2,semitones/12);
-  }
-
-  function loadDing() {
-    if(!audioCtx||dingBuffer) return Promise.resolve(dingBuffer);
-    if(dingLoadPromise) return dingLoadPromise;
-
-    dingLoadPromise=fetch('ding.ogg')
-      .then(response=>{
-        if(!response.ok) throw new Error('Could not load ding.ogg');
-        return response.arrayBuffer();
-      })
-      .then(data=>audioCtx.decodeAudioData(data.slice(0)))
-      .then(buffer=>{
-        dingBuffer=buffer;
-        return buffer;
-      })
-      .catch(()=>{
-        dingLoadPromise=null;
-        return null;
-      });
-
-    return dingLoadPromise;
-  }
-
   function unlockAudio() {
     if (!audioCtx) {
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
@@ -375,23 +381,39 @@
     if(audioCtx){
       if(audioCtx.state==='suspended') audioCtx.resume();
       setupGemAudioBus();
-      loadDing();
+      makeGemStrikeNoise();
     }
   }
 
+  function connectGemVoice(node,x,wetAmount=.24) {
+    const dryGain=audioCtx.createGain();
+    const wetGain=audioCtx.createGain();
+
+    dryGain.gain.value=1;
+    wetGain.gain.value=wetAmount;
+
+    if(typeof audioCtx.createStereoPanner==='function'){
+      const pan=audioCtx.createStereoPanner();
+      pan.pan.value=clamp((x/W)*2-1,-.82,.82);
+      node.connect(pan);
+      pan.connect(dryGain);
+      pan.connect(wetGain);
+    }else{
+      node.connect(dryGain);
+      node.connect(wetGain);
+    }
+
+    dryGain.connect(gemAudioDry);
+    wetGain.connect(gemAudioWet);
+  }
+
   function playGemDing(tier,impact=1,x=W/2) {
-    if(
-      !audioCtx||
-      !dingBuffer||
-      !gemAudioMaster||
-      audioCtx.state!=='running'
-    ) return;
+    if(!audioCtx||!gemAudioMaster||audioCtx.state!=='running') return;
 
     const now=performance.now();
 
-    // Let a small cluster through together so piles can make chords,
-    // but stop dense physics bursts from becoming a wall of sound.
-    if(now-dingWindowStartedAt>42){
+    // Allow small harmonic clusters, but cap dense physics chatter.
+    if(now-dingWindowStartedAt>48){
       dingWindowStartedAt=now;
       dingVoicesInWindow=0;
     }
@@ -400,53 +422,127 @@
     dingVoicesInWindow++;
 
     const note=gemNoteForTier(tier);
-    const playbackRate=playbackRateForSemitones(note.semitones);
-    const strength=clamp((impact-.45)/4.8,0,1);
-    const volume=.20+strength*.48;
+    const t=audioCtx.currentTime;
+    const strength=clamp((impact-.45)/4.6,0,1);
+    const body=.19+strength*.25;
+    const ring=.34+strength*.34;
+    const voice=audioCtx.createGain();
 
-    const source=audioCtx.createBufferSource();
-    const gain=audioCtx.createGain();
-    const lowpass=audioCtx.createBiquadFilter();
-    const warmth=audioCtx.createBiquadFilter();
+    voice.gain.setValueAtTime(.0001,t);
+    voice.gain.exponentialRampToValueAtTime(.34+strength*.34,t+.0018);
+    voice.gain.exponentialRampToValueAtTime(.0001,t+ring);
 
-    source.buffer=dingBuffer;
-    source.playbackRate.value=playbackRate;
+    connectGemVoice(voice,x,.22+strength*.10);
 
-    lowpass.type='lowpass';
-    lowpass.frequency.value=11900;
-    lowpass.Q.value=.18;
+    // Tiny hard contact at the front of the sound.
+    const strike=audioCtx.createBufferSource();
+    const strikeHP=audioCtx.createBiquadFilter();
+    const strikeBP=audioCtx.createBiquadFilter();
+    const strikeGain=audioCtx.createGain();
 
-    warmth.type='peaking';
-    warmth.frequency.value=850;
-    warmth.Q.value=.7;
-    warmth.gain.value=1.9;
+    strike.buffer=makeGemStrikeNoise();
 
-    gain.gain.value=volume;
+    strikeHP.type='highpass';
+    strikeHP.frequency.value=2300;
 
-    source.connect(lowpass);
-    lowpass.connect(warmth);
-    warmth.connect(gain);
+    strikeBP.type='bandpass';
+    strikeBP.frequency.value=5200+strength*1800;
+    strikeBP.Q.value=1.25;
 
-    const dryGain=audioCtx.createGain();
-    const wetGain=audioCtx.createGain();
-    dryGain.gain.value=1;
-    wetGain.gain.value=.13;
+    strikeGain.gain.setValueAtTime(.20+strength*.30,t);
+    strikeGain.gain.exponentialRampToValueAtTime(.0001,t+.018+strength*.012);
 
-    if(typeof audioCtx.createStereoPanner==='function'){
-      const pan=audioCtx.createStereoPanner();
-      pan.pan.value=clamp((x/W)*2-1,-.78,.78);
-      gain.connect(pan);
-      pan.connect(dryGain);
-      pan.connect(wetGain);
-    }else{
-      gain.connect(dryGain);
-      gain.connect(wetGain);
-    }
+    strike.connect(strikeHP);
+    strikeHP.connect(strikeBP);
+    strikeBP.connect(strikeGain);
+    strikeGain.connect(voice);
+    strike.start(t);
+    strike.stop(t+.05);
 
-    dryGain.connect(gemAudioDry);
-    wetGain.connect(gemAudioWet);
+    // Inharmonic crystal modes. The first partial anchors the musical note,
+    // while the upper partials make it sound like struck stone/glass instead of a synth bell.
+    const modes=[
+      { ratio:1.000, level:.55, life:1.00 },
+      { ratio:2.318, level:.21, life:.62 },
+      { ratio:3.887, level:.105,life:.43 },
+      { ratio:5.421, level:.054,life:.31 },
+      { ratio:7.146, level:.026,life:.22 }
+    ];
 
-    source.start();
+    modes.forEach((mode,index)=>{
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+      const resonator=audioCtx.createBiquadFilter();
+
+      osc.type='sine';
+
+      const imperfection=index===0
+        ? 1
+        : 1+(Math.random()-.5)*.007;
+
+      const startHz=note.hz*mode.ratio*imperfection;
+      const settleHz=startHz*(index===0?1:.9975-Math.random()*.0015);
+
+      osc.frequency.setValueAtTime(startHz,t);
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(80,settleHz),
+        t+.028+index*.004
+      );
+
+      resonator.type='bandpass';
+      resonator.frequency.value=Math.min(15000,startHz);
+      resonator.Q.value=2.8+index*.95;
+
+      const life=ring*mode.life*(.90+Math.random()*.14);
+      gain.gain.setValueAtTime(.0001,t);
+      gain.gain.exponentialRampToValueAtTime(
+        Math.max(.0002,mode.level*(.74+strength*.44)),
+        t+.001+index*.00035
+      );
+      gain.gain.exponentialRampToValueAtTime(
+        .0001,
+        t+Math.max(.035,life)
+      );
+
+      osc.connect(resonator);
+      resonator.connect(gain);
+      gain.connect(voice);
+
+      osc.start(t);
+      osc.stop(t+Math.max(.05,life)+.025);
+    });
+
+    // A very quiet high crystal reflection gives the "ice cave" impression.
+    const shimmer=audioCtx.createOscillator();
+    const shimmerGain=audioCtx.createGain();
+    const shimmerDelay=audioCtx.createDelay(.08);
+    const shimmerFilter=audioCtx.createBiquadFilter();
+
+    shimmer.type='sine';
+    shimmer.frequency.value=Math.min(14500,note.hz*8.12);
+
+    shimmerFilter.type='highpass';
+    shimmerFilter.frequency.value=6500;
+
+    shimmerDelay.delayTime.value=.018+Math.random()*.018;
+
+    shimmerGain.gain.setValueAtTime(.0001,t);
+    shimmerGain.gain.exponentialRampToValueAtTime(
+      .018+strength*.018,
+      t+.012
+    );
+    shimmerGain.gain.exponentialRampToValueAtTime(
+      .0001,
+      t+body+.16
+    );
+
+    shimmer.connect(shimmerFilter);
+    shimmerFilter.connect(shimmerDelay);
+    shimmerDelay.connect(shimmerGain);
+    shimmerGain.connect(gemAudioWet);
+
+    shimmer.start(t);
+    shimmer.stop(t+body+.20);
   }
 
   function tone(freq,duration=.055,volume=.022,type='sine') {
