@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gem Lighting Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #f5f1ff;
+      background:
+        radial-gradient(circle at 18% 16%, rgba(172, 84, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 80% 76%, rgba(48, 110, 255, 0.12), transparent 24%),
+        #09030f;
+    }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .wrap {
+      width: min(840px, 100%);
+      display: grid;
+      gap: 16px;
+    }
+    .stage {
+      min-height: 620px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 26px;
+      box-shadow: 0 20px 42px rgba(0,0,0,0.28);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+    .controls {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-size: 14px;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #a857ff;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 700;
+      color: #14091f;
+      background: #f4deff;
+      cursor: pointer;
+      width: fit-content;
+    }
+    p {
+      margin: 0;
+      color: rgba(245,241,255,0.76);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 2px 8px;
+      color: #fff;
+    }
+    .small {
+      font-size: 13px;
+      color: rgba(245,241,255,0.62);
+    }
+    svg {
+      width: min(520px, 90vw);
+      height: auto;
+      overflow: visible;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="stage">
+      <div id="gemMount"></div>
+    </section>
+
+    <section class="controls">
+      <div class="row">
+        <strong>Rotation</strong>
+        <span id="angleLabel">0°</span>
+      </div>
+      <input id="rotation" type="range" min="-180" max="180" value="0" />
+      <button id="toggleSpin">Start auto rotate</button>
+
+      <p>
+        This version removes the baked light and dark side. Each facet has its own simulated normal, so
+        every face brightens or darkens independently as the gem rotates. The fixed reflection is only a
+        subtle world-space overlay clipped inside the gem.
+      </p>
+      <p class="small">
+        Reuse in Gemdrop by importing <code>gem-component.js</code> and creating
+        <code>new FacetedGem().mount(target)</code>.
+      </p>
+    </section>
+  </main>
+
+  <script src="./gem-component.js"></script>
+  <script>
+    const mount = document.getElementById("gemMount");
+    const slider = document.getElementById("rotation");
+    const angleLabel = document.getElementById("angleLabel");
+    const toggleSpin = document.getElementById("toggleSpin");
+
+    const gem = new FacetedGem({ size: 520, hue: 272, saturation: 86 }).mount(mount);
+
+    function sync() {
+      const angle = Number(slider.value);
+      gem.setRotation(angle);
+      angleLabel.textContent = `${angle}°`;
+    }
+
+    slider.addEventListener("input", () => {
+      gem.stop();
+      toggleSpin.textContent = "Start auto rotate";
+      sync();
+    });
+
+    toggleSpin.addEventListener("click", () => {
+      if (gem.autoSpin) {
+        gem.stop();
+        toggleSpin.textContent = "Start auto rotate";
+      } else {
+        gem.start();
+        toggleSpin.textContent = "Stop auto rotate";
+      }
+    });
+
+    sync();
+  </script>
+</body>
+</html>
