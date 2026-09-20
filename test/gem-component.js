@@ -27,7 +27,19 @@ class FacetedGem {
       { id: "f15", points: "381,329 311,333 256,468",                     n: { x:  0.40, y:  0.75, z: 0.52 }, hue: -6, sat: 4,  base: 0.02 },
       { id: "f16", points: "201,333 256,282 311,333 256,468",             n: { x:  0.00, y:  0.85, z: 0.52 }, hue: -1, sat: -2, base: 0.02 },
       { id: "f17", points: "109,194 161,231 191.799,177.102",              n: { x: -0.76, y: -0.18, z: 0.63 }, hue: -5, sat: 2,  base: 0.03 },
-      { id: "f18", points: "403,194 351,231 320.201,177.102",              n: { x:  0.76, y: -0.18, z: 0.63 }, hue: -4, sat: 3,  base: 0.03 }
+      { id: "f18", points: "403,194 351,231 320.201,177.102",              n: { x:  0.76, y: -0.18, z: 0.63 }, hue: -4, sat: 3,  base: 0.03 },
+      { id: "b1",  points: "256,42 167,90 196,103",                        n: { x: -0.42, y: -0.82, z: 0.39 }, hue: -1, sat: 1,  base: 0.03 },
+      { id: "b2",  points: "256,42 316,103 345,90",                        n: { x:  0.42, y: -0.82, z: 0.39 }, hue:  1, sat: 2,  base: 0.03 },
+      { id: "b3",  points: "167,90 109,194 160,182",                       n: { x: -0.93, y: -0.12, z: 0.35 }, hue: -3, sat: 2,  base: 0.04 },
+      { id: "b4",  points: "345,90 352,182 403,194",                       n: { x:  0.93, y: -0.12, z: 0.35 }, hue: -2, sat: 2,  base: 0.04 },
+      { id: "b5",  points: "109,194 131,329 157,252",                      n: { x: -0.95, y:  0.18, z: 0.24 }, hue: -5, sat: 3,  base: 0.05 },
+      { id: "b6",  points: "403,194 355,252 381,329",                      n: { x:  0.95, y:  0.18, z: 0.24 }, hue: -5, sat: 3,  base: 0.05 },
+      { id: "b7",  points: "131,329 201,333 219,383",                      n: { x: -0.58, y:  0.74, z: 0.34 }, hue:  0, sat: 1,  base: 0.03 },
+      { id: "b8",  points: "381,329 293,383 311,333",                      n: { x:  0.58, y:  0.74, z: 0.34 }, hue: -2, sat: 2,  base: 0.03 },
+      { id: "b9",  points: "209,147 256,164 224,197",                      n: { x: -0.28, y: -0.18, z: 0.94 }, hue:  2, sat: -2, base: 0.01 },
+      { id: "b10", points: "303,147 288,197 256,164",                      n: { x:  0.28, y: -0.18, z: 0.94 }, hue: -1, sat: -1, base: 0.01 },
+      { id: "b11", points: "213,247 256,282 228,303",                      n: { x: -0.18, y:  0.26, z: 0.95 }, hue:  3, sat: -3, base: 0.01 },
+      { id: "b12", points: "299,247 284,303 256,282",                      n: { x:  0.18, y:  0.26, z: 0.95 }, hue: -2, sat: -2, base: 0.01 }
     ];
 
     this.facets = this.facets.map((facet) => ({
@@ -168,7 +180,7 @@ class FacetedGem {
       line.setAttribute("points", facet.points);
       line.setAttribute("fill", "none");
       line.setAttribute("stroke", "#F1D3FF");
-      line.setAttribute("stroke-width", "1.75");
+      line.setAttribute("stroke-width", "1.4");
       line.dataset.role = "facet-stroke";
       linesGroup.appendChild(line);
     });
@@ -236,7 +248,7 @@ class FacetedGem {
         this.highlightLayer.appendChild(highlight);
       }
 
-      const edgeOpacity = this.clamp(0.10 + diffuse * 0.14 + transmission * 0.07 + facing * 0.05, 0.10, 0.30);
+      const edgeOpacity = this.clamp(0.08 + diffuse * 0.12 + transmission * 0.06 + facing * 0.04, 0.08, 0.24);
       this.strokeEls[index].setAttribute("stroke-opacity", edgeOpacity.toFixed(3));
     });
   }
