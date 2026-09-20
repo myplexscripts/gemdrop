@@ -65,7 +65,7 @@ select{width:100%;border:1px solid #31394b;background:#131824;color:var(--text);
 <header>
   <div>
     <h1>Gem Sound Lab</h1>
-    <div class="sub">Procedural crystal audio for GemDrop. Every sound is synthesized live with Web Audio, tuned to stay musical as gems collide and settle.</div>
+    <div class="sub">GemDrop collision audio built from the repo's ding.ogg recording, with subtle live variation so repeated contacts stay natural.</div>
   </div>
   <div class="status"><i class="dot" id="audioDot"></i><span id="audioStatus">Audio starts on first tap</span></div>
 </header>
@@ -143,7 +143,7 @@ select{width:100%;border:1px solid #31394b;background:#131824;color:var(--text);
     <div class="note">Tip: use <b>Big pile</b> while tuning. If that stays soft and musical instead of turning into a wall of bells, the settings are working.</div>
   </aside>
 </div>
-<div class="foot">No audio files are used. Reloading the page returns to the GemDrop default preset.</div>
+<div class="foot">Collision audio uses ding.ogg from the GemDrop repository.</div>
 </div>
 
 <script>
@@ -163,7 +163,7 @@ const SCALES = {
 
 const defaults={brightness:54,body:72,shimmer:22,decay:38,reverb:18,variation:34,density:48,master:82};
 const state={...defaults};
-let ctx,master,dry,wet,convolver,compressor,toneBus,noiseBuffer,lastMeter=0;
+let ctx,master,dry,wet,convolver,compressor,toneBus,noiseBuffer,dingBuffer,dingLoading,lastMeter=0;
 
 function initAudio(){
  if(ctx) return;
@@ -225,6 +225,31 @@ function makeNoise(){
  return b;
 }
 
+function loadDing(){
+ initAudio();
+ if(dingBuffer) return Promise.resolve(dingBuffer);
+ if(dingLoading) return dingLoading;
+ document.querySelector("#audioStatus").textContent="Loading ding.ogg...";
+ dingLoading=fetch("../ding.ogg")
+  .then(r=>{
+   if(!r.ok) throw new Error("ding.ogg failed to load");
+   return r.arrayBuffer();
+  })
+  .then(buf=>ctx.decodeAudioData(buf))
+  .then(decoded=>{
+   dingBuffer=decoded;
+   document.querySelector("#audioDot").classList.add("live");
+   document.querySelector("#audioStatus").textContent="ding.ogg loaded";
+   return decoded;
+  })
+  .catch(err=>{
+   dingLoading=null;
+   document.querySelector("#audioStatus").textContent="Could not load ding.ogg";
+   throw err;
+  });
+ return dingLoading;
+}
+
 function v(name){return state[name]/100}
 function updateMix(){
  if(!ctx) return;
@@ -254,101 +279,71 @@ function connectVoice(node,pan=0,send=.3){
 
 function strike(gemIndex=0,impact=.45,pan=0,when=0,opts={}){
  initAudio();
+
+ if(!dingBuffer){
+  loadDing().then(()=>strike(gemIndex,impact,pan,when,opts)).catch(()=>{});
+  return;
+ }
+
  const t=ctx.currentTime+when;
  const gem=GEM_DATA[gemIndex%GEM_DATA.length];
  const natural=v("variation");
- const drift=(Math.random()*2-1)*natural;
- const base=noteFor(gemIndex,opts.octave||0)*gem[3]*Math.pow(2,drift*.012);
- const decay=.075+v("decay")*.52;
+ const level=Math.min(1,Math.max(.025,impact));
  const bright=v("brightness");
  const body=v("body");
- const shimmer=v("shimmer");
- const level=Math.min(1,Math.max(.025,impact));
+ const tail=.18+v("decay")*.95;
 
- const out=ctx.createGain();
- out.gain.setValueAtTime(.0001,t);
- out.gain.exponentialRampToValueAtTime(.54*level,t+.0015);
- out.gain.exponentialRampToValueAtTime(.0001,t+decay*(.92+Math.random()*.26));
- connectVoice(out,pan,.08+v("reverb")*.44);
+ const src=ctx.createBufferSource();
+ const gain=ctx.createGain();
+ const panNode=ctx.createStereoPanner();
+ const lowpass=ctx.createBiquadFilter();
+ const warmth=ctx.createBiquadFilter();
 
- // Physical contact: a short, filtered glass/chip transient instead of a synthetic beep.
- const click=ctx.createBufferSource();
- const clickHP=ctx.createBiquadFilter();
- const clickBP=ctx.createBiquadFilter();
- const clickGain=ctx.createGain();
- click.buffer=makeNoise();
- click.playbackRate.value=.82+Math.random()*.42;
- clickHP.type="highpass";
- clickHP.frequency.value=950+bright*1450;
- clickBP.type="bandpass";
- clickBP.frequency.value=2400+bright*3700+(Math.random()*700-350);
- clickBP.Q.value=.75+body*1.2;
- clickGain.gain.setValueAtTime(.64*level*(.76+body*.35),t);
- clickGain.gain.exponentialRampToValueAtTime(.0001,t+.018+body*.018);
- click.connect(clickHP);
- clickHP.connect(clickBP);
- clickBP.connect(clickGain);
- clickGain.connect(out);
- click.start(t);
- click.stop(t+.09);
+ src.buffer=dingBuffer;
 
- // Struck glass is inharmonic. These deliberately imperfect modal ratios keep it crystal-like
- // while avoiding the clean harmonic stack that made the first version sound electronic.
- const modalSets=[
-  [1.00,2.31,3.74,5.18,6.86],
-  [1.00,2.18,3.42,4.91,7.12],
-  [1.00,2.46,3.88,5.57,7.36],
-  [1.00,2.27,3.61,5.03,6.54],
-  [1.00,2.39,3.53,5.34,7.01]
- ];
- const ratios=modalSets[gem[2]%modalSets.length];
- const modalGain=[.34+body*.25,.16+bright*.10,.075+bright*.075,.032+shimmer*.06,.014+shimmer*.045];
- const modalLife=[1,.62,.40,.27,.18];
+ const pitchJitter=(Math.random()*2-1)*(.003+.018*natural);
+ const gemColour=(gem[3]-1)*.28;
+ src.playbackRate.value=Math.max(.84,Math.min(1.18,1+gemColour+pitchJitter));
 
- ratios.forEach((ratio,i)=>{
-  const o=ctx.createOscillator();
-  const g=ctx.createGain();
-  const filter=ctx.createBiquadFilter();
-  o.type="sine";
+ lowpass.type="lowpass";
+ lowpass.frequency.value=6500+bright*10000;
+ lowpass.Q.value=.18;
 
-  const startFreq=base*ratio*(1+(Math.random()*2-1)*natural*.004);
-  const settleFreq=startFreq*(.996-Math.random()*.004);
-  o.frequency.setValueAtTime(startFreq,t);
-  o.frequency.exponentialRampToValueAtTime(Math.max(45,settleFreq),t+.025+Math.random()*.02);
+ warmth.type="peaking";
+ warmth.frequency.value=850;
+ warmth.Q.value=.7;
+ warmth.gain.value=-1+body*4;
 
-  filter.type="bandpass";
-  filter.frequency.value=Math.min(15000,startFreq);
-  filter.Q.value=2.2+i*.8;
+ panNode.pan.value=Math.max(-1,Math.min(1,pan+(Math.random()*2-1)*.025*natural));
 
-  const attack=.001+Math.random()*.0025;
-  const life=decay*modalLife[i]*(.82+Math.random()*.36);
-  g.gain.setValueAtTime(.0001,t);
-  g.gain.exponentialRampToValueAtTime(Math.max(.0002,modalGain[i]*level),t+attack);
-  g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.025,life));
+ const peak=(.38+level*.92)*(1+(Math.random()*2-1)*.05*natural);
+ gain.gain.setValueAtTime(.0001,t);
+ gain.gain.exponentialRampToValueAtTime(Math.max(.001,peak),t+.002);
+ gain.gain.setValueAtTime(Math.max(.001,peak),t+.045);
+ gain.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.12,Math.min(dingBuffer.duration/src.playbackRate.value,tail)));
 
-  o.connect(filter);
-  filter.connect(g);
-  g.connect(out);
-  o.start(t);
-  o.stop(t+Math.max(.04,life)+.02);
- });
+ src.connect(lowpass);
+ lowpass.connect(warmth);
+ warmth.connect(gain);
+ gain.connect(panNode);
+ connectVoice(panNode,0,.05+v("reverb")*.42);
 
- // A tiny broadband sparkle gives cut crystal some air without becoming a synth pad.
- if(shimmer>.04 && (opts.forceShimmer||Math.random()<.20+shimmer*.42)){
-  const s=ctx.createBufferSource();
-  const hp=ctx.createBiquadFilter();
-  const sg=ctx.createGain();
-  s.buffer=makeNoise();
-  s.playbackRate.value=1.5+Math.random()*.9;
-  hp.type="highpass";
-  hp.frequency.value=6000+bright*2800;
-  sg.gain.setValueAtTime(.065*level*shimmer,t+.004);
-  sg.gain.exponentialRampToValueAtTime(.0001,t+.045+decay*.18);
-  s.connect(hp);
-  hp.connect(sg);
-  sg.connect(out);
-  s.start(t+.004);
-  s.stop(t+.13);
+ src.start(t);
+
+ if((opts.forceShimmer||Math.random()<v("shimmer")*.12) && level>.3){
+  const echo=ctx.createBufferSource();
+  const eg=ctx.createGain();
+  const ep=ctx.createStereoPanner();
+  echo.buffer=dingBuffer;
+  echo.playbackRate.value=Math.min(1.2,src.playbackRate.value*(1.006+Math.random()*.012));
+  ep.pan.value=Math.max(-1,Math.min(1,pan+.04));
+  eg.gain.setValueAtTime(.0001,t+.018);
+  eg.gain.exponentialRampToValueAtTime(.045+.06*v("shimmer")*level,t+.022);
+  eg.gain.exponentialRampToValueAtTime(.0001,t+.15+.22*v("decay"));
+  echo.connect(eg);
+  eg.connect(ep);
+  connectVoice(ep,0,.03+v("reverb")*.22);
+  echo.start(t+.018);
  }
 
  pulseMeter(Math.min(1,level*.95+.12));
