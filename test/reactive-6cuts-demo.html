@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Intricate Reactive Gem Cuts</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 18% 16%, rgba(172,84,255,.16), transparent 28%),
+        radial-gradient(circle at 82% 78%, rgba(27,201,173,.10), transparent 26%),
+        #09030f;
+      color: #f5f1ff;
+      padding: 24px;
+    }
+    .app { width: min(1160px, 100%); margin: 0 auto; display: grid; gap: 18px; }
+    .hero { display: grid; grid-template-columns: minmax(340px, 560px) minmax(260px, 1fr); gap: 18px; }
+    .stage, .panel, .thumbs {
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.26);
+    }
+    .stage { min-height: 580px; display: grid; place-items: center; padding: 18px; }
+    .panel, .thumbs { padding: 18px; }
+    .panel { display: grid; gap: 14px; align-content: start; }
+    h1 { margin: 0; font-size: clamp(30px, 4vw, 38px); line-height: 1.02; }
+    p { margin: 0; color: rgba(245,241,255,.78); font-size: 14px; line-height: 1.45; }
+    .label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgba(245,241,255,.56); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat strong { display: block; font-size: 18px; line-height: 1.1; margin-top: 4px; }
+    .control { display: grid; gap: 8px; }
+    select, input, button { font: inherit; }
+    select, input[type="range"] { width: 100%; }
+    select {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      padding: 10px 12px;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 700;
+      color: #14091f;
+      background: #f4deff;
+      cursor: pointer;
+    }
+    #mount svg { width: min(500px, 88vw); height: auto; display: block; overflow: visible; }
+    .thumb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .thumb {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 12px;
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+    .thumb:hover { transform: translateY(-2px); background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); }
+    .thumb.active { border-color: rgba(244,222,255,.42); background: rgba(255,255,255,.08); }
+    .thumb .mini svg { width: 78px; height: 78px; }
+    .thumb strong { font-size: 13px; }
+    .thumb span { font-size: 11px; color: rgba(245,241,255,.56); text-align: center; }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .stage { min-height: 460px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <section class="stage"><div id="mount"></div></section>
+      <aside class="panel">
+        <div class="label">Reactive gem system</div>
+        <h1 id="title">Citrine Round</h1>
+        <p>Six cleaner gem cuts, but with the more intricate internal faceting style you liked. All shine is reactive, so the light stays fixed while different facets catch it as the gem rotates.</p>
+        <div class="grid2">
+          <div class="stat"><div class="label">Cut</div><strong id="cut">Round</strong></div>
+          <div class="stat"><div class="label">Gem</div><strong id="gem">Citrine</strong></div>
+        </div>
+        <div class="control">
+          <strong>Gem cut</strong>
+          <select id="select"></select>
+        </div>
+        <div class="control">
+          <strong>Rotation <span id="angleLabel">0°</span></strong>
+          <input id="rotation" type="range" min="-180" max="180" value="0">
+        </div>
+        <div><button id="spin">Start auto rotate</button></div>
+      </aside>
+    </section>
+    <section class="thumbs">
+      <div class="label">6 cuts</div>
+      <div class="thumb-grid" id="thumbGrid"></div>
+    </section>
+  </main>
+
+  <script src="./reactive-6cuts-component.js?v=1"></script>
+  <script>
+    const mount = document.getElementById('mount');
+    const select = document.getElementById('select');
+    const rotation = document.getElementById('rotation');
+    const angleLabel = document.getElementById('angleLabel');
+    const title = document.getElementById('title');
+    const cutLabel = document.getElementById('cut');
+    const gemLabel = document.getElementById('gem');
+    const spin = document.getElementById('spin');
+    const thumbGrid = document.getElementById('thumbGrid');
+
+    const gem = new IntricateReactiveGem({ type: 'round', size: 520 }).mount(mount);
+    const thumbs = [];
+
+    function syncMeta(type) {
+      const data = GEM_CUTS[type];
+      title.textContent = `${data.gem} ${data.label}`;
+      cutLabel.textContent = data.label;
+      gemLabel.textContent = data.gem;
+      select.value = type;
+      thumbs.forEach((thumb) => thumb.classList.toggle('active', thumb.dataset.type === type));
+    }
+
+    function setType(type) {
+      gem.stop();
+      spin.textContent = 'Start auto rotate';
+      gem.setType(type);
+      gem.setRotation(Number(rotation.value));
+      syncMeta(type);
+    }
+
+    Object.entries(GEM_CUTS).forEach(([type, data]) => {
+      const option = document.createElement('option');
+      option.value = type;
+      option.textContent = `${data.gem} • ${data.label}`;
+      select.appendChild(option);
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'thumb';
+      button.dataset.type = type;
+      button.innerHTML = `<div class="mini"></div><strong>${data.label}</strong><span>${data.gem}</span>`;
+      const miniGem = new IntricateReactiveGem({ type, size: 78, angle: 22 }).mount(button.querySelector('.mini'));
+      miniGem.update(22);
+      button.addEventListener('click', () => setType(type));
+      thumbs.push(button);
+      thumbGrid.appendChild(button);
+    });
+
+    rotation.addEventListener('input', () => {
+      gem.stop();
+      spin.textContent = 'Start auto rotate';
+      const angle = Number(rotation.value);
+      angleLabel.textContent = `${angle}°`;
+      gem.setRotation(angle);
+    });
+
+    select.addEventListener('change', () => setType(select.value));
+
+    spin.addEventListener('click', () => {
+      if (gem.autoSpin) {
+        gem.stop();
+        spin.textContent = 'Start auto rotate';
+      } else {
+        gem.start();
+        spin.textContent = 'Stop auto rotate';
+      }
+    });
+
+    syncMeta('round');
+  </script>
+</body>
+</html>
