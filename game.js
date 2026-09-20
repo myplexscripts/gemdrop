@@ -1152,19 +1152,13 @@
     syncGemShadow(gem) {
       if(!gem||!gem.active||!gem.shadow||!gem.shadow.active) return;
 
-      const lx=this.keyLight?this.keyLight.x:70;
-      const ly=this.keyLight?this.keyLight.y:-30;
-      const dx=gem.x-lx;
-      const dy=gem.y-ly;
-      const len=Math.hypot(dx,dy)||1;
+      const shadowAngle=.72*Math.PI;
       const offset=clamp(gem.tier*.23+3,3,10);
 
-      gem.shadow.x=gem.x+(dx/len)*offset;
-      gem.shadow.y=gem.y+(dy/len)*offset+2;
+      gem.shadow.x=gem.x+Math.cos(shadowAngle)*offset;
+      gem.shadow.y=gem.y+Math.sin(shadowAngle)*offset+2;
       gem.shadow.rotation=gem.rotation;
-
-      const floorWeight=clamp(gem.y/FLOOR,0,1);
-      gem.shadow.setAlpha(.09+floorWeight*.10);
+      gem.shadow.setAlpha(.13);
     }
 
     createGemGlint(gem) {
@@ -1196,17 +1190,17 @@
       if(!gem||!gem.active||!gem.body||!gem.glint||!gem.glint.active) return;
 
       const t=tiers[gem.tier];
-      const lx=this.keyLight?this.keyLight.x:70;
-      const ly=this.keyLight?this.keyLight.y:30;
-      const lightAngle=Math.atan2(ly-gem.y,lx-gem.x);
+      const lightAngle=-Math.PI*.32;
 
-      // Sharp angle-dependent flashes. The highlight is world-oriented, so it
-      // does not look painted onto the rotating sprite.
       const cut=CUTS[t.cutKey]||CUTS.brilliant;
       const facetCount=cut.verts.length;
       const phase=(gem.rotation-lightAngle)*facetCount*2+gem.opticSeed;
       const flash=Math.pow(Math.max(0,Math.cos(phase)),18);
-      const motion=clamp(Math.abs(gem.body.angularVelocity)*65+gem.body.speed*.08,.18,1);
+      const motion=clamp(
+        Math.abs(gem.body.angularVelocity)*65+gem.body.speed*.08,
+        .18,
+        1
+      );
 
       const localLight=Phaser.Math.Angle.Wrap(lightAngle-gem.rotation);
       const facetStep=(Math.PI*2)/facetCount;
@@ -1215,12 +1209,16 @@
       const worldFacet=localFacet+gem.rotation;
 
       if(gem.sheen&&gem.sheen.active){
-        gem.sheen.x=gem.x;
-        gem.sheen.y=gem.y;
+        const localPhase=gem.rotation-lightAngle;
+        const sweep=.5+.5*Math.cos(localPhase*2+gem.opticSeed*.35);
+        const offset=t.r*(.018+.018*sweep);
+
+        gem.sheen.x=gem.x+Math.cos(lightAngle)*offset;
+        gem.sheen.y=gem.y+Math.sin(lightAngle)*offset;
         gem.sheen.rotation=gem.rotation;
-        gem.sheen.setScale(this.gemSpriteScale(gem.tier));
-        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.82));
-        gem.sheen.setAlpha(.010+.012*flash);
+        gem.sheen.setScale(this.gemSpriteScale(gem.tier)*1.006);
+        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.86));
+        gem.sheen.setAlpha(.028+.035*flash+.018*sweep);
       }
 
       gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.46;
