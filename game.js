@@ -821,8 +821,8 @@
         art.className='gem-card__art';
 
         const canvas=document.createElement('canvas');
-        canvas.width=192;
-        canvas.height=192;
+        canvas.width=256;
+        canvas.height=256;
         canvas.setAttribute('aria-hidden','true');
         art.appendChild(canvas);
 

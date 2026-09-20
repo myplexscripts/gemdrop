@@ -1250,3 +1250,187 @@ body{
       rgba(122,45,171,.42)
     );
 }
+
+
+/* === GEM SHOWCASE CLEANUP 2026-09-20 === */
+.collection-overlay{
+  background:
+    radial-gradient(circle at 18% 2%,rgba(151,61,175,.12),transparent 26%),
+    radial-gradient(circle at 92% 14%,rgba(89,64,171,.10),transparent 28%),
+    linear-gradient(180deg,#17091d 0%,#0d0711 100%);
+}
+.collection-screen{
+  width:min(100%,680px);
+}
+.collection-header{
+  position:sticky;
+  top:0;
+  z-index:3;
+  min-height:calc(88px + env(safe-area-inset-top));
+  padding:
+    calc(12px + env(safe-area-inset-top))
+    16px
+    12px;
+  gap:13px;
+  background:rgba(23,9,29,.92);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(255,224,173,.08);
+}
+.collection-header h2{
+  margin-top:2px;
+  font-size:30px;
+  line-height:1.04;
+}
+.collection-progress{
+  min-width:auto;
+  font-size:16px;
+}
+.gem-collection{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-items:stretch;
+  gap:14px!important;
+  padding:
+    14px
+    14px
+    calc(30px + env(safe-area-inset-bottom))!important;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,215,129,.22) transparent;
+}
+.gem-collection::-webkit-scrollbar{
+  width:5px;
+}
+.gem-collection::-webkit-scrollbar-thumb{
+  border-radius:999px;
+  background:rgba(255,215,129,.20);
+}
+.gem-card{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:308px!important;
+  padding:10px 10px 12px!important;
+  border-radius:24px!important;
+  justify-content:flex-start!important;
+  background:
+    linear-gradient(180deg,rgba(49,24,55,.76),rgba(23,12,29,.94))!important;
+  border:1px solid rgba(255,229,187,.10)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    0 8px 22px rgba(0,0,0,.14)!important;
+}
+.gem-card__art{
+  box-sizing:border-box;
+  width:100%!important;
+  height:218px!important;
+  margin:0 0 11px!important;
+  border-radius:18px!important;
+  background:
+    linear-gradient(180deg,rgba(19,10,23,.97),rgba(10,6,13,.99))!important;
+  border:1px solid rgba(255,236,205,.045)!important;
+  box-shadow:
+    inset 0 7px 16px rgba(0,0,0,.34),
+    inset 0 -1px 0 rgba(255,255,255,.025)!important;
+}
+.gem-card__art canvas{
+  width:208px!important;
+  height:208px!important;
+  max-width:94%;
+  max-height:94%;
+  display:block;
+}
+.gem-card__meta{
+  box-sizing:border-box;
+  width:100%!important;
+  min-height:58px!important;
+  padding:0 3px 1px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-areas:
+    "name value"
+    "cut cut"!important;
+  column-gap:10px!important;
+  row-gap:5px!important;
+  align-content:start;
+  align-items:center!important;
+  text-align:left!important;
+}
+.gem-card__meta strong{
+  grid-area:name;
+  min-width:0;
+  font-size:17px!important;
+  line-height:1.15!important;
+  font-weight:800;
+  white-space:nowrap!important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.gem-card__meta .gem-card__value{
+  grid-area:value;
+  margin:0!important;
+  font-size:17px!important;
+  line-height:1!important;
+  white-space:nowrap;
+}
+.gem-card__meta small{
+  grid-area:cut;
+  min-width:0;
+  margin:0!important;
+  font-size:13px!important;
+  line-height:1.25!important;
+  color:#bcaac1;
+  white-space:nowrap!important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.gem-card.locked{
+  min-height:308px!important;
+  justify-content:flex-start!important;
+  background:
+    linear-gradient(180deg,rgba(34,24,38,.66),rgba(18,12,21,.92))!important;
+}
+.gem-card.locked .gem-card__art{
+  height:218px!important;
+  margin-bottom:11px!important;
+}
+.gem-card.locked .gem-card__meta{
+  display:grid!important;
+  visibility:hidden;
+}
+@media(max-width:430px){
+  .gem-collection{
+    gap:12px!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+  .gem-card{
+    min-height:286px!important;
+    padding:9px 9px 11px!important;
+  }
+  .gem-card__art,
+  .gem-card.locked .gem-card__art{
+    height:196px!important;
+  }
+  .gem-card__art canvas{
+    width:188px!important;
+    height:188px!important;
+  }
+  .gem-card.locked{
+    min-height:286px!important;
+  }
+  .gem-card__meta strong,
+  .gem-card__meta .gem-card__value{
+    font-size:16px!important;
+  }
+  .gem-card__meta small{
+    font-size:12px!important;
+  }
+}
+@media(min-width:760px){
+  .collection-screen{
+    width:min(100%,820px);
+  }
+  .gem-collection{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
