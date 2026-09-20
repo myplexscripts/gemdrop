@@ -320,7 +320,7 @@ function pile(){
  for(let i=0;i<count;i++) times.push(Math.pow(Math.random(),1.6)*.72);
  times.sort((a,b)=>a-b);
  times.forEach((time,i)=>{
-  const strongest=i<4?.46:.10+Math.random()*.24;
+  const strongest=i < 4 ? 0.46 : 0.10 + Math.random() * 0.24;
   strike(randGem(),strongest,randPan(),time,{octave:Math.random()<.12?1:0});
  });
 }
