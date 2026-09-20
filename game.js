@@ -14,6 +14,8 @@
   const DROP_DELAY = 300;
   const COLLIDER_SCALE = 0.94;
   const ART_SCALE = 0.925;
+  const RENDER_SCALE = 2;
+  const GEM_TEXTURE_SIZE = 768;
 
   const $ = id => document.getElementById(id);
   const scoreEl = $('score');
@@ -387,13 +389,18 @@
         this.load.svg(
           'gem-'+index,
           tier.asset,
-          {width:384,height:384}
+          {width:GEM_TEXTURE_SIZE,height:GEM_TEXTURE_SIZE}
         );
+        this.load.text('gem-svg-'+index,tier.asset);
       });
     }
 
     create() {
-      this.cameras.main.setBackgroundColor('rgba(0,0,0,0)');
+      this.cameras.main
+        .setOrigin(0,0)
+        .setZoom(RENDER_SCALE)
+        .setScroll(0,0)
+        .setBackgroundColor('rgba(0,0,0,0)');
       this.matter.set60Hz();
 
       const engine=this.matter.world.engine;
@@ -768,64 +775,49 @@
 
     makeTextures() {
       this.makeSparkleTexture();
-      this.makeSheenTexture();
 
       for(let i=0;i<tiers.length;i++){
-        this.recolourSvgTexture(i);
+        this.buildSvgGemTexture(i);
       }
     }
 
     makeSparkleTexture() {
       const canvas=document.createElement('canvas');
-      canvas.width=64;
-      canvas.height=64;
-      const ctx=canvas.getContext('2d');
-      const cx=32;
-      const cy=32;
-
-      const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,18);
-      glow.addColorStop(0,'rgba(255,255,255,.98)');
-      glow.addColorStop(.18,'rgba(255,246,214,.86)');
-      glow.addColorStop(.48,'rgba(255,223,160,.26)');
-      glow.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=glow;
-      ctx.fillRect(0,0,64,64);
-
-      ctx.strokeStyle='rgba(255,255,255,.94)';
-      ctx.lineCap='round';
-      ctx.lineWidth=2;
-      ctx.beginPath();
-      ctx.moveTo(32,6);
-      ctx.lineTo(32,58);
-      ctx.moveTo(6,32);
-      ctx.lineTo(58,32);
-      ctx.stroke();
-
-      ctx.strokeStyle='rgba(255,239,194,.62)';
-      ctx.lineWidth=1.4;
-      ctx.beginPath();
-      ctx.moveTo(15,15);
-      ctx.lineTo(49,49);
-      ctx.moveTo(49,15);
-      ctx.lineTo(15,49);
-      ctx.stroke();
-
-      this.textures.addCanvas('gem-sparkle',canvas);
-    }
-
-    makeSheenTexture() {
-      const canvas=document.createElement('canvas');
       canvas.width=128;
       canvas.height=128;
       const ctx=canvas.getContext('2d');
-      const glow=ctx.createRadialGradient(64,64,0,64,64,58);
-      glow.addColorStop(0,'rgba(255,255,255,.52)');
-      glow.addColorStop(.18,'rgba(255,255,255,.23)');
-      glow.addColorStop(.48,'rgba(255,255,255,.07)');
+      const cx=64;
+      const cy=64;
+
+      const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,36);
+      glow.addColorStop(0,'rgba(255,255,255,.98)');
+      glow.addColorStop(.16,'rgba(255,248,222,.80)');
+      glow.addColorStop(.44,'rgba(255,229,178,.22)');
       glow.addColorStop(1,'rgba(255,255,255,0)');
       ctx.fillStyle=glow;
       ctx.fillRect(0,0,128,128);
-      this.textures.addCanvas('gem-sheen',canvas);
+
+      ctx.strokeStyle='rgba(255,255,255,.96)';
+      ctx.lineCap='round';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(64,14);
+      ctx.lineTo(64,114);
+      ctx.moveTo(14,64);
+      ctx.lineTo(114,64);
+      ctx.stroke();
+
+      ctx.strokeStyle='rgba(255,240,204,.58)';
+      ctx.lineWidth=1.4;
+      ctx.beginPath();
+      ctx.moveTo(31,31);
+      ctx.lineTo(97,97);
+      ctx.moveTo(97,31);
+      ctx.lineTo(31,97);
+      ctx.stroke();
+
+      const texture=this.textures.addCanvas('gem-sparkle',canvas);
+      if(texture) texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
     }
 
     cutPoints(cutKey,scale,cx=0,cy=0) {
@@ -847,272 +839,273 @@
         : null;
 
       const fallback=source
-        ? Math.max(source.width||384,source.height||384)
-        : 384;
+        ? Math.max(source.width||GEM_TEXTURE_SIZE,source.height||GEM_TEXTURE_SIZE)
+        : GEM_TEXTURE_SIZE;
 
       const visible=this.gemVisualBounds[tier]||fallback;
-
-      // Scale the visible gemstone itself to the intended diameter. The SVGs
-      // contain generous transparent margins, so scaling against the full
-      // 384px canvas made every gem look much smaller than its physics body.
       return (tiers[tier].r*2*ART_SCALE)/Math.max(1,visible);
     }
 
     sizeGemSprite(gameObject,tier) {
       const scale=this.gemSpriteScale(tier);
       gameObject.setScale(scale);
-
       return scale;
     }
 
-    recolourSvgTexture(index) {
+    buildSvgGemTexture(index) {
       const key='gem-'+index;
       const texture=this.textures.get(key);
       if(!texture||!texture.getSourceImage) return;
 
       const source=texture.getSourceImage();
+      const svgText=this.cache.text.get('gem-svg-'+index);
       if(!source) return;
 
       const t=tiers[index];
-      const w=source.width||384;
-      const h=source.height||384;
+      const w=source.width||GEM_TEXTURE_SIZE;
+      const h=source.height||GEM_TEXTURE_SIZE;
+
+      const maskCanvas=document.createElement('canvas');
+      maskCanvas.width=w;
+      maskCanvas.height=h;
+      const mctx=maskCanvas.getContext('2d',{willReadFrequently:true});
+      mctx.drawImage(source,0,0,w,h);
+
       const canvas=document.createElement('canvas');
       canvas.width=w;
       canvas.height=h;
-      const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      const ctx=canvas.getContext('2d');
 
-      try {
-        ctx.drawImage(source,0,0,w,h);
+      const normal=document.createElement('canvas');
+      normal.width=w;
+      normal.height=h;
+      const nctx=normal.getContext('2d');
 
-        const image=ctx.getImageData(0,0,w,h);
-        const px=image.data;
+      const toRgb=hex=>{
+        const v=parseInt(hex.slice(1),16);
+        return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
+      };
 
-        const rgb=hex=>{
-          const v=parseInt(hex.slice(1),16);
-          return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
-        };
+      const blend=(a,b,u)=>({
+        r:Math.round(a.r+(b.r-a.r)*u),
+        g:Math.round(a.g+(b.g-a.g)*u),
+        b:Math.round(a.b+(b.b-a.b)*u)
+      });
 
-        const blend=(a,b,u)=>({
-          r:Math.round(a.r+(b.r-a.r)*u),
-          g:Math.round(a.g+(b.g-a.g)*u),
-          b:Math.round(a.b+(b.b-a.b)*u)
-        });
+      const css=c=>'rgb('+c.r+','+c.g+','+c.b+')';
+      const base=toRgb(t.color);
+      const accent=toRgb(t.accent);
+      const deep=toRgb(t.dark);
 
-        const base=rgb(t.color);
-        const accent=rgb(t.accent);
-        const deep=rgb(t.dark);
-        const white={r:255,g:255,b:255};
+      // Material colour only. This is deliberately radially symmetric so the
+      // direction of the light comes entirely from the live lighting pass.
+      const body=ctx.createRadialGradient(w*.5,h*.5,0,w*.5,h*.5,w*.53);
+      body.addColorStop(0,css(blend(base,accent,.18)));
+      body.addColorStop(.58,css(base));
+      body.addColorStop(1,css(blend(base,deep,.30)));
+      ctx.fillStyle=body;
+      ctx.fillRect(0,0,w,h);
 
-        const p0=blend(deep,base,.18);
-        const p1=blend(deep,base,.58);
-        const p2=blend(base,accent,.10);
-        const p3=blend(base,accent,.38);
-        const p4=blend(base,accent,.68);
-        const p5=blend(accent,white,.58);
+      // Default normal points out of the screen. Facet polygons overwrite it.
+      nctx.fillStyle='rgb(128,128,255)';
+      nctx.fillRect(0,0,w,h);
 
-        const palette=[p0,p1,p2,p3,p4,p5];
-        const stops=[0,.18,.39,.60,.79,1];
+      let viewX=0;
+      let viewY=0;
+      let viewW=512;
+      let viewH=512;
+      let polygons=[];
 
-        const samplePalette=v=>{
-          v=clamp(v,0,1);
-          for(let n=1;n<stops.length;n++){
-            if(v<=stops[n]){
-              const u=(v-stops[n-1])/(stops[n]-stops[n-1]);
-              return blend(palette[n-1],palette[n],u);
-            }
+      if(svgText){
+        try {
+          const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
+          const svg=doc.documentElement;
+          const vb=(svg.getAttribute('viewBox')||'0 0 512 512')
+            .trim()
+            .split(/[\s,]+/)
+            .map(Number);
+
+          if(vb.length===4&&vb.every(Number.isFinite)){
+            viewX=vb[0];
+            viewY=vb[1];
+            viewW=vb[2]||512;
+            viewH=vb[3]||512;
           }
-          return palette[palette.length-1];
-        };
 
-        let minX=w,minY=h,maxX=-1,maxY=-1;
+          polygons=[...doc.querySelectorAll('polygon')]
+            .map((node,polyIndex)=>{
+              const values=(node.getAttribute('points')||'')
+                .trim()
+                .split(/[\s,]+/)
+                .map(Number)
+                .filter(Number.isFinite);
 
-        for(let y=0;y<h;y++){
-          for(let x=0;x<w;x++){
-            const i=(y*w+x)*4;
-            const alpha=px[i+3];
+              const pts=[];
+              for(let i=0;i+1<values.length;i+=2){
+                pts.push({x:values[i],y:values[i+1]});
+              }
+
+              return {pts,polyIndex};
+            })
+            .filter(poly=>poly.pts.length>=3);
+        } catch {
+          polygons=[];
+        }
+      }
+
+      const sx=w/viewW;
+      const sy=h/viewH;
+      const cx=viewX+viewW*.5;
+      const cy=viewY+viewH*.5;
+      const maxRadius=Math.hypot(viewW*.5,viewH*.5);
+
+      const drawPoly=(context,pts)=>{
+        context.beginPath();
+        context.moveTo((pts[0].x-viewX)*sx,(pts[0].y-viewY)*sy);
+        for(let i=1;i<pts.length;i++){
+          context.lineTo((pts[i].x-viewX)*sx,(pts[i].y-viewY)*sy);
+        }
+        context.closePath();
+      };
+
+      for(const poly of polygons){
+        let px=0;
+        let py=0;
+        for(const p of poly.pts){
+          px+=p.x;
+          py+=p.y;
+        }
+        px/=poly.pts.length;
+        py/=poly.pts.length;
+
+        const dx=px-cx;
+        const dy=py-cy;
+        const dist=clamp(Math.hypot(dx,dy)/maxRadius,0,1);
+        const angle=Math.atan2(dy,dx);
+
+        // Subtle static albedo variation gives the cut readable facet
+        // boundaries without pre-baking a light direction.
+        const hash=.5+.5*Math.sin(
+          (index+1)*12.9898+(poly.polyIndex+1)*78.233
+        );
+        const variation=(hash-.5)*.22;
+
+        let facetColour;
+        if(variation<0){
+          facetColour=blend(base,deep,Math.abs(variation)*.58);
+        }else{
+          facetColour=blend(base,accent,variation*.74);
+        }
+
+        ctx.save();
+        ctx.globalAlpha=.18+.11*hash;
+        ctx.fillStyle=css(facetColour);
+        drawPoly(ctx,poly.pts);
+        ctx.fill();
+        ctx.restore();
+
+        // Each SVG facet gets a real surface direction. Rotation and moving
+        // lights now change its brightness live instead of using baked shading.
+        const jitter=(hash-.5)*.22;
+        const tilt=clamp(.12+dist*.58+jitter*.16,.08,.72);
+        const tangentAngle=angle+(hash-.5)*.42;
+
+        let nx=Math.cos(tangentAngle)*tilt;
+        let ny=-Math.sin(tangentAngle)*tilt;
+        const nz=Math.sqrt(Math.max(.16,1-nx*nx-ny*ny));
+        const len=Math.hypot(nx,ny,nz)||1;
+        nx/=len;
+        ny/=len;
+
+        nctx.fillStyle=normalCss(nx,ny,nz/len);
+        drawPoly(nctx,poly.pts);
+        nctx.fill();
+      }
+
+      // Use only the original SVG alpha. Its old highlights and shadows are
+      // intentionally discarded.
+      ctx.save();
+      ctx.globalCompositeOperation='destination-in';
+      ctx.drawImage(maskCanvas,0,0,w,h);
+      ctx.restore();
+
+      nctx.save();
+      nctx.globalCompositeOperation='destination-in';
+      nctx.drawImage(maskCanvas,0,0,w,h);
+      nctx.restore();
+
+      // Measure the actual visible cut, ignoring transparent SVG padding.
+      try {
+        const data=mctx.getImageData(0,0,w,h).data;
+        let minX=w;
+        let minY=h;
+        let maxX=-1;
+        let maxY=-1;
+        const stride=2;
+
+        for(let y=0;y<h;y+=stride){
+          for(let x=0;x<w;x+=stride){
+            const alpha=data[(y*w+x)*4+3];
             if(alpha<8) continue;
-
             if(x<minX) minX=x;
             if(x>maxX) maxX=x;
             if(y<minY) minY=y;
             if(y>maxY) maxY=y;
-
-            const lum=(px[i]*.2126+px[i+1]*.7152+px[i+2]*.0722)/255;
-            const nx=x/w-.5;
-            const ny=y/h-.5;
-
-            let value=.18+.82*Math.pow(lum,.62);
-            const directional=clamp((-.78*nx-.62*ny)*.18,-.11,.11);
-            const facetVariation=Math.sin(x*.071+y*.043+index*1.91)*.022;
-            value=clamp(value+directional+facetVariation,0,1);
-
-            let c=samplePalette(value);
-            if(lum<.14) c=blend(p0,p1,.28+.35*(lum/.14));
-
-            px[i]=c.r;
-            px[i+1]=c.g;
-            px[i+2]=c.b;
-
-            const radial=clamp(Math.hypot(nx*1.08,ny*1.08),0,1);
-            const clear=.055+(1-radial)*.075;
-            px[i+3]=Math.round(alpha*(1-clear));
           }
         }
 
-        ctx.putImageData(image,0,0);
-
-        ctx.save();
-        ctx.globalCompositeOperation='screen';
-        const bodyGlow=ctx.createRadialGradient(
-          w*.34,h*.24,0,
-          w*.48,h*.48,Math.max(w,h)*.62
-        );
-        bodyGlow.addColorStop(0,rgba(t.accent,.34));
-        bodyGlow.addColorStop(.24,rgba(t.accent,.15));
-        bodyGlow.addColorStop(.58,rgba(t.color,.065));
-        bodyGlow.addColorStop(1,'rgba(255,255,255,0)');
-        ctx.fillStyle=bodyGlow;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-
-        ctx.save();
-        ctx.globalCompositeOperation='screen';
-        const centre=ctx.createRadialGradient(
-          w*.46,h*.42,0,
-          w*.46,h*.42,Math.max(w,h)*.22
-        );
-        centre.addColorStop(0,'rgba(255,255,255,.25)');
-        centre.addColorStop(.42,rgba(t.accent,.12));
-        centre.addColorStop(1,'rgba(255,255,255,0)');
-        ctx.fillStyle=centre;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-
-        ctx.save();
-        ctx.globalCompositeOperation='screen';
-        const sheen=ctx.createLinearGradient(w*.18,h*.12,w*.72,h*.72);
-        sheen.addColorStop(0,'rgba(255,255,255,.24)');
-        sheen.addColorStop(.28,rgba(t.accent,.10));
-        sheen.addColorStop(.58,'rgba(255,255,255,.025)');
-        sheen.addColorStop(1,'rgba(255,255,255,0)');
-        ctx.fillStyle=sheen;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-
-        ctx.save();
-        ctx.globalCompositeOperation='destination-in';
-        ctx.drawImage(source,0,0,w,h);
-        ctx.restore();
-
-        if(maxX>=minX&&maxY>=minY){
-          this.gemVisualBounds[index]=Math.max(maxX-minX+1,maxY-minY+1);
-        }else{
-          this.gemVisualBounds[index]=Math.max(w,h);
-        }
-
-        this.textures.remove(key);
-        const coloured=this.textures.addCanvas(key,canvas);
-        if(coloured) coloured.setFilter(Phaser.Textures.FilterMode.LINEAR);
+        this.gemVisualBounds[index]=maxX>=minX&&maxY>=minY
+          ? Math.max(maxX-minX+stride,maxY-minY+stride)
+          : Math.max(w,h);
       } catch {
+        this.gemVisualBounds[index]=Math.max(w,h);
+      }
+
+      this.textures.remove(key);
+      const coloured=this.textures.addCanvas(key,canvas);
+
+      if(coloured){
+        coloured.setDataSource(normal);
+        coloured.setFilter(Phaser.Textures.FilterMode.LINEAR);
       }
     }
 
-    attachSvgNormalMap(index) {
-      const texture=this.textures.get('gem-'+index);
-      if(!texture||!texture.getSourceImage) return;
-
-      const source=texture.getSourceImage();
-      if(!source) return;
-
-      const w=source.width||384;
-      const h=source.height||384;
-      const sample=document.createElement('canvas');
-      sample.width=w;
-      sample.height=h;
-      const sctx=sample.getContext('2d',{willReadFrequently:true});
-
-      try {
-        sctx.drawImage(source,0,0,w,h);
-        const image=sctx.getImageData(0,0,w,h);
-        const src=image.data;
-        const lum=new Float32Array(w*h);
-
-        for(let i=0,p=0;i<src.length;i+=4,p++){
-          lum[p]=(src[i]*.2126+src[i+1]*.7152+src[i+2]*.0722)/255;
-        }
-
-        const normal=document.createElement('canvas');
-        normal.width=w;
-        normal.height=h;
-        const nctx=normal.getContext('2d');
-        const out=nctx.createImageData(w,h);
-        const dst=out.data;
-
-        const readLum=(x,y)=>{
-          x=Math.max(0,Math.min(w-1,x));
-          y=Math.max(0,Math.min(h-1,y));
-          return lum[y*w+x];
-        };
-
-        for(let y=0;y<h;y++){
-          for(let x=0;x<w;x++){
-            const p=y*w+x;
-            const di=p*4;
-            const alpha=src[di+3];
-
-            if(alpha<4){
-              dst[di]=128;
-              dst[di+1]=128;
-              dst[di+2]=255;
-              dst[di+3]=0;
-              continue;
-            }
-
-            const dx=readLum(x+2,y)-readLum(x-2,y);
-            const dy=readLum(x,y+2)-readLum(x,y-2);
-            const rx=(x-w*.5)/(w*.5);
-            const ry=(y-h*.5)/(h*.5);
-
-            let nx=-dx*.62+rx*.16;
-            let ny=dy*.62-ry*.16;
-            let nz=.965;
-
-            const len=Math.hypot(nx,ny,nz)||1;
-            nx/=len;
-            ny/=len;
-            nz/=len;
-
-            dst[di]=Math.round((nx*.5+.5)*255);
-            dst[di+1]=Math.round((ny*.5+.5)*255);
-            dst[di+2]=Math.round((nz*.5+.5)*255);
-            dst[di+3]=alpha;
-          }
-        }
-
-        nctx.putImageData(out,0,0);
-        texture.setDataSource(normal);
-        texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
-      } catch {
-      }
-    }
     setupGemLighting() {
       this.webglLighting=(this.game.renderer.type===Phaser.WEBGL);
-
       if(!this.webglLighting) return;
 
       this.lights.enable();
-      // Keep every stone readable even when no facet directly faces a lamp.
-      // Gemstone shadows should stay richly coloured, not collapse to black.
-      this.lights.setAmbientColor(0x76657f);
+      this.lights.setAmbientColor(0x62586d);
 
-      this.keyLight=this.lights.addLight(70,-30,1460,0xfff1d6,1.28);
-      this.fillLight=this.lights.addLight(650,280,1260,0xbfa7ff,.46);
-      this.rimLight=this.lights.addLight(320,910,920,0xff7dbe,.24);
+      this.keyLight=this.lights.addLight(70,-34,1480,0xfff1d2,1.20);
+      this.fillLight=this.lights.addLight(635,270,1280,0xa990ff,.46);
+      this.rimLight=this.lights.addLight(320,880,980,0xff78b8,.26);
     }
 
     applyGemLighting(gameObject) {
-      if(gameObject&&gameObject.resetPipeline){
-        gameObject.resetPipeline();
+      if(this.webglLighting&&gameObject&&gameObject.setPipeline){
+        gameObject.setPipeline('Light2D');
+      }
+    }
+
+    animateGemLights(time) {
+      if(!this.webglLighting) return;
+
+      const phase=time*.00035;
+
+      if(this.keyLight){
+        this.keyLight.x=70+Math.cos(phase)*54;
+        this.keyLight.y=-34+Math.sin(phase*.73)*26;
+      }
+
+      if(this.fillLight){
+        this.fillLight.x=635+Math.cos(phase*.61+2.1)*42;
+        this.fillLight.y=270+Math.sin(phase*.48+1.2)*36;
+      }
+
+      if(this.rimLight){
+        this.rimLight.x=320+Math.cos(phase*.44+4.2)*72;
+        this.rimLight.y=880+Math.sin(phase*.38+2.8)*34;
       }
     }
 
@@ -1152,10 +1145,12 @@
     createGemGlint(gem) {
       if(!gem||!this.textures.exists('gem-sparkle')) return;
 
-      const sheen=this.add.image(gem.x,gem.y,'gem-sheen')
+      const sheen=this.add.image(gem.x,gem.y,'gem-'+gem.tier)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(33+gem.tier*.01)
         .setAlpha(0);
+
+      this.sizeGemSprite(sheen,gem.tier);
 
       const glint=this.add.image(gem.x,gem.y,'gem-sparkle')
         .setBlendMode(Phaser.BlendModes.ADD)
@@ -1195,13 +1190,16 @@
       const worldFacet=localFacet+gem.rotation;
 
       if(gem.sheen&&gem.sheen.active){
-        const sheenAngle=lightAngle+.15*Math.sin(time*.0011+gem.opticSeed);
-        gem.sheen.x=gem.x+Math.cos(sheenAngle)*t.r*.18;
-        gem.sheen.y=gem.y+Math.sin(sheenAngle)*t.r*.18;
+        const sheenAngle=lightAngle+.10*Math.sin(time*.0011+gem.opticSeed);
+        const baseScale=this.gemSpriteScale(gem.tier);
+        const pulse=.035+.018*Math.sin(time*.0018+gem.opticSeed);
+
+        gem.sheen.x=gem.x+Math.cos(sheenAngle)*t.r*.035;
+        gem.sheen.y=gem.y+Math.sin(sheenAngle)*t.r*.035;
         gem.sheen.rotation=gem.rotation;
-        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.72));
-        gem.sheen.setScale(clamp(t.r/92,.46,1.42));
-        gem.sheen.setAlpha(.075+.055*Math.sin(time*.002+gem.opticSeed));
+        gem.sheen.setScale(baseScale*1.012);
+        gem.sheen.setTint(mixHex(t.accent,'#ffffff',.78));
+        gem.sheen.setAlpha(pulse);
       }
 
       gem.glint.x=gem.x+Math.cos(worldFacet)*t.r*.46;
@@ -1972,8 +1970,8 @@
       if(!this.textures.exists('gem-'+this.nextTier)) return;
 
       const source=this.textures.get('gem-'+this.nextTier).getSourceImage();
-      const maxW=58;
-      const maxH=58;
+      const maxW=nextPreview.width*.82;
+      const maxH=nextPreview.height*.82;
       const scale=Math.min(maxW/source.width,maxH/source.height);
       const w=source.width*scale;
       const h=source.height*scale;
@@ -1989,6 +1987,7 @@
 
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
+      this.animateGemLights(time);
 
       if(this.running&&!this.paused){
         this.scanForRestingMatches();
@@ -2103,8 +2102,8 @@
   const config={
     type:Phaser.AUTO,
     parent:'game',
-    width:W,
-    height:H,
+    width:W*RENDER_SCALE,
+    height:H*RENDER_SCALE,
     transparent:true,
     antialias:true,
     roundPixels:false,
@@ -2130,7 +2129,8 @@
       antialias:true,
       pixelArt:false,
       roundPixels:false,
-      maxLights:3
+      maxLights:3,
+      mipmapFilter:'LINEAR'
     },
     scene:GameScene
   };
