@@ -37,6 +37,12 @@ h1{font-size:clamp(28px,4vw,44px);line-height:1;margin:0 0 8px;letter-spacing:-.
 .swatch{width:20px;height:20px;border-radius:7px;background:var(--gem);box-shadow:inset 0 1px 1px rgba(255,255,255,.45),0 0 20px color-mix(in srgb,var(--gem) 35%,transparent);margin-bottom:11px;transform:rotate(45deg)}
 .gem strong{display:block;font-size:13px}
 .gem small{color:#aeb7c6;font-size:11px}
+.notes{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:20px}
+.note-key{border:1px solid #30384a;background:#151b28;border-radius:12px;padding:11px 8px;cursor:pointer;text-align:center}
+.note-key:hover{background:#20283a;border-color:#4b5873}
+.note-key strong{display:block;font-size:15px}
+.note-key small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.note-key.source{border-color:#8d68ec;background:#241b3c}
 .events{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
 .event{border:1px solid #30384a;background:#1b2130;border-radius:13px;padding:13px 12px;cursor:pointer;min-height:68px;text-align:left}
 .event:hover{background:#22293a;border-color:#465168}
@@ -57,7 +63,7 @@ select{width:100%;border:1px solid #31394b;background:#131824;color:var(--text);
 .meter>i{display:block;width:0%;height:100%;background:linear-gradient(90deg,#63E3C4,#9B6BFF,#FF4F87);transition:width .08s linear;border-radius:inherit}
 .foot{margin-top:18px;color:#7f8999;font-size:12px;text-align:center}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.controls{grid-template-columns:repeat(2,minmax(0,1fr))}.sep,.actions,.note,.meter{grid-column:1/-1}}
-@media(max-width:650px){.shell{padding:20px 14px 38px}.gems{grid-template-columns:repeat(2,1fr)}.events{grid-template-columns:1fr}.controls{grid-template-columns:1fr}.card{border-radius:15px;padding:14px}header{align-items:flex-start;flex-direction:column}.status{display:none}}
+@media(max-width:650px){.shell{padding:20px 14px 38px}.notes{grid-template-columns:repeat(4,1fr)}.gems{grid-template-columns:repeat(2,1fr)}.events{grid-template-columns:1fr}.controls{grid-template-columns:1fr}.card{border-radius:15px;padding:14px}header{align-items:flex-start;flex-direction:column}.status{display:none}}
 </style>
 </head>
 <body>
@@ -65,13 +71,15 @@ select{width:100%;border:1px solid #31394b;background:#131824;color:var(--text);
 <header>
   <div>
     <h1>Gem Sound Lab</h1>
-    <div class="sub">GemDrop collision audio built from the repo's ding.ogg recording, with subtle live variation so repeated contacts stay natural.</div>
+    <div class="sub">GemDrop collision audio built from the repo's ding.ogg recording. The source is E6 and every other pitch is tuned to an exact musical note.</div>
   </div>
   <div class="status"><i class="dot" id="audioDot"></i><span id="audioStatus">Audio starts on first tap</span></div>
 </header>
 
 <div class="grid">
   <main class="card">
+    <h2>Pitch reference</h2>
+    <div class="notes" id="noteKeys"></div>
     <h2>Gem voices</h2>
     <div class="gems" id="gems"></div>
 
@@ -124,14 +132,8 @@ select{width:100%;border:1px solid #31394b;background:#131824;color:var(--text);
 
       <div class="sep"></div>
 
-      <div>
-        <label for="scale" style="display:block;font-size:13px;margin-bottom:7px;color:#dce2ee">Harmony</label>
-        <select id="scale">
-          <option value="pentatonic">Dreamy pentatonic</option>
-          <option value="lydian">Bright lydian</option>
-          <option value="major6">Warm major sixth</option>
-          <option value="whole">Glass whole-tone</option>
-        </select>
+      <div class="note">
+        <b>Pitch source:</b> E6 is the untouched recording. A5, B5, C6, D6, F6 and G6 are exact semitone transpositions of that same sample.
       </div>
 
       <div class="actions">
@@ -154,12 +156,15 @@ const GEM_DATA = [
 ["Emerald","#18B56A",0,.86],["Ruby","#E12F4F",1,.78],["Alexandrite","#47B38E",2,.94],["Starstone","#9B6BFF",3,1.08],["Crownstone","#FFD24A",4,1.14]
 ];
 
-const SCALES = {
- pentatonic:[0,2,4,7,9],
- lydian:[0,2,4,6,7,9],
- major6:[0,4,7,9,12],
- whole:[0,2,4,6,8,10]
-};
+const NOTE_SET = [
+ {name:"A5", letter:"A", semitones:-7},
+ {name:"B5", letter:"B", semitones:-5},
+ {name:"C6", letter:"C", semitones:-4},
+ {name:"D6", letter:"D", semitones:-2},
+ {name:"E6", letter:"E", semitones:0, source:true},
+ {name:"F6", letter:"F", semitones:1},
+ {name:"G6", letter:"G", semitones:3}
+];
 
 const defaults={brightness:54,body:72,shimmer:22,decay:38,reverb:18,variation:34,density:48,master:82};
 const state={...defaults};
@@ -196,7 +201,7 @@ function initAudio(){
 
  updateMix();
  document.querySelector("#audioDot").classList.add("live");
- document.querySelector("#audioStatus").textContent="Procedural audio live";
+ document.querySelector("#audioStatus").textContent=dingBuffer?"ding.ogg loaded · E6 source":"Audio ready";
 }
 
 function makeImpulse(seconds,decay){
@@ -239,7 +244,7 @@ function loadDing(){
   .then(decoded=>{
    dingBuffer=decoded;
    document.querySelector("#audioDot").classList.add("live");
-   document.querySelector("#audioStatus").textContent="ding.ogg loaded";
+   document.querySelector("#audioStatus").textContent="ding.ogg loaded · E6 source";
    return decoded;
   })
   .catch(err=>{
@@ -260,12 +265,12 @@ function updateMix(){
  toneBus.frequency.setTargetAtTime(7200+v("brightness")*7500,ctx.currentTime,.02);
 }
 
-function midiFreq(m){return 440*Math.pow(2,(m-69)/12)}
-function noteFor(gemIndex,octaveOffset=0){
- const scale=SCALES[document.querySelector("#scale").value];
- const degree=gemIndex%scale.length;
- const octave=Math.floor(gemIndex/scale.length)%3;
- return midiFreq(60+scale[degree]+12*(octave+octaveOffset));
+function rateForSemitones(semitones){
+ return Math.pow(2,semitones/12);
+}
+
+function noteForGem(gemIndex){
+ return NOTE_SET[gemIndex%NOTE_SET.length];
 }
 
 function connectVoice(node,pan=0,send=.3){
@@ -301,9 +306,8 @@ function strike(gemIndex=0,impact=.45,pan=0,when=0,opts={}){
 
  src.buffer=dingBuffer;
 
- const pitchJitter=(Math.random()*2-1)*(.003+.018*natural);
- const gemColour=(gem[3]-1)*.28;
- src.playbackRate.value=Math.max(.84,Math.min(1.18,1+gemColour+pitchJitter));
+ const note=opts.note||noteForGem(gemIndex);
+ src.playbackRate.value=rateForSemitones(note.semitones);
 
  lowpass.type="lowpass";
  lowpass.frequency.value=6500+bright*10000;
@@ -335,7 +339,7 @@ function strike(gemIndex=0,impact=.45,pan=0,when=0,opts={}){
   const eg=ctx.createGain();
   const ep=ctx.createStereoPanner();
   echo.buffer=dingBuffer;
-  echo.playbackRate.value=Math.min(1.2,src.playbackRate.value*(1.006+Math.random()*.012));
+  echo.playbackRate.value=src.playbackRate.value;
   ep.pan.value=Math.max(-1,Math.min(1,pan+.04));
   eg.gain.setValueAtTime(.0001,t+.018);
   eg.gain.exponentialRampToValueAtTime(.045+.06*v("shimmer")*level,t+.022);
@@ -400,11 +404,21 @@ function pile(){
 function randGem(){return Math.floor(Math.random()*GEM_DATA.length)}
 function randPan(){return Math.random()*1.6-.8}
 
+const noteKeysEl=document.querySelector("#noteKeys");
+NOTE_SET.forEach(note=>{
+ const b=document.createElement("button");
+ b.className="note-key"+(note.source?" source":"");
+ b.innerHTML="<strong>"+note.letter+"</strong><small>"+note.name+(note.source?" · source":"")+"</small>";
+ b.addEventListener("click",()=>strike(4,.68,0,0,{note,forceShimmer:false}));
+ noteKeysEl.appendChild(b);
+});
+
 const gemsEl=document.querySelector("#gems");
 GEM_DATA.forEach((g,i)=>{
  const b=document.createElement("button");
  b.className="gem";b.style.setProperty("--gem",g[1]);
- b.innerHTML='<i class="swatch"></i><strong>'+g[0]+'</strong><small>tap to audition</small>';
+ const note=noteForGem(i);
+ b.innerHTML='<i class="swatch"></i><strong>'+g[0]+'</strong><small>'+note.name+'</small>';
  b.addEventListener("click",()=>strike(i,.64,0,0,{forceShimmer:true}));
  gemsEl.appendChild(b);
 });
@@ -435,7 +449,6 @@ document.querySelector("#reset").addEventListener("click",()=>{
   document.querySelector("#"+k).value=n;
   document.querySelector("#"+k).dispatchEvent(new Event("input"));
  }
- document.querySelector("#scale").value="pentatonic";
  setTimeout(cascade,50);
 });
 
