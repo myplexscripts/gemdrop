@@ -161,22 +161,39 @@ const SCALES = {
  whole:[0,2,4,6,8,10]
 };
 
-const defaults={brightness:68,body:46,shimmer:36,decay:42,reverb:24,variation:28,density:48,master:58};
+const defaults={brightness:54,body:72,shimmer:22,decay:38,reverb:18,variation:34,density:48,master:82};
 const state={...defaults};
-let ctx,master,dry,wet,convolver,meterGain,noiseBuffer,lastMeter=0;
+let ctx,master,dry,wet,convolver,compressor,toneBus,noiseBuffer,lastMeter=0;
 
 function initAudio(){
  if(ctx) return;
  ctx=new (window.AudioContext||window.webkitAudioContext)();
- master=ctx.createGain();
+
  dry=ctx.createGain();
  wet=ctx.createGain();
  convolver=ctx.createConvolver();
- meterGain=ctx.createGain();
- convolver.buffer=makeImpulse(1.8,2.7);
- dry.connect(master);
- wet.connect(convolver); convolver.connect(master);
+ toneBus=ctx.createBiquadFilter();
+ compressor=ctx.createDynamicsCompressor();
+ master=ctx.createGain();
+
+ convolver.buffer=makeImpulse(1.45,3.4);
+ toneBus.type="lowpass";
+ toneBus.frequency.value=11800;
+ toneBus.Q.value=.2;
+
+ compressor.threshold.value=-22;
+ compressor.knee.value=18;
+ compressor.ratio.value=3.2;
+ compressor.attack.value=.004;
+ compressor.release.value=.16;
+
+ dry.connect(toneBus);
+ wet.connect(convolver);
+ convolver.connect(toneBus);
+ toneBus.connect(compressor);
+ compressor.connect(master);
  master.connect(ctx.destination);
+
  updateMix();
  document.querySelector("#audioDot").classList.add("live");
  document.querySelector("#audioStatus").textContent="Procedural audio live";
@@ -194,17 +211,28 @@ function makeImpulse(seconds,decay){
 
 function makeNoise(){
  if(noiseBuffer) return noiseBuffer;
- const b=ctx.createBuffer(1,ctx.sampleRate*.08,ctx.sampleRate),d=b.getChannelData(0);
- for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
- noiseBuffer=b; return b;
+ const length=Math.floor(ctx.sampleRate*.12);
+ const b=ctx.createBuffer(1,length,ctx.sampleRate);
+ const d=b.getChannelData(0);
+ let last=0;
+ for(let i=0;i<d.length;i++){
+  const white=Math.random()*2-1;
+  last=last*.32+white*.68;
+  const env=Math.pow(1-i/d.length,2.4);
+  d[i]=last*env;
+ }
+ noiseBuffer=b;
+ return b;
 }
 
 function v(name){return state[name]/100}
 function updateMix(){
  if(!ctx) return;
- master.gain.setTargetAtTime(.08+v("master")*.45,ctx.currentTime,.02);
- dry.gain.setTargetAtTime(1-v("reverb")*.3,ctx.currentTime,.02);
- wet.gain.setTargetAtTime(v("reverb")*.72,ctx.currentTime,.02);
+ const vol=v("master");
+ master.gain.setTargetAtTime(.20+vol*1.28,ctx.currentTime,.018);
+ dry.gain.setTargetAtTime(.95-v("reverb")*.18,ctx.currentTime,.018);
+ wet.gain.setTargetAtTime(.06+v("reverb")*.58,ctx.currentTime,.018);
+ toneBus.frequency.setTargetAtTime(7200+v("brightness")*7500,ctx.currentTime,.02);
 }
 
 function midiFreq(m){return 440*Math.pow(2,(m-69)/12)}
@@ -228,52 +256,102 @@ function strike(gemIndex=0,impact=.45,pan=0,when=0,opts={}){
  initAudio();
  const t=ctx.currentTime+when;
  const gem=GEM_DATA[gemIndex%GEM_DATA.length];
- const variation=(Math.random()*2-1)*v("variation");
- const base=noteFor(gemIndex,opts.octave||0)*gem[3]*Math.pow(2,variation*.025);
- const decay=.10+v("decay")*.62;
+ const natural=v("variation");
+ const drift=(Math.random()*2-1)*natural;
+ const base=noteFor(gemIndex,opts.octave||0)*gem[3]*Math.pow(2,drift*.012);
+ const decay=.075+v("decay")*.52;
  const bright=v("brightness");
  const body=v("body");
  const shimmer=v("shimmer");
- const level=Math.min(1,Math.max(.02,impact));
+ const level=Math.min(1,Math.max(.025,impact));
+
  const out=ctx.createGain();
  out.gain.setValueAtTime(.0001,t);
- out.gain.exponentialRampToValueAtTime(.16*level,t+.002);
- out.gain.exponentialRampToValueAtTime(.0001,t+decay*(.8+Math.random()*.35));
- connectVoice(out,pan,.16+v("reverb")*.62);
+ out.gain.exponentialRampToValueAtTime(.54*level,t+.0015);
+ out.gain.exponentialRampToValueAtTime(.0001,t+decay*(.92+Math.random()*.26));
+ connectVoice(out,pan,.08+v("reverb")*.44);
 
- const modes=[
-  [1, .55+body*.45, 1],
-  [2.01, .16+bright*.22, .72],
-  [2.96, .08+bright*.18, .48],
-  [4.12, .025+shimmer*.16, .31],
-  [5.43, .012+shimmer*.12, .22]
+ // Physical contact: a short, filtered glass/chip transient instead of a synthetic beep.
+ const click=ctx.createBufferSource();
+ const clickHP=ctx.createBiquadFilter();
+ const clickBP=ctx.createBiquadFilter();
+ const clickGain=ctx.createGain();
+ click.buffer=makeNoise();
+ click.playbackRate.value=.82+Math.random()*.42;
+ clickHP.type="highpass";
+ clickHP.frequency.value=950+bright*1450;
+ clickBP.type="bandpass";
+ clickBP.frequency.value=2400+bright*3700+(Math.random()*700-350);
+ clickBP.Q.value=.75+body*1.2;
+ clickGain.gain.setValueAtTime(.64*level*(.76+body*.35),t);
+ clickGain.gain.exponentialRampToValueAtTime(.0001,t+.018+body*.018);
+ click.connect(clickHP);
+ clickHP.connect(clickBP);
+ clickBP.connect(clickGain);
+ clickGain.connect(out);
+ click.start(t);
+ click.stop(t+.09);
+
+ // Struck glass is inharmonic. These deliberately imperfect modal ratios keep it crystal-like
+ // while avoiding the clean harmonic stack that made the first version sound electronic.
+ const modalSets=[
+  [1.00,2.31,3.74,5.18,6.86],
+  [1.00,2.18,3.42,4.91,7.12],
+  [1.00,2.46,3.88,5.57,7.36],
+  [1.00,2.27,3.61,5.03,6.54],
+  [1.00,2.39,3.53,5.34,7.01]
  ];
- modes.forEach(([ratio,amt,life],i)=>{
-  const o=ctx.createOscillator(),g=ctx.createGain();
-  o.type=i===0&&body>.6?"triangle":"sine";
-  o.frequency.setValueAtTime(base*ratio,t);
-  if(i>1)o.detune.value=(Math.random()*2-1)*8*v("variation");
-  g.gain.setValueAtTime(Math.max(.0001,amt*level),t);
-  g.gain.exponentialRampToValueAtTime(.0001,t+decay*life);
-  o.connect(g);g.connect(out);o.start(t);o.stop(t+decay*life+.03);
+ const ratios=modalSets[gem[2]%modalSets.length];
+ const modalGain=[.34+body*.25,.16+bright*.10,.075+bright*.075,.032+shimmer*.06,.014+shimmer*.045];
+ const modalLife=[1,.62,.40,.27,.18];
+
+ ratios.forEach((ratio,i)=>{
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+  const filter=ctx.createBiquadFilter();
+  o.type="sine";
+
+  const startFreq=base*ratio*(1+(Math.random()*2-1)*natural*.004);
+  const settleFreq=startFreq*(.996-Math.random()*.004);
+  o.frequency.setValueAtTime(startFreq,t);
+  o.frequency.exponentialRampToValueAtTime(Math.max(45,settleFreq),t+.025+Math.random()*.02);
+
+  filter.type="bandpass";
+  filter.frequency.value=Math.min(15000,startFreq);
+  filter.Q.value=2.2+i*.8;
+
+  const attack=.001+Math.random()*.0025;
+  const life=decay*modalLife[i]*(.82+Math.random()*.36);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(Math.max(.0002,modalGain[i]*level),t+attack);
+  g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.025,life));
+
+  o.connect(filter);
+  filter.connect(g);
+  g.connect(out);
+  o.start(t);
+  o.stop(t+Math.max(.04,life)+.02);
  });
 
- const click=ctx.createBufferSource(),hp=ctx.createBiquadFilter(),cg=ctx.createGain();
- click.buffer=makeNoise();hp.type="bandpass";
- hp.frequency.value=2200+bright*5200;hp.Q.value=1.5+bright*3;
- cg.gain.setValueAtTime(.13*level*(.55+bright),t);
- cg.gain.exponentialRampToValueAtTime(.0001,t+.013+.018*(1-body));
- click.connect(hp);hp.connect(cg);cg.connect(out);click.start(t);click.stop(t+.07);
-
- if(shimmer>.08 && (opts.forceShimmer||Math.random()<.35+shimmer*.35)){
-  const so=ctx.createOscillator(),sg=ctx.createGain();
-  so.type="sine";so.frequency.value=base*(6.9+Math.random()*.35);
-  sg.gain.setValueAtTime(.012*level*shimmer,t+.006);
-  sg.gain.exponentialRampToValueAtTime(.0001,t+decay*1.15);
-  so.connect(sg);sg.connect(out);so.start(t+.006);so.stop(t+decay*1.2);
+ // A tiny broadband sparkle gives cut crystal some air without becoming a synth pad.
+ if(shimmer>.04 && (opts.forceShimmer||Math.random()<.20+shimmer*.42)){
+  const s=ctx.createBufferSource();
+  const hp=ctx.createBiquadFilter();
+  const sg=ctx.createGain();
+  s.buffer=makeNoise();
+  s.playbackRate.value=1.5+Math.random()*.9;
+  hp.type="highpass";
+  hp.frequency.value=6000+bright*2800;
+  sg.gain.setValueAtTime(.065*level*shimmer,t+.004);
+  sg.gain.exponentialRampToValueAtTime(.0001,t+.045+decay*.18);
+  s.connect(hp);
+  hp.connect(sg);
+  sg.connect(out);
+  s.start(t+.004);
+  s.stop(t+.13);
  }
 
- pulseMeter(Math.min(1,level*.8+.1));
+ pulseMeter(Math.min(1,level*.95+.12));
 }
 
 function pulseMeter(x){
@@ -285,13 +363,13 @@ function pulseMeter(x){
 }
 
 function soft(){
- strike(randGem(),.16,randPan());
+ strike(randGem(),.24,randPan());
 }
 function drop(){
  const g=randGem(),p=randPan();
- strike(g,.68,p,0,{forceShimmer:true});
- strike(g,.28,p*.88,.095);
- strike(g,.12,p*.74,.205);
+ strike(g,.82,p,0,{forceShimmer:true});
+ strike(g,.34,p*.88,.095);
+ strike(g,.16,p*.74,.205);
 }
 function rattle(){
  const g=randGem(),count=4+Math.floor(v("density")*7);
@@ -332,7 +410,7 @@ GEM_DATA.forEach((g,i)=>{
  const b=document.createElement("button");
  b.className="gem";b.style.setProperty("--gem",g[1]);
  b.innerHTML='<i class="swatch"></i><strong>'+g[0]+'</strong><small>tap to audition</small>';
- b.addEventListener("click",()=>strike(i,.46,0,0,{forceShimmer:true}));
+ b.addEventListener("click",()=>strike(i,.64,0,0,{forceShimmer:true}));
  gemsEl.appendChild(b);
 });
 
