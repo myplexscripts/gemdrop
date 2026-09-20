@@ -109,7 +109,7 @@
       <input id="rotation" type="range" min="-180" max="180" value="0" />
       <button id="toggleSpin">Start auto rotate</button>
 
-      <p>The two black triangles were gaps in the facet mesh, not dark shading. They are now real dynamically lit violet facets, with a dark-violet base underneath the full gem so transparent holes cannot appear.</p>
+      <p>Every visible bevel now reacts to the light. Extra micro-facets around the outer edges and key bevel planes brighten and darken independently as the gem rotates.</p>
       <p class="small">
         Reuse in Gemdrop by importing <code>gem-component.js</code> and creating
         <code>new FacetedGem().mount(target)</code>.
@@ -117,7 +117,7 @@
     </section>
   </main>
 
-  <script src="./gem-component.js?v=5"></script>
+  <script src="./gem-component.js?v=6"></script>
   <script>
     const mount = document.getElementById("gemMount");
     const slider = document.getElementById("rotation");
