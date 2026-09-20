@@ -470,6 +470,8 @@
       this.uiBound=false;
       this.gemVisualBounds=[];
       this.gemPipeline=null;
+      this.tumbleState=null;
+      this.baseGravityY=1.32;
     }
 
     preload() {
@@ -491,7 +493,8 @@
       engine.positionIterations=10;
       engine.velocityIterations=8;
       engine.constraintIterations=2;
-      engine.gravity.y=1.32;
+      engine.gravity.x=0;
+      engine.gravity.y=this.baseGravityY;
       engine.gravity.scale=.001;
 
       if(this.game.renderer.type===Phaser.WEBGL){
@@ -785,11 +788,8 @@
           0,
           256
         );
-        const visualScale=window.ReactiveGemSystem.visualScale
-          ? window.ReactiveGemSystem.visualScale(t.reactiveCut)
-          : 1;
         const max=cavityRadius*1.78;
-        const scale=Math.min(max/source.width,max/source.height)*visualScale;
+        const scale=Math.min(max/source.width,max/source.height);
         const gw=source.width*scale;
         const gh=source.height*scale;
 
@@ -814,7 +814,7 @@
         card.setAttribute(
           'aria-label',
           unlocked
-            ? t.name+', '+t.cut+' cut, value $'+fmt(t.score)
+            ? t.name+', value $'+fmt(t.score)
             : 'Undiscovered gem'
         );
 
@@ -839,6 +839,11 @@
           value.textContent='$'+fmt(t.score);
 
           meta.append(name,value);
+        }else{
+          const unknown=document.createElement('span');
+          unknown.className='gem-card__unknown';
+          unknown.textContent='UNDISCOVERED';
+          meta.append(unknown);
         }
 
         card.append(art,meta);
@@ -1095,6 +1100,11 @@
       this.gems.length=0;
       this.pendingMerges.length=0;
       this.dropGateGem=null;
+      this.tumbleState=null;
+      if(this.matter&&this.matter.world&&this.matter.world.engine){
+        this.matter.world.engine.gravity.x=0;
+        this.matter.world.engine.gravity.y=this.baseGravityY;
+      }
 
       if(this.preview){
         this.preview.destroy();
@@ -1536,7 +1546,7 @@
         canvas.height=40;
         const ctx=canvas.getContext('2d');
         const t=tiers[tier];
-        const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,128);
+        const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,128,t);
         const scale=Math.min(34/source.width,34/source.height);
         const w=source.width*scale;
         const h=source.height*scale;
@@ -1612,9 +1622,9 @@
 
     rechargePowers(amount=1) {
       const gains={
-        tumble:.20,
-        prism:.14,
-        cascade:.10
+        tumble:.18,
+        prism:.125,
+        cascade:.09
       };
 
       for(const key of Object.keys(gains)){
@@ -1653,81 +1663,98 @@
       if(
         !this.running||
         this.paused||
+        this.tumbleState||
         (this.powerCharge.tumble??0)<.999||
         !this.gems.length
       ) return;
 
       this.powerCharge.tumble=0;
-      const M=Phaser.Physics.Matter.Matter;
-      const shell=document.querySelector('.play-shell');
-      const pulses=18;
-      const spacing=46;
+      this.tumbleState={
+        started:this.time.now,
+        duration:980,
+        nextKick:this.time.now
+      };
 
+      const shell=document.querySelector('.play-shell');
       if(shell){
         shell.classList.remove('tumbling');
         void shell.offsetWidth;
         shell.classList.add('tumbling');
-        window.setTimeout(()=>shell.classList.remove('tumbling'),pulses*spacing+180);
+        window.setTimeout(()=>shell.classList.remove('tumbling'),1080);
       }
 
-      // A real tumble should substantially rearrange the pile, not merely make
-      // the sprites wobble. Alternate horizontal basin kicks with upward jolts
-      // and strong torque so pieces trade places and roll over one another.
-      for(let p=0;p<pulses;p++){
-        this.time.delayedCall(p*spacing,()=>{
-          if(!this.running||this.paused) return;
-
-          const direction=p%2===0?1:-1;
-          const phase=Math.sin((p/(pulses-1))*Math.PI);
-          const horizontal=2.15+phase*2.65;
-          const liftPulse=p%3===0||p===pulses-2;
-
-          for(const gem of this.gems){
-            if(!gem||!gem.active||!gem.body) continue;
-
-            const vx=gem.body.velocity.x;
-            const vy=gem.body.velocity.y;
-            const xKick=direction*horizontal*Phaser.Math.FloatBetween(.76,1.22);
-            const yKick=liftPulse
-              ? -(1.75+phase*2.10)*Phaser.Math.FloatBetween(.72,1.18)
-              : Phaser.Math.FloatBetween(-.38,.42);
-
-            M.Body.setVelocity(gem.body,{
-              x:clamp(vx+xKick,-7.1,7.1),
-              y:clamp(vy+yKick,-6.2,7.2)
-            });
-
-            M.Body.setAngularVelocity(
-              gem.body,
-              clamp(
-                gem.body.angularVelocity+
-                direction*Phaser.Math.FloatBetween(.038,.082),
-                -.14,
-                .14
-              )
-            );
-
-            const mass=gem.body.mass;
-            M.Body.applyForce(
-              gem.body,
-              {
-                x:gem.body.position.x+Phaser.Math.FloatBetween(-16,16),
-                y:gem.body.position.y+Phaser.Math.FloatBetween(-12,12)
-              },
-              {
-                x:direction*(.00042+phase*.00034)*mass,
-                y:(liftPulse?-.00042:.00003)*mass
-              }
-            );
-          }
+      const M=Phaser.Physics.Matter.Matter;
+      for(const gem of this.gems){
+        if(!gem||!gem.active||!gem.body) continue;
+        M.Body.setVelocity(gem.body,{
+          x:clamp(gem.body.velocity.x+Phaser.Math.FloatBetween(-1.15,1.15),-4.5,4.5),
+          y:clamp(gem.body.velocity.y+Phaser.Math.FloatBetween(-.75,.15),-3.6,5.0)
         });
+        M.Body.setAngularVelocity(
+          gem.body,
+          clamp(gem.body.angularVelocity+Phaser.Math.FloatBetween(-.035,.035),-.085,.085)
+        );
       }
 
-      this.cameras.main.shake(pulses*spacing,.009);
-      this.showStatus('TUMBLE!','reward',1200,'rotate-cw');
-      tone(210,.14,.032,'triangle');
-      haptic([12,22,12,22,18]);
+      this.cameras.main.shake(820,.0055);
+      this.showStatus('TUMBLE!','reward',1050,'rotate-cw');
+      tone(210,.12,.028,'triangle');
+      haptic([10,18,10,18,12]);
       this.updatePowerButtons();
+    }
+
+    updateTumble(time) {
+      if(!this.tumbleState) return;
+
+      const state=this.tumbleState;
+      const engine=this.matter.world.engine;
+      const elapsed=time-state.started;
+      const p=clamp(elapsed/state.duration,0,1);
+      const envelope=Math.sin(Math.PI*p);
+      const wave=Math.sin(p*Math.PI*9);
+
+      engine.gravity.x=wave*.64*envelope;
+      engine.gravity.y=this.baseGravityY-
+        Math.max(0,Math.sin(p*Math.PI*5))*.28*envelope;
+
+      if(time>=state.nextKick){
+        state.nextKick=time+150;
+        const M=Phaser.Physics.Matter.Matter;
+        const direction=wave>=0?1:-1;
+
+        for(const gem of this.gems){
+          if(!gem||!gem.active||!gem.body) continue;
+          M.Body.setVelocity(gem.body,{
+            x:clamp(
+              gem.body.velocity.x+
+              direction*Phaser.Math.FloatBetween(.28,.72)*envelope,
+              -4.8,
+              4.8
+            ),
+            y:clamp(
+              gem.body.velocity.y-
+              Phaser.Math.FloatBetween(.08,.34)*envelope,
+              -3.8,
+              5.2
+            )
+          });
+          M.Body.setAngularVelocity(
+            gem.body,
+            clamp(
+              gem.body.angularVelocity+
+              direction*Phaser.Math.FloatBetween(.008,.022),
+              -.09,
+              .09
+            )
+          );
+        }
+      }
+
+      if(p>=1){
+        engine.gravity.x=0;
+        engine.gravity.y=this.baseGravityY;
+        this.tumbleState=null;
+      }
     }
 
     useCascade() {
@@ -1820,6 +1847,11 @@
       this.updatePowerButtons();
 
       if(value){
+        if(this.tumbleState){
+          this.tumbleState=null;
+          this.matter.world.engine.gravity.x=0;
+          this.matter.world.engine.gravity.y=this.baseGravityY;
+        }
         this.matter.world.pause();
         this.tweens.pauseAll();
       }else{
@@ -1834,6 +1866,9 @@
       this.running=false;
       this.ready=false;
       this.pointerHeld=false;
+      this.tumbleState=null;
+      this.matter.world.engine.gravity.x=0;
+      this.matter.world.engine.gravity.y=this.baseGravityY;
       this.updatePowerButtons();
       this.matter.world.pause();
 
@@ -1852,7 +1887,7 @@
       if(!window.ReactiveGemSystem) return;
 
       const t=tiers[this.nextTier];
-      const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,256);
+      const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,256,t);
       const maxW=nextPreview.width*.82;
       const maxH=nextPreview.height*.82;
       const scale=Math.min(maxW/source.width,maxH/source.height);
@@ -1865,6 +1900,7 @@
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
       this.animateGemLights(time);
+      this.updateTumble(time);
 
       if(this.running&&!this.paused&&!this.ready&&!this.dropGateGem&&time-this.lastDropAt>=DROP_DELAY){
         this.ready=true;

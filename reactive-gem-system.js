@@ -311,6 +311,8 @@
     if(!raw.length) throw new Error('No facets found for '+name);
 
     const metrics=outerMetrics(outer);
+    metrics.width=metrics.maxX-metrics.minX;
+    metrics.height=metrics.maxY-metrics.minY;
     const visualExtent=clamp(metrics.extent,220,512);
     const collisionPoints=outerPhysicsPoints(outer);
 
@@ -349,6 +351,7 @@
       facets,
       baseHue,
       visualExtent,
+      metrics,
       collisionPoints,
       stepCut:!!CUTS[name].stepCut
     };
@@ -400,26 +403,63 @@
 
   function dot3(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
 
-  function renderPreviewCanvas(name,color,angle=0,size=256){
+  function smoothstep(edge0,edge1,x){
+    const t=clamp((x-edge0)/(edge1-edge0),0,1);
+    return t*t*(3-2*t);
+  }
+
+  function mixRgb(a,b,t){
+    return {
+      r:a.r+(b.r-a.r)*t,
+      g:a.g+(b.g-a.g)*t,
+      b:a.b+(b.b-a.b)*t
+    };
+  }
+
+  function rgbCss(c){
+    return 'rgb('+
+      Math.round(clamp(c.r,0,1)*255)+' '+
+      Math.round(clamp(c.g,0,1)*255)+' '+
+      Math.round(clamp(c.b,0,1)*255)+')';
+  }
+
+  function renderPreviewCanvas(name,color,angle=0,size=256,palette=null){
     const model=models.get(name);
     if(!model) throw new Error('Gem model not prepared: '+name);
 
+    const metrics=model.metrics;
+    const pad=model.visualExtent*.055;
+    const maxSpan=model.visualExtent+pad*2;
+    const drawScale=size/maxSpan;
+
+    // Crop the canvas to the authored silhouette's real proportions.
     const canvas=document.createElement('canvas');
-    canvas.width=size; canvas.height=size;
+    canvas.width=Math.max(1,Math.round((metrics.width+pad*2)*drawScale));
+    canvas.height=Math.max(1,Math.round((metrics.height+pad*2)*drawScale));
     const ctx=canvas.getContext('2d',{alpha:true});
-    const scale=size/512;
-    const base=hexToHsl(color);
-    const baseSat=clamp(base.s,12,100);
-    const light=norm3(-.58,-.46,.67);
+
+    // Use the exact same three material colours used by the gameplay shader.
+    const gemColor=parseHex((palette&&palette.color)||color)||parseHex(color);
+    const deepColor=parseHex((palette&&palette.dark)||color)||gemColor;
+    const accentColor=parseHex((palette&&palette.accent)||color)||gemColor;
+
+    const lightAngle=-Math.PI*.32;
+    const light=norm3(Math.cos(lightAngle)*.67,Math.sin(lightAngle)*.67,.74);
+    const tintLight=norm3(-Math.cos(lightAngle)*.16,-Math.sin(lightAngle)*.16,.97);
     const view=[0,0,1];
 
-    ctx.clearRect(0,0,size,size);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.save();
-    ctx.translate(size/2,size/2);
-    ctx.rotate(angle*Math.PI/180);
-    ctx.translate(-size/2,-size/2);
+    ctx.scale(drawScale,drawScale);
+    ctx.translate(pad-metrics.minX,pad-metrics.minY);
 
-    fillOuter(ctx,model.outer,scale,hslString(base.h,baseSat,clamp(base.l-12,18,42)));
+    if(angle){
+      ctx.translate(256,256);
+      ctx.rotate(angle*Math.PI/180);
+      ctx.translate(-256,-256);
+    }
+
+    fillOuter(ctx,model.outer,1,rgbCss(deepColor));
 
     const rad=angle*Math.PI/180;
     const cos=Math.cos(rad),sin=Math.sin(rad);
@@ -430,33 +470,42 @@
       const normal=norm3(nx,ny,facet.nz);
       const diffuse=Math.max(0,dot3(normal,light));
       const facing=clamp(normal[2],0,1);
-      const rim=Math.pow(1-facing,1.2);
-      const energy=clamp(.18+facet.style*.36+diffuse*.38+facing*.11+rim*.10,0,1);
-      const l=clamp(22+energy*58,18,82);
-      const s=clamp(baseSat*(.86+facet.saturation*.18)-diffuse*2,10,100);
+      const transmission=Math.max(0,dot3(normal,tintLight));
+      const rim=Math.pow(1-facing,1.15);
+      const style=facet.style;
 
-      polygonPath(ctx,facet.points,scale);
-      ctx.globalAlpha=facet.opacity;
-      ctx.fillStyle=hslString(base.h+facet.hueOffset*.16,s,l);
-      ctx.fill();
+      const energy=.22+(style-.52)*.78+diffuse*.34+transmission*.28+rim*.16+facing*.12;
+      const low=smoothstep(.18,.56,energy);
+      const high=smoothstep(.55,.88,energy);
 
-      // Dynamic specular plane from the fixed light, not a baked SVG highlight.
+      let material=mixRgb(deepColor,gemColor,low);
+      material=mixRgb(material,accentColor,high*.72);
+
+      const incoming=[-light[0],-light[1],-light[2]];
+      const ndot=dot3(incoming,normal);
       const reflected=[
-        -light[0]-2*dot3([-light[0],-light[1],-light[2]],normal)*normal[0],
-        -light[1]-2*dot3([-light[0],-light[1],-light[2]],normal)*normal[1],
-        -light[2]-2*dot3([-light[0],-light[1],-light[2]],normal)*normal[2]
+        incoming[0]-2*ndot*normal[0],
+        incoming[1]-2*ndot*normal[1],
+        incoming[2]-2*ndot*normal[2]
       ];
-      const spec=Math.pow(Math.max(0,dot3(reflected,view)),model.stepCut?14:19);
-      if(spec>.035){
-        ctx.save();
-        ctx.globalCompositeOperation='screen';
-        ctx.globalAlpha=clamp(spec*.42,0,.30)*facet.opacity;
-        ctx.fillStyle=hslString(base.h,Math.max(18,baseSat*.45),88);
-        polygonPath(ctx,facet.points,scale);
-        ctx.fill();
-        ctx.restore();
-      }
+
+      const spec=Math.pow(Math.max(dot3(reflected,view),0),model.stepCut?16:18);
+      const caustic=Math.pow(transmission,model.stepCut?2.8:3.0)*.18;
+      const flash=clamp(spec*1.15+caustic+diffuse*.03,0,model.stepCut?.28:.34);
+
+      let final=mixRgb(material,accentColor,flash*.72);
+      final={
+        r:(final.r+accentColor.r*flash*.34)*(.92+style*.16),
+        g:(final.g+accentColor.g*flash*.34)*(.92+style*.16),
+        b:(final.b+accentColor.b*flash*.34)*(.92+style*.16)
+      };
+
+      polygonPath(ctx,facet.points,1);
+      ctx.globalAlpha=facet.opacity;
+      ctx.fillStyle=rgbCss(final);
+      ctx.fill();
     }
+
     ctx.restore();
     ctx.globalAlpha=1;
     return canvas;
@@ -467,6 +516,12 @@
     prepare,
     createDataCanvas,
     renderPreviewCanvas,
+    aspectRatio:name=>{
+      const model=models.get(name);
+      return model&&model.metrics&&model.metrics.height
+        ? model.metrics.width/model.metrics.height
+        : 1;
+    },
     visualScale:name=>{
       const model=models.get(name);
       return model&&model.visualExtent?512/model.visualExtent:1;
