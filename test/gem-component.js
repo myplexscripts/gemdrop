@@ -199,17 +199,18 @@ class FacetedGem {
       const grazing = Math.pow(this.clamp(Math.abs(this.dot(n, this.light)), 0, 1), 0.75);
 
       const energy =
-        0.20 +
+        0.24 +
         facet.base +
-        diffuse * 0.42 +
-        transmission * 0.26 +
-        sideGlow * 0.16 +
-        grazing * 0.08 +
-        facing * 0.08;
+        diffuse * 0.36 +
+        transmission * 0.28 +
+        sideGlow * 0.14 +
+        grazing * 0.10 +
+        facing * 0.10;
 
-      const lightness = this.clamp(30 + energy * 27, 30, 76);
-      const saturation = this.clamp(this.saturation + facet.sat + diffuse * 6 + transmission * 5, 76, 98);
-      const hue = this.hue + facet.hue + diffuse * 2 - sideGlow * 1.5;
+      const shadowLift = 0.16 + transmission * 0.12 + sideGlow * 0.08;
+      const lightness = this.clamp(36 + (energy + shadowLift) * 24, 36, 76);
+      const saturation = this.clamp(this.saturation + facet.sat + diffuse * 5 + transmission * 6 + sideGlow * 2, 80, 98);
+      const hue = this.hue + facet.hue + diffuse * 1.5 - sideGlow * 1.2;
 
       this.facetEls[index].setAttribute("fill", this.hsl(hue, saturation, lightness));
 
