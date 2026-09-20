@@ -209,7 +209,27 @@
   let audioCtx = null;
   let dingBuffer = null;
   let dingLoadPromise = null;
-  let lastDingAt = 0;
+
+  let gemAudioMaster = null;
+  let gemAudioDry = null;
+  let gemAudioWet = null;
+  let gemAudioConvolver = null;
+  let gemAudioToneBus = null;
+  let gemAudioCompressor = null;
+
+  let dingWindowStartedAt = 0;
+  let dingVoicesInWindow = 0;
+
+  // ding.ogg is recorded at E6. These are exact natural-note offsets from E6.
+  const GEM_NOTE_SET = [
+    { name:'A5', semitones:-7 },
+    { name:'B5', semitones:-5 },
+    { name:'C6', semitones:-4 },
+    { name:'D6', semitones:-2 },
+    { name:'E6', semitones:0 },
+    { name:'F6', semitones:1 },
+    { name:'G6', semitones:3 }
+  ];
 
   function clamp(v,min,max) {
     return Math.max(min,Math.min(max,v));
@@ -267,6 +287,64 @@
     ctx.closePath();
   }
 
+  function makeGemImpulse(seconds=1.45,decay=3.4) {
+    if(!audioCtx) return null;
+
+    const length=Math.max(1,Math.floor(audioCtx.sampleRate*seconds));
+    const buffer=audioCtx.createBuffer(2,length,audioCtx.sampleRate);
+
+    for(let channel=0;channel<2;channel++){
+      const data=buffer.getChannelData(channel);
+      for(let i=0;i<length;i++){
+        data[i]=(Math.random()*2-1)*Math.pow(1-i/length,decay);
+      }
+    }
+
+    return buffer;
+  }
+
+  function setupGemAudioBus() {
+    if(!audioCtx||gemAudioMaster) return;
+
+    gemAudioDry=audioCtx.createGain();
+    gemAudioWet=audioCtx.createGain();
+    gemAudioConvolver=audioCtx.createConvolver();
+    gemAudioToneBus=audioCtx.createBiquadFilter();
+    gemAudioCompressor=audioCtx.createDynamicsCompressor();
+    gemAudioMaster=audioCtx.createGain();
+
+    gemAudioConvolver.buffer=makeGemImpulse();
+
+    gemAudioToneBus.type='lowpass';
+    gemAudioToneBus.frequency.value=11250;
+    gemAudioToneBus.Q.value=.2;
+
+    gemAudioCompressor.threshold.value=-22;
+    gemAudioCompressor.knee.value=18;
+    gemAudioCompressor.ratio.value=3.2;
+    gemAudioCompressor.attack.value=.004;
+    gemAudioCompressor.release.value=.16;
+
+    gemAudioDry.gain.value=.918;
+    gemAudioWet.gain.value=.164;
+    gemAudioMaster.gain.value=1.08;
+
+    gemAudioDry.connect(gemAudioToneBus);
+    gemAudioWet.connect(gemAudioConvolver);
+    gemAudioConvolver.connect(gemAudioToneBus);
+    gemAudioToneBus.connect(gemAudioCompressor);
+    gemAudioCompressor.connect(gemAudioMaster);
+    gemAudioMaster.connect(audioCtx.destination);
+  }
+
+  function gemNoteForTier(tier) {
+    return GEM_NOTE_SET[Math.abs(tier)%GEM_NOTE_SET.length];
+  }
+
+  function playbackRateForSemitones(semitones) {
+    return Math.pow(2,semitones/12);
+  }
+
   function loadDing() {
     if(!audioCtx||dingBuffer) return Promise.resolve(dingBuffer);
     if(dingLoadPromise) return dingLoadPromise;
@@ -296,38 +374,77 @@
 
     if(audioCtx){
       if(audioCtx.state==='suspended') audioCtx.resume();
+      setupGemAudioBus();
       loadDing();
     }
   }
 
   function playGemDing(tier,impact=1,x=W/2) {
-    if(!audioCtx||!dingBuffer||audioCtx.state!=='running') return;
+    if(
+      !audioCtx||
+      !dingBuffer||
+      !gemAudioMaster||
+      audioCtx.state!=='running'
+    ) return;
 
     const now=performance.now();
-    if(now-lastDingAt<30) return;
-    lastDingAt=now;
 
-    const tierT=clamp(tier/Math.max(1,tiers.length-1),0,1);
-    const sizePitch=1.13-(tierT*.31);
-    const variation=(Math.random()-.5)*.07;
-    const playbackRate=clamp(sizePitch+variation,.78,1.17);
+    // Let a small cluster through together so piles can make chords,
+    // but stop dense physics bursts from becoming a wall of sound.
+    if(now-dingWindowStartedAt>42){
+      dingWindowStartedAt=now;
+      dingVoicesInWindow=0;
+    }
 
+    if(dingVoicesInWindow>=3) return;
+    dingVoicesInWindow++;
+
+    const note=gemNoteForTier(tier);
+    const playbackRate=playbackRateForSemitones(note.semitones);
     const strength=clamp((impact-.45)/4.8,0,1);
-    const volume=.018+strength*.092;
+    const volume=.20+strength*.48;
 
     const source=audioCtx.createBufferSource();
     const gain=audioCtx.createGain();
+    const lowpass=audioCtx.createBiquadFilter();
+    const warmth=audioCtx.createBiquadFilter();
+
     source.buffer=dingBuffer;
     source.playbackRate.value=playbackRate;
+
+    lowpass.type='lowpass';
+    lowpass.frequency.value=11900;
+    lowpass.Q.value=.18;
+
+    warmth.type='peaking';
+    warmth.frequency.value=850;
+    warmth.Q.value=.7;
+    warmth.gain.value=1.9;
+
     gain.gain.value=volume;
+
+    source.connect(lowpass);
+    lowpass.connect(warmth);
+    warmth.connect(gain);
+
+    const dryGain=audioCtx.createGain();
+    const wetGain=audioCtx.createGain();
+    dryGain.gain.value=1;
+    wetGain.gain.value=.13;
 
     if(typeof audioCtx.createStereoPanner==='function'){
       const pan=audioCtx.createStereoPanner();
-      pan.pan.value=clamp((x/W)*2-1,-.72,.72);
-      source.connect(gain).connect(pan).connect(audioCtx.destination);
+      pan.pan.value=clamp((x/W)*2-1,-.78,.78);
+      gain.connect(pan);
+      pan.connect(dryGain);
+      pan.connect(wetGain);
     }else{
-      source.connect(gain).connect(audioCtx.destination);
+      gain.connect(dryGain);
+      gain.connect(wetGain);
     }
+
+    dryGain.connect(gemAudioDry);
+    wetGain.connect(gemAudioWet);
 
     source.start();
   }
@@ -1301,8 +1418,8 @@
 
           if(
             speed>.55 &&
-            now-(a.lastDingAt||0)>72 &&
-            now-(b.lastDingAt||0)>72
+            now-(a.lastDingAt||0)>64 &&
+            now-(b.lastDingAt||0)>64
           ){
             a.lastDingAt=now;
             b.lastDingAt=now;
@@ -1335,7 +1452,7 @@
         const v=gem.body.velocity;
         const speed=Math.hypot(v.x,v.y);
 
-        if(speed>.55&&now-(gem.lastDingAt||0)>72){
+        if(speed>.55&&now-(gem.lastDingAt||0)>64){
           gem.lastDingAt=now;
           playGemDing(gem.tier,speed,gem.x);
         }
