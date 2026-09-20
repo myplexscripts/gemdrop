@@ -590,6 +590,7 @@
         collectionOverlay.classList.remove('visible');
       });
 
+      $('homeButton').addEventListener('click',()=>this.returnToMenu());
       $('pauseButton').addEventListener('click',()=>this.setPaused(true));
       $('resumeButton').addEventListener('click',()=>this.setPaused(false));
 
@@ -833,14 +834,11 @@
           const name=document.createElement('strong');
           name.textContent=t.name;
 
-          const cut=document.createElement('small');
-          cut.textContent=t.cut+' cut';
-
           const value=document.createElement('div');
           value.className='gem-card__value';
           value.textContent='$'+fmt(t.score);
 
-          meta.append(name,cut,value);
+          meta.append(name,value);
         }
 
         card.append(art,meta);
@@ -1614,9 +1612,9 @@
 
     rechargePowers(amount=1) {
       const gains={
-        tumble:.16,
-        cascade:.13,
-        prism:.10
+        tumble:.20,
+        prism:.14,
+        cascade:.10
       };
 
       for(const key of Object.keys(gains)){
@@ -1797,6 +1795,21 @@
       scoreEl.classList.remove('bump');
       void scoreEl.offsetWidth;
       scoreEl.classList.add('bump');
+    }
+
+    returnToMenu() {
+      this.running=false;
+      this.ready=false;
+      this.paused=false;
+      this.pointerHeld=false;
+      this.clearRun();
+      this.clearStatus();
+      this.matter.world.pause();
+      pauseOverlay.classList.remove('visible');
+      gameOverOverlay.classList.remove('visible');
+      collectionOverlay.classList.remove('visible');
+      startOverlay.classList.add('visible');
+      this.updatePowerButtons();
     }
 
     setPaused(value) {

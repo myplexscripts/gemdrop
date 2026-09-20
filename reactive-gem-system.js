@@ -409,7 +409,7 @@
     const ctx=canvas.getContext('2d',{alpha:true});
     const scale=size/512;
     const base=hexToHsl(color);
-    const baseSat=Math.max(72,base.s);
+    const baseSat=clamp(base.s,12,100);
     const light=norm3(-.58,-.46,.67);
     const view=[0,0,1];
 
@@ -433,7 +433,7 @@
       const rim=Math.pow(1-facing,1.2);
       const energy=clamp(.18+facet.style*.36+diffuse*.38+facing*.11+rim*.10,0,1);
       const l=clamp(22+energy*58,18,82);
-      const s=clamp(baseSat*(.82+facet.saturation*.24)-diffuse*3,52,100);
+      const s=clamp(baseSat*(.86+facet.saturation*.18)-diffuse*2,10,100);
 
       polygonPath(ctx,facet.points,scale);
       ctx.globalAlpha=facet.opacity;

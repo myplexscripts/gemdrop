@@ -1434,3 +1434,179 @@ body{
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
   }
 }
+
+
+/* === SHOWCASE + POWER POLISH 2026-09-20 === */
+.hud{
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+}
+.hud-controls{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.hud-controls .hud-button{
+  width:46px;
+  height:46px;
+}
+
+.collection-screen{
+  background:
+    linear-gradient(180deg,rgba(31,13,38,.98),rgba(11,7,14,1));
+}
+.gem-collection{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  margin:12px 12px calc(18px + env(safe-area-inset-bottom))!important;
+  padding:14px!important;
+  gap:14px!important;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 24% 12%,rgba(112,62,111,.09),transparent 36%),
+    radial-gradient(circle at 80% 76%,rgba(83,45,86,.07),transparent 38%),
+    linear-gradient(180deg,#1a111d,#0c090e);
+  border:1px solid rgba(255,231,191,.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.028),
+    inset 0 18px 34px rgba(0,0,0,.20),
+    0 18px 38px rgba(0,0,0,.16);
+}
+.gem-card{
+  min-height:264px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:22px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.gem-card__art{
+  height:216px!important;
+  margin:0!important;
+  border-radius:21px!important;
+  background:
+    radial-gradient(circle at 50% 35%,rgba(74,42,76,.09),transparent 46%),
+    linear-gradient(180deg,rgba(13,8,16,.99),rgba(7,5,9,1))!important;
+  border:1px solid rgba(255,236,208,.035)!important;
+  box-shadow:
+    inset 0 10px 22px rgba(0,0,0,.38),
+    inset 0 -1px 0 rgba(255,255,255,.018)!important;
+}
+.gem-card__art canvas{
+  width:206px!important;
+  height:206px!important;
+  max-width:94%!important;
+  max-height:94%!important;
+}
+.gem-card__meta{
+  min-height:48px!important;
+  padding:10px 4px 0!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-areas:"name value"!important;
+  align-items:center!important;
+  gap:10px!important;
+  border-top:1px solid rgba(255,227,185,.045);
+}
+.gem-card__meta strong{
+  grid-area:name!important;
+  font-size:17px!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.gem-card__meta .gem-card__value{
+  grid-area:value!important;
+  margin:0!important;
+  font-size:17px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+.gem-card__meta small{
+  display:none!important;
+}
+.gem-card.locked{
+  min-height:264px!important;
+  opacity:.76;
+}
+.gem-card.locked .gem-card__art{
+  height:216px!important;
+}
+.gem-card.locked .gem-card__meta{
+  min-height:48px!important;
+  display:block!important;
+  visibility:hidden!important;
+}
+@media(max-width:430px){
+  .gem-collection{
+    margin-left:10px!important;
+    margin-right:10px!important;
+    padding:11px!important;
+    gap:12px!important;
+  }
+  .gem-card,
+  .gem-card.locked{
+    min-height:244px!important;
+  }
+  .gem-card__art,
+  .gem-card.locked .gem-card__art{
+    height:194px!important;
+  }
+  .gem-card__art canvas{
+    width:186px!important;
+    height:186px!important;
+  }
+  .gem-card__meta{
+    min-height:42px!important;
+    padding-top:8px!important;
+  }
+  .gem-card__meta strong,
+  .gem-card__meta .gem-card__value{
+    font-size:16px!important;
+  }
+}
+@media(min-width:760px){
+  .gem-collection{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+
+#powerTumble{
+  --power-fill-top:rgba(255,202,88,.22);
+  --power-fill-mid:rgba(240,135,42,.30);
+  --power-fill-bottom:rgba(166,76,27,.44);
+  --power-line:rgba(255,211,112,.72);
+}
+#powerCascade{
+  --power-fill-top:rgba(241,125,255,.20);
+  --power-fill-mid:rgba(186,75,235,.30);
+  --power-fill-bottom:rgba(101,35,164,.47);
+  --power-line:rgba(237,153,255,.74);
+}
+#powerPrism{
+  --power-fill-top:rgba(111,239,255,.20);
+  --power-fill-mid:rgba(58,184,236,.29);
+  --power-fill-bottom:rgba(31,96,171,.47);
+  --power-line:rgba(143,235,255,.74);
+}
+.power-button::before{
+  background:
+    linear-gradient(
+      180deg,
+      var(--power-fill-top),
+      var(--power-fill-mid) 48%,
+      var(--power-fill-bottom)
+    )!important;
+}
+.power-button::after{
+  background:var(--power-line)!important;
+  box-shadow:0 0 10px var(--power-line)!important;
+}
+.power-button.charged::before{
+  background:
+    linear-gradient(
+      180deg,
+      var(--power-fill-top),
+      var(--power-fill-mid) 48%,
+      var(--power-fill-bottom)
+    )!important;
+}
