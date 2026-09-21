@@ -2450,3 +2450,42 @@ body{
   }
 }
 
+
+
+/* Next-piece preview: readable, compact, and separate from the aim control */
+.next-chip{
+  position:absolute;
+  top:12px;
+  right:14px;
+  z-index:20;
+  width:62px;
+  height:76px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  pointer-events:none;
+  color:rgba(255,229,166,.76);
+  font-size:10px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-shadow:0 1px 6px rgba(0,0,0,.5);
+}
+.next-chip canvas{
+  width:58px;
+  height:58px;
+  display:block;
+  filter:drop-shadow(0 4px 7px rgba(0,0,0,.38));
+}
+.aim-handle{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  transform:translate(-50%,-50%) rotate(45deg);
+  background:linear-gradient(145deg,#f179e5,#a739da 48%,#6b1e9d);
+}
+.aim-strip:active .aim-handle{
+  transform:translate(-50%,-50%) rotate(45deg) scale(1.06);
+}
