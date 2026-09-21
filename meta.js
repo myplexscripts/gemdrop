@@ -28,17 +28,48 @@
   ];
 
   const TREASURES=[
-    {id:'silver-ring',name:'Silver Ring',type:'ring',rarity:'Common',base:90,weight:28,minTier:0,minMerges:0,sockets:[[160,92]]},
-    {id:'sun-brooch',name:'Sunburst Brooch',type:'brooch',rarity:'Common',base:125,weight:24,minTier:1,minMerges:8,sockets:[[125,128],[195,128]]},
-    {id:'heart-pendant',name:'Heart Pendant',type:'pendant',rarity:'Common',base:145,weight:20,minTier:2,minMerges:14,sockets:[[160,115],[160,160]]},
-    {id:'signet-ring',name:'Royal Signet',type:'signet',rarity:'Uncommon',base:210,weight:15,minTier:4,minMerges:24,sockets:[[125,90],[160,74],[195,90]]},
-    {id:'moon-necklace',name:'Moon Necklace',type:'necklace',rarity:'Uncommon',base:285,weight:13,minTier:5,minMerges:36,sockets:[[105,119],[142,142],[178,142],[215,119]]},
-    {id:'ceremonial-goblet',name:'Ceremonial Goblet',type:'goblet',rarity:'Uncommon',base:340,weight:11,minTier:6,minMerges:50,sockets:[[125,90],[160,112],[195,90]]},
-    {id:'ornate-chalice',name:'Ornate Chalice',type:'chalice',rarity:'Rare',base:475,weight:7,minTier:8,minMerges:70,sockets:[[112,92],[144,112],[176,112],[208,92]]},
-    {id:'moon-tiara',name:'Moon Tiara',type:'tiara',rarity:'Rare',base:610,weight:5,minTier:10,minMerges:95,sockets:[[94,126],[127,102],[160,82],[193,102],[226,126]]},
-    {id:'crown-reliquary',name:'Crown Reliquary',type:'reliquary',rarity:'Rare',base:760,weight:4,minTier:12,minMerges:125,sockets:[[112,102],[160,82],[208,102],[132,150],[188,150]]},
-    {id:'sovereign-crown',name:'Sovereign Crown',type:'crown',rarity:'Exceptional',base:1100,weight:2,minTier:14,minMerges:170,sockets:[[84,130],[116,98],[160,72],[204,98],[236,130],[160,146]]},
-    {id:'star-sceptre',name:'Star Sceptre',type:'sceptre',rarity:'Exceptional',base:1280,weight:1.5,minTier:16,minMerges:220,sockets:[[160,60],[126,91],[194,91],[160,126],[160,172]]}
+    {id:'silver-ring',name:'Silver Ring',type:'ring',rarity:'Common',base:90,weight:28,minTier:0,minMerges:0,sockets:[
+      {x:160,y:92,cut:'circular_starcut',size:48}
+    ]},
+    {id:'sun-brooch',name:'Sunburst Brooch',type:'brooch',rarity:'Common',base:125,weight:24,minTier:1,minMerges:8,sockets:[
+      {x:125,y:128,cut:'heart',size:43},{x:195,y:128,cut:'circular_starcut',size:43}
+    ]},
+    {id:'heart-pendant',name:'Heart Pendant',type:'pendant',rarity:'Common',base:145,weight:20,minTier:2,minMerges:14,sockets:[
+      {x:160,y:112,cut:'rectangular_brilliant',size:45},{x:160,y:162,cut:'heart',size:45}
+    ]},
+    {id:'signet-ring',name:'Royal Signet',type:'signet',rarity:'Uncommon',base:210,weight:15,minTier:4,minMerges:24,sockets:[
+      {x:123,y:94,cut:'tanzanite',size:39},{x:160,y:76,cut:'rectangular',size:43},{x:197,y:94,cut:'tanzanite',size:39}
+    ]},
+    {id:'moon-necklace',name:'Moon Necklace',type:'necklace',rarity:'Uncommon',base:285,weight:13,minTier:5,minMerges:36,sockets:[
+      {x:105,y:119,cut:'circular_starcut',size:38},{x:142,y:142,cut:'heart',size:38},
+      {x:178,y:142,cut:'heart',size:38},{x:215,y:119,cut:'circular_starcut',size:38}
+    ]},
+    {id:'ceremonial-goblet',name:'Ceremonial Goblet',type:'goblet',rarity:'Uncommon',base:340,weight:11,minTier:6,minMerges:50,sockets:[
+      {x:125,y:90,cut:'emerald_stepcut',size:40},{x:160,y:112,cut:'rectangular_brilliant',size:42},{x:195,y:90,cut:'emerald_stepcut',size:40}
+    ]},
+    {id:'ornate-chalice',name:'Ornate Chalice',type:'chalice',rarity:'Rare',base:475,weight:7,minTier:8,minMerges:70,sockets:[
+      {x:112,y:92,cut:'tanzanite',size:38},{x:144,y:115,cut:'circular_starcut',size:38},
+      {x:176,y:115,cut:'circular_starcut',size:38},{x:208,y:92,cut:'tanzanite',size:38}
+    ]},
+    {id:'moon-tiara',name:'Moon Tiara',type:'tiara',rarity:'Rare',base:610,weight:5,minTier:10,minMerges:95,sockets:[
+      {x:94,y:126,cut:'heart',size:35},{x:127,y:102,cut:'rectangular_brilliant',size:36},
+      {x:160,y:82,cut:'circular_starcut',size:39},{x:193,y:102,cut:'rectangular_brilliant',size:36},
+      {x:226,y:126,cut:'heart',size:35}
+    ]},
+    {id:'crown-reliquary',name:'Crown Reliquary',type:'reliquary',rarity:'Rare',base:760,weight:4,minTier:12,minMerges:125,sockets:[
+      {x:112,y:102,cut:'emerald_stepcut',size:37},{x:160,y:82,cut:'rectangular',size:40},
+      {x:208,y:102,cut:'emerald_stepcut',size:37},{x:132,y:150,cut:'heart',size:36},{x:188,y:150,cut:'heart',size:36}
+    ]},
+    {id:'sovereign-crown',name:'Sovereign Crown',type:'crown',rarity:'Exceptional',base:1100,weight:2,minTier:14,minMerges:170,sockets:[
+      {x:84,y:130,cut:'tanzanite',size:34},{x:116,y:98,cut:'heart',size:34},
+      {x:160,y:72,cut:'rectangular',size:39},{x:204,y:98,cut:'heart',size:34},
+      {x:236,y:130,cut:'tanzanite',size:34},{x:160,y:146,cut:'circular_starcut',size:38}
+    ]},
+    {id:'star-sceptre',name:'Star Sceptre',type:'sceptre',rarity:'Exceptional',base:1280,weight:1.5,minTier:16,minMerges:220,sockets:[
+      {x:160,y:60,cut:'circular_starcut',size:40},{x:126,y:91,cut:'tanzanite',size:34},
+      {x:194,y:91,cut:'tanzanite',size:34},{x:160,y:126,cut:'rectangular_brilliant',size:37},
+      {x:160,y:172,cut:'emerald_stepcut',size:37}
+    ]}
   ];
 
   const THEMES=[
@@ -52,6 +83,15 @@
     'pale','gold','warm','violet','green','red','gold','pale','blue','red',
     'green','violet','violet','red','blue','green','red','green','violet','gold'
   ];
+
+  const CUT_LABELS={
+    rectangular:'Rectangular',
+    circular_starcut:'Round',
+    emerald_stepcut:'Emerald',
+    rectangular_brilliant:'Brilliant',
+    heart:'Heart',
+    tanzanite:'Tanzanite'
+  };
 
   const $=id=>document.getElementById(id);
   const money=n=>'$'+Math.round(Number(n)||0).toLocaleString();
@@ -97,6 +137,22 @@
       }
     }catch{}
     base.chest=clamp(Number(base.chest)||0,0,CHEST_TARGET);
+
+    // Old builds allowed any gem in any socket. Empty incompatible draft
+    // inlays so every setting now has one fixed, readable gem silhouette.
+    for(const copy of base.treasures){
+      const treasure=TREASURES.find(t=>t.id===copy.typeId);
+      if(!treasure||!Array.isArray(copy.inlays)) continue;
+      copy.inlays=treasure.sockets.map((socket,index)=>{
+        const tier=copy.inlays[index];
+        if(!Number.isInteger(tier)||!GEMS[tier]) return null;
+        return GEMS[tier].cut===socket.cut?tier:null;
+      });
+      copy.completed=false;
+      copy.finalValue=null;
+      copy.comboId=null;
+    }
+
     return base;
   }
 
@@ -106,8 +162,6 @@
   let currentSocketIndex=-1;
   let rewardCopyUid=null;
   let metaPauseHeld=false;
-  let sellArmedUid=null;
-  let sellArmTimer=0;
 
   function save(){
     try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch{}
@@ -225,24 +279,14 @@
     return '<circle cx="160" cy="130" r="74" '+common+'/>';
   }
 
-  function treasureSVG(treasure,silhouette=false,copy=null){
+  function treasureSVG(treasure,silhouette=false){
     const colours=metalColours(treasure.rarity);
     const gid='m-'+treasure.id.replace(/[^a-z0-9]/g,'');
     const fill=silhouette?'#23182a':'url(#'+gid+')';
     const stroke=silhouette?'#3a2b40':colours[2];
-    let sockets='';
-    treasure.sockets.forEach((p,i)=>{
-      const tier=copy&&copy.inlays?copy.inlays[i]:null;
-      if(Number.isInteger(tier)){
-        const g=GEMS[tier];
-        sockets+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="15" fill="'+g.color+'" stroke="'+g.accent+'" stroke-width="5"/><path d="M'+(p[0]-9)+' '+p[1]+' L'+(p[0]+9)+' '+p[1]+' M'+p[0]+' '+(p[1]-9)+' L'+p[0]+' '+(p[1]+9)+'" stroke="rgba(255,255,255,.48)" stroke-width="2"/>';
-      }else{
-        sockets+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="15" fill="'+(silhouette?'#18101c':'#211526')+'" stroke="'+stroke+'" stroke-width="4"/>';
-      }
-    });
     return '<svg viewBox="0 0 320 260" role="img" aria-label="'+treasure.name+'">'+
       '<defs><linearGradient id="'+gid+'" x1="70" y1="40" x2="240" y2="220" gradientUnits="userSpaceOnUse"><stop stop-color="'+colours[0]+'"/><stop offset=".48" stop-color="'+colours[1]+'"/><stop offset="1" stop-color="'+colours[2]+'"/></linearGradient></defs>'+
-      '<g opacity="'+(silhouette?'.78':'1')+'">'+treasureBody(treasure.type,fill,stroke)+sockets+'</g></svg>';
+      '<g opacity="'+(silhouette?'.78':'1')+'">'+treasureBody(treasure.type,fill,stroke)+'</g></svg>';
   }
 
   function pauseForMeta(value){
@@ -387,8 +431,7 @@
   function treasureCollectionCard(treasure){
     const discovered=state.discoveredTreasures.includes(treasure.id);
     const copies=copiesFor(treasure.id);
-    const completed=copies.filter(c=>c.completed).length;
-    const latest=completed?copies.filter(c=>c.completed).slice(-1)[0]:copies[0]||null;
+    const completed=copies.filter(c=>calculateValue(treasure,c).full).length;
     const button=document.createElement('button');
     button.type='button';
     button.className='treasure-card rarity-'+rarityClass(treasure.rarity)+(discovered?'':' locked');
@@ -396,7 +439,7 @@
     button.disabled=!copies.length;
     button.setAttribute('aria-label',discovered?treasure.name+', '+copies.length+' owned':'Undiscovered treasure');
     button.innerHTML=
-      '<div class="treasure-card__art">'+treasureSVG(treasure,!discovered,latest)+'</div>'+
+      '<div class="treasure-card__art">'+treasureSVG(treasure,!discovered)+'</div>'+
       '<div class="treasure-card__meta">'+
         '<strong>'+(discovered?treasure.name:'Undiscovered')+'</strong>'+
         '<span class="treasure-card__rarity">'+(discovered?treasure.rarity:'???')+'</span>'+
@@ -490,6 +533,66 @@
     container.appendChild(dot);
   }
 
+  function renderSocketArt(container,socket,tier=null){
+    container.innerHTML='';
+    const size=112;
+    const canvas=document.createElement('canvas');
+    canvas.width=size;
+    canvas.height=size;
+    canvas.setAttribute('aria-hidden','true');
+    const ctx=canvas.getContext('2d');
+    const reference=GEMS.find(g=>g.cut===socket.cut)||GEMS[0];
+
+    try{
+      const source=window.ReactiveGemSystem.renderPreviewCanvas(
+        socket.cut,
+        Number.isInteger(tier)?GEMS[tier].color:reference.color,
+        0,
+        192,
+        Number.isInteger(tier)?GEMS[tier]:reference
+      );
+      const scale=Math.min(size*.88/source.width,size*.88/source.height);
+      const w=source.width*scale;
+      const h=source.height*scale;
+      const x=(size-w)/2;
+      const y=(size-h)/2;
+
+      if(Number.isInteger(tier)){
+        ctx.drawImage(source,x,y,w,h);
+      }else{
+        ctx.drawImage(source,x,y,w,h);
+        ctx.globalCompositeOperation='source-in';
+        ctx.fillStyle='rgba(20,10,26,.96)';
+        ctx.fillRect(0,0,size,size);
+        ctx.globalCompositeOperation='source-over';
+      }
+    }catch{
+      ctx.fillStyle=Number.isInteger(tier)?GEMS[tier].color:'#1a0d20';
+      ctx.beginPath();
+      ctx.arc(size/2,size/2,size*.31,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    container.appendChild(canvas);
+    if(!Number.isInteger(tier)){
+      const plus=document.createElement('span');
+      plus.className='socket-plus';
+      plus.textContent='+';
+      container.appendChild(plus);
+    }
+  }
+
+  function updateTreasureRecord(treasure,copy){
+    const calc=calculateValue(treasure,copy);
+    if(!calc.full) return calc;
+    state.treasureRecords[treasure.id]=Math.max(state.treasureRecords[treasure.id]||0,calc.total);
+    if(calc.combo.id!=='none'&&!state.comboDiscoveries.includes(calc.combo.id)){
+      state.comboDiscoveries.push(calc.combo.id);
+    }
+    save();
+    return calc;
+  }
+
   function renderTreasureDetail(){
     const treasure=treasureById(currentTreasureId);
     const copy=getCurrentCopy();
@@ -500,43 +603,42 @@
     $('treasureDetailRarity').textContent=treasure.rarity.toUpperCase();
     $('treasureDetailTitle').textContent=treasure.name;
     $('treasureCopyCount').textContent=(currentCopyIndex+1)+' / '+copies.length;
-    $('treasureDetailArt').innerHTML=treasureSVG(treasure,false,null);
+    $('treasureDetailArt').innerHTML=treasureSVG(treasure,false);
     $('treasureBaseValue').textContent=money(treasure.base);
     $('treasureGemValue').textContent=money(calc.gemValue);
 
-    const known=!calc.combo.hidden||state.comboDiscoveries.includes(calc.combo.id)||copy.completed;
+    const known=!calc.combo.hidden||state.comboDiscoveries.includes(calc.combo.id);
     $('treasureBonusLabel').textContent=known?calc.combo.name:'Mystery setting';
     $('treasureMultiplier').textContent='×'+calc.combo.multiplier.toFixed(2);
-    $('treasureTotalValue').textContent=money(copy.completed&&copy.finalValue!=null?copy.finalValue:calc.total);
-    $('treasureCopyStatus').textContent=copy.completed?'Completed':'Inlay in progress';
+    $('treasureTotalValue').textContent=money(calc.total);
+    $('treasureCopyStatus').textContent=calc.full?'Complete · keep it or sell it':'Tap a setting to choose a gem';
 
     $('treasurePrevCopy').disabled=copies.length<2;
     $('treasureNextCopy').disabled=copies.length<2;
 
     const socketRoot=$('treasureSockets');
     socketRoot.innerHTML='';
-    treasure.sockets.forEach((p,index)=>{
+    treasure.sockets.forEach((socket,index)=>{
+      const tier=copy.inlays[index];
       const button=document.createElement('button');
       button.type='button';
-      button.className='treasure-socket'+(Number.isInteger(copy.inlays[index])?' filled':'');
-      button.style.left=(p[0]/3.2)+'%';
-      button.style.top=(p[1]/2.6)+'%';
-      button.setAttribute('aria-label',Number.isInteger(copy.inlays[index])?'Change '+GEMS[copy.inlays[index]].name+' inlay':'Choose gem for socket '+(index+1));
-      button.disabled=copy.completed;
-      if(Number.isInteger(copy.inlays[index])) drawMiniGem(button,copy.inlays[index],76);
-      else button.innerHTML='<span class="socket-plus">+</span>';
-      if(!copy.completed) button.addEventListener('click',()=>openGemPicker(index));
+      button.className='treasure-socket'+(Number.isInteger(tier)?' filled':'');
+      button.style.left=(socket.x/3.2)+'%';
+      button.style.top=(socket.y/2.6)+'%';
+      button.style.width=(socket.size/3.2)+'%';
+      button.style.height=(socket.size/2.6)+'%';
+      button.dataset.cut=socket.cut;
+      button.setAttribute('aria-label',Number.isInteger(tier)
+        ? 'Change '+GEMS[tier].name+' '+CUT_LABELS[socket.cut]+' inlay'
+        : 'Choose a '+CUT_LABELS[socket.cut]+' gem');
+      renderSocketArt(button,socket,tier);
+      button.addEventListener('click',()=>openGemPicker(index));
       socketRoot.appendChild(button);
     });
 
-    const complete=$('completeInlayButton');
-    complete.hidden=copy.completed;
-    complete.disabled=!calc.full;
     const sell=$('sellTreasureButton');
-    sell.hidden=!copy.completed;
-    if(copy.completed){
-      sell.querySelector('span').textContent='SELL FOR '+money(copy.finalValue||calc.total);
-    }
+    sell.hidden=!calc.full;
+    if(calc.full) sell.querySelector('span').textContent='SELL FOR '+money(calc.total);
     refreshIcons();
   }
 
@@ -563,7 +665,6 @@
     const copies=copiesFor(currentTreasureId);
     if(copies.length<2) return;
     currentCopyIndex=(currentCopyIndex+direction+copies.length)%copies.length;
-    sellArmedUid=null;
     renderTreasureDetail();
   }
 
@@ -582,27 +683,37 @@
 
   function renderGemPicker(){
     const root=$('gemPickerList');
+    const treasure=treasureById(currentTreasureId);
     const copy=getCurrentCopy();
-    if(!root||!copy) return;
+    if(!root||!copy||!treasure) return;
+
+    const socket=treasure.sockets[currentSocketIndex];
     const currentTier=copy.inlays[currentSocketIndex];
+    $('gemPickerTitle').textContent='Choose a '+CUT_LABELS[socket.cut]+' gem';
     root.innerHTML='';
 
     GEMS.forEach((gem,tier)=>{
+      if(gem.cut!==socket.cut) return;
       const available=availableGemCount(tier,currentTier);
       if(available<=0&&currentTier!==tier) return;
+
       const button=document.createElement('button');
       button.type='button';
       button.className='gem-picker-item'+(currentTier===tier?' selected':'');
       button.disabled=available<=0&&currentTier!==tier;
+
       const art=document.createElement('span');
       art.className='gem-picker-item__art';
       drawMiniGem(art,tier,64);
+
       const copyText=document.createElement('span');
       copyText.className='gem-picker-item__copy';
       copyText.innerHTML='<strong>'+gem.name+'</strong><small>+'+money(gemContribution(tier))+' value</small>';
+
       const count=document.createElement('span');
       count.className='gem-picker-item__count';
       count.textContent='×'+available;
+
       button.append(art,copyText,count);
       button.addEventListener('click',()=>chooseGem(tier));
       root.appendChild(button);
@@ -612,82 +723,60 @@
   }
 
   function chooseGem(tier){
+    const treasure=treasureById(currentTreasureId);
     const copy=getCurrentCopy();
-    if(!copy||copy.completed||currentSocketIndex<0) return;
+    if(!treasure||!copy||currentSocketIndex<0) return;
+    const socket=treasure.sockets[currentSocketIndex];
+    if(!GEMS[tier]||GEMS[tier].cut!==socket.cut) return;
+
     const currentTier=copy.inlays[currentSocketIndex];
     if(availableGemCount(tier,currentTier)<=0&&currentTier!==tier) return;
+
     copy.inlays[currentSocketIndex]=tier;
-    save();
+    updateTreasureRecord(treasure,copy);
     closeGemPicker();
     renderTreasureDetail();
+    renderTreasureCollection();
   }
 
   function removeInlay(){
+    const treasure=treasureById(currentTreasureId);
     const copy=getCurrentCopy();
-    if(!copy||copy.completed||currentSocketIndex<0) return;
+    if(!copy||currentSocketIndex<0) return;
     copy.inlays[currentSocketIndex]=null;
     save();
     closeGemPicker();
     renderTreasureDetail();
+    renderTreasureCollection();
   }
 
-  function completeCurrentTreasure(){
+  function sellCurrentTreasure(){
     const treasure=treasureById(currentTreasureId);
     const copy=getCurrentCopy();
-    if(!treasure||!copy||copy.completed) return;
+    if(!treasure||!copy) return;
+
     const calc=calculateValue(treasure,copy);
     if(!calc.full) return;
 
     const needed=Array(GEMS.length).fill(0);
-    copy.inlays.forEach(t=>needed[t]++);
-    for(let i=0;i<needed.length;i++){
-      if(needed[i]>(state.gemCounts[i]||0)) return;
+    copy.inlays.forEach(tier=>needed[tier]++);
+    for(let tier=0;tier<needed.length;tier++){
+      if(needed[tier]>(state.gemCounts[tier]||0)) return;
     }
 
-    for(let i=0;i<needed.length;i++) state.gemCounts[i]-=needed[i];
-    copy.completed=true;
-    copy.finalValue=calc.total;
-    copy.comboId=calc.combo.id;
-    copy.completedAt=Date.now();
+    for(let tier=0;tier<needed.length;tier++){
+      state.gemCounts[tier]-=needed[tier];
+    }
+
+    state.gold+=calc.total;
+    state.lifetimeTreasureSales+=calc.total;
     state.treasureRecords[treasure.id]=Math.max(state.treasureRecords[treasure.id]||0,calc.total);
-    if(calc.combo.id!=='none'&&!state.comboDiscoveries.includes(calc.combo.id)){
-      state.comboDiscoveries.push(calc.combo.id);
-    }
-    save();
-    updateGemBadges();
-    renderTreasureDetail();
-    renderTreasureCollection();
 
-    const display=document.querySelector('.treasure-display');
-    if(display){
-      display.classList.remove('treasure-complete-pop');
-      void display.offsetWidth;
-      display.classList.add('treasure-complete-pop');
-    }
-  }
-
-  function sellCurrentTreasure(){
-    const copy=getCurrentCopy();
-    if(!copy||!copy.completed) return;
-    const button=$('sellTreasureButton');
-    if(sellArmedUid!==copy.uid){
-      sellArmedUid=copy.uid;
-      button.querySelector('span').textContent='TAP AGAIN TO SELL';
-      window.clearTimeout(sellArmTimer);
-      sellArmTimer=window.setTimeout(()=>{
-        sellArmedUid=null;
-        renderTreasureDetail();
-      },2600);
-      return;
-    }
-
-    const value=Math.max(0,Math.round(copy.finalValue||0));
-    state.gold+=value;
-    state.lifetimeTreasureSales+=value;
     const index=state.treasures.findIndex(t=>t.uid===copy.uid);
     if(index>=0) state.treasures.splice(index,1);
+
     save();
-    sellArmedUid=null;
+    updateGemBadges();
 
     const remaining=copiesFor(currentTreasureId);
     if(!remaining.length){
@@ -723,7 +812,6 @@
     $('treasureDetailBack').addEventListener('click',closeTreasureDetail);
     $('treasurePrevCopy').addEventListener('click',()=>cycleCopy(-1));
     $('treasureNextCopy').addEventListener('click',()=>cycleCopy(1));
-    $('completeInlayButton').addEventListener('click',completeCurrentTreasure);
     $('sellTreasureButton').addEventListener('click',sellCurrentTreasure);
 
     $('gemPickerClose').addEventListener('click',closeGemPicker);
