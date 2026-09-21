@@ -1408,7 +1408,7 @@
 
       const sparkleColors=[0xffc65b,0xf36ac8,0xa46cff,0xffffff];
 
-      for(let i=0;i<28;i++){
+      for(let i=0;i<24;i++){
         const x=(i*173.7)%W;
         const y=(i*109.3)%H;
         const s=this.add.circle(
@@ -1419,15 +1419,15 @@
           .16
         ).setDepth(1);
 
-        const driftX=Phaser.Math.Between(-18,18);
-        const driftY=Phaser.Math.Between(-18,18);
+        const driftX=Phaser.Math.FloatBetween(-30,30);
+        const driftY=Phaser.Math.FloatBetween(-30,30);
 
         this.tweens.add({
           targets:s,
           x:x+driftX,
           y:y+driftY,
           alpha:{from:.05,to:.24},
-          duration:1800+(i%5)*260,
+          duration:Phaser.Math.Between(2200,4600),
           yoyo:true,
           repeat:-1,
           ease:'Sine.inOut',
