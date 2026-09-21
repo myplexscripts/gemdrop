@@ -825,6 +825,7 @@
       ];
 
       this.aimStrip=$('aimStrip');
+      this.aimTrack=this.aimStrip.querySelector('.aim-track');
       this.aimHandle=$('aimHandle');
 
       this.best=this.loadBest();
@@ -934,7 +935,7 @@
       });
 
       const aimFromEvent=e=>{
-        const rect=this.aimStrip.getBoundingClientRect();
+        const rect=(this.aimTrack||this.aimStrip).getBoundingClientRect();
         const u=clamp((e.clientX-rect.left)/rect.width,0,1);
         const t=tiers[this.currentTier];
         const min=WALL+t.r*COLLIDER_SCALE;
