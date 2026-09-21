@@ -1799,7 +1799,7 @@
           this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',21);
           this.showStatus('MASTER CUT +$'+masterValue,'reward',1450,'gem',tier);
           this.cameras.main.shake(100,.0038);
-          tone(760,.15,.042,'sine');
+          playMergeTone(tier,Math.max(4,this.mergeChain),x);
           haptic([14,17,22]);
           if(gateInMerge) this.dropGateGem=null;
           continue;
