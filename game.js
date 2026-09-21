@@ -1473,14 +1473,17 @@
         t.r*COLLIDER_SCALE
       );
 
+      const tierWeight=tier/(tiers.length-1);
+      const gemDensity=.00112+tierWeight*.00078;
+      const gemAir=.0036+tierWeight*.0017;
       const bodyOptions={
-        restitution:.006,
-        friction:.032,
-        frictionStatic:.022,
-        frictionAir:.0028,
-        density:.0012,
-        sleepThreshold:0,
-        slop:.018
+        restitution:.004,
+        friction:.026,
+        frictionStatic:.018,
+        frictionAir:gemAir,
+        density:gemDensity,
+        sleepThreshold:52,
+        slop:.014
       };
 
       if(exactShape&&exactShape.type==='circle'){
@@ -1498,10 +1501,10 @@
         gem.setBody({type:'fromVertices',verts:cutVerts},bodyOptions);
       }
 
-      gem.setBounce(.006);
-      gem.setFriction(.032,.0028,.022);
-      gem.setDensity(.0012);
-      gem.setSleepThreshold(0);
+      gem.setBounce(.004);
+      gem.setFriction(.026,gemAir,.018);
+      gem.setDensity(gemDensity);
+      gem.setSleepThreshold(52);
 
       // Real gems are never released with mathematically perfect balance.
       let releaseAngle=Phaser.Math.FloatBetween(-7.5,7.5);
