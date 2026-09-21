@@ -2539,3 +2539,53 @@ body{
 .power-button{
   min-height:50px;
 }
+
+
+/* 2026-09-20 regression fix: preserve the authored 640:936 game canvas.
+   Never stretch the playfield because that changes every gem's apparent aspect ratio. */
+.game-app{
+  border:0!important;
+  box-shadow:none!important;
+}
+.play-shell{
+  flex:0 0 auto!important;
+  width:90%!important;
+  max-width:500px!important;
+  aspect-ratio:640/936!important;
+  margin:0 auto!important;
+  min-height:0!important;
+}
+#game,
+#game canvas{
+  width:100%!important;
+  height:100%!important;
+  aspect-ratio:640/936!important;
+}
+.power-dock{
+  flex:0 0 64px!important;
+  min-height:64px!important;
+  max-height:64px!important;
+  align-items:start!important;
+  margin-bottom:0!important;
+  padding:4px 10px 4px!important;
+}
+@media(max-height:760px){
+  .play-shell{
+    width:78%!important;
+  }
+  .aim-strip{
+    flex-basis:58px!important;
+    min-height:58px!important;
+    max-height:58px!important;
+  }
+  .power-dock{
+    flex-basis:58px!important;
+    min-height:58px!important;
+    max-height:58px!important;
+    padding-top:2px!important;
+    padding-bottom:2px!important;
+  }
+  .power-button{
+    min-height:48px!important;
+  }
+}
