@@ -4,11 +4,11 @@
   if (!window.Phaser) return;
 
   const W = 640;
-  const H = 864;
+  const H = 936;
   const FRAME_WALL = 24;
-  const FRAME_FLOOR = 828;
-  const WALL = 42;
-  const FLOOR = 808;
+  const FRAME_FLOOR = 900;
+  const WALL = 16;
+  const FLOOR = 880;
   const DROP_Y = 72;
   const LIMIT_Y = 146;
   const DROP_DELAY = 300;
@@ -159,26 +159,26 @@
   // 20 progression tiers. Only these six authored cuts are reused;
   // progression beyond six is colour + size, never new gem geometry.
   const tiers = [
-    {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:42, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
-    {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:46, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
-    {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:50, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
-    {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:54, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
-    {name:'Peridot', cut:'Heart', cutKey:'princess', reactiveCut:'heart', r:58, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
-    {name:'Garnet', cut:'Tanzanite', cutKey:'radiant', reactiveCut:'tanzanite', r:63, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
-    {name:'Topaz', cut:'Rectangular', cutKey:'square', reactiveCut:'rectangular', r:68, score:30, color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
-    {name:'Moonstone', cut:'Circular Starcut', cutKey:'french', reactiveCut:'circular_starcut', r:73, score:40, color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
-    {name:'Zircon', cut:'Emerald Stepcut', cutKey:'oval', reactiveCut:'emerald_stepcut', r:78, score:52, color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
-    {name:'Morganite', cut:'Rectangular Brilliant', cutKey:'asscher', reactiveCut:'rectangular_brilliant', r:84, score:66, color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
-    {name:'Aquamarine', cut:'Heart', cutKey:'pear', reactiveCut:'heart', r:90, score:82, color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
-    {name:'Tourmaline', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:97, score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
-    {name:'Tanzanite', cut:'Rectangular', cutKey:'octagon', reactiveCut:'rectangular', r:104, score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
-    {name:'Spinel', cut:'Circular Starcut', cutKey:'rectangle', reactiveCut:'circular_starcut', r:112, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
-    {name:'Sapphire', cut:'Emerald Stepcut', cutKey:'step', reactiveCut:'emerald_stepcut', r:120, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
-    {name:'Emerald', cut:'Rectangular Brilliant', cutKey:'scissor', reactiveCut:'rectangular_brilliant', r:129, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
-    {name:'Ruby', cut:'Heart', cutKey:'pendeloque', reactiveCut:'heart', r:138, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
-    {name:'Alexandrite', cut:'Tanzanite', cutKey:'trapeze', reactiveCut:'tanzanite', r:148, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
-    {name:'Starstone', cut:'Rectangular', cutKey:'navette', reactiveCut:'rectangular', r:159, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
-    {name:'Crownstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:171, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
+    {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:48, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
+    {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:53, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
+    {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:58, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
+    {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:63, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
+    {name:'Peridot', cut:'Heart', cutKey:'princess', reactiveCut:'heart', r:69, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
+    {name:'Garnet', cut:'Tanzanite', cutKey:'radiant', reactiveCut:'tanzanite', r:75, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
+    {name:'Topaz', cut:'Rectangular', cutKey:'square', reactiveCut:'rectangular', r:81, score:30, color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
+    {name:'Moonstone', cut:'Circular Starcut', cutKey:'french', reactiveCut:'circular_starcut', r:88, score:40, color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
+    {name:'Zircon', cut:'Emerald Stepcut', cutKey:'oval', reactiveCut:'emerald_stepcut', r:95, score:52, color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
+    {name:'Morganite', cut:'Rectangular Brilliant', cutKey:'asscher', reactiveCut:'rectangular_brilliant', r:102, score:66, color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
+    {name:'Aquamarine', cut:'Heart', cutKey:'pear', reactiveCut:'heart', r:110, score:82, color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
+    {name:'Tourmaline', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:118, score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
+    {name:'Tanzanite', cut:'Rectangular', cutKey:'octagon', reactiveCut:'rectangular', r:127, score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
+    {name:'Spinel', cut:'Circular Starcut', cutKey:'rectangle', reactiveCut:'circular_starcut', r:136, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
+    {name:'Sapphire', cut:'Emerald Stepcut', cutKey:'step', reactiveCut:'emerald_stepcut', r:146, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
+    {name:'Emerald', cut:'Rectangular Brilliant', cutKey:'scissor', reactiveCut:'rectangular_brilliant', r:156, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
+    {name:'Ruby', cut:'Heart', cutKey:'pendeloque', reactiveCut:'heart', r:167, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
+    {name:'Alexandrite', cut:'Tanzanite', cutKey:'trapeze', reactiveCut:'tanzanite', r:179, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
+    {name:'Starstone', cut:'Rectangular', cutKey:'navette', reactiveCut:'rectangular', r:192, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
+    {name:'Crownstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:206, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
   function gemTextureKey(tier) {
@@ -672,6 +672,7 @@
       this.uiBound=false;
       this.gemVisualBounds=[];
       this.gemPipeline=null;
+      this.activeGemGlints=0;
       this.tumbleState=null;
       this.baseGravityY=1.32;
     }
@@ -1214,11 +1215,82 @@
 
     createGemGlint(gem) {
       if(!gem) return;
+
       gem.sheen=null;
-      gem.glint=null;
+
+      const glint=this.add.image(gem.x,gem.y,'gem-sparkle')
+        .setDepth(22+gem.tier*.01)
+        .setAlpha(0)
+        .setScale(.12)
+        .setBlendMode(Phaser.BlendModes.ADD);
+
+      if(this.gemMask) glint.setMask(this.gemMask);
+
+      gem.glint=glint;
+      gem.glintActive=false;
+      gem.glintStartedAt=0;
+      gem.glintDuration=0;
+      gem.glintOffsetX=0;
+      gem.glintOffsetY=0;
+      gem.glintBaseScale=.12;
+      gem.nextGlintAt=this.time.now+Phaser.Math.Between(900,4200);
     }
 
     syncGemOptics(gem,time) {
+      if(!gem||!gem.active||!gem.glint||!gem.glint.active) return;
+
+      const glint=gem.glint;
+
+      if(!gem.glintActive&&time>=gem.nextGlintAt){
+        if(this.activeGemGlints>=2){
+          gem.nextGlintAt=time+Phaser.Math.Between(350,1000);
+          return;
+        }
+
+        const t=tiers[gem.tier];
+        const angle=Phaser.Math.FloatBetween(0,Math.PI*2);
+        const radius=t.r*Phaser.Math.FloatBetween(.08,.28);
+
+        gem.glintOffsetX=Math.cos(angle)*radius;
+        gem.glintOffsetY=Math.sin(angle)*radius;
+        gem.glintDuration=Phaser.Math.Between(280,440);
+        gem.glintStartedAt=time;
+        gem.glintBaseScale=Phaser.Math.FloatBetween(.105,.155)*
+          (1+Math.min(.30,gem.tier*.012));
+        gem.glintActive=true;
+        this.activeGemGlints++;
+      }
+
+      if(!gem.glintActive){
+        glint.setAlpha(0);
+        return;
+      }
+
+      const p=clamp(
+        (time-gem.glintStartedAt)/Math.max(1,gem.glintDuration),
+        0,
+        1
+      );
+
+      if(p>=1){
+        gem.glintActive=false;
+        glint.setAlpha(0);
+        this.activeGemGlints=Math.max(0,this.activeGemGlints-1);
+        gem.nextGlintAt=time+Phaser.Math.Between(1800,6200);
+        return;
+      }
+
+      const cos=Math.cos(gem.rotation);
+      const sin=Math.sin(gem.rotation);
+      const x=gem.glintOffsetX*cos-gem.glintOffsetY*sin;
+      const y=gem.glintOffsetX*sin+gem.glintOffsetY*cos;
+      const pulse=Math.sin(Math.PI*p);
+
+      glint.x=gem.x+x;
+      glint.y=gem.y+y;
+      glint.rotation=-gem.rotation*.18;
+      glint.setScale(gem.glintBaseScale*(.72+pulse*.48));
+      glint.setAlpha(pulse*.34);
     }
 
     drawVaultBackdrop() {
@@ -1231,15 +1303,8 @@
 
       const rails=this.add.graphics().setDepth(18);
 
-      rails.fillGradientStyle(0xffdd7a,0xf2a433,0xb13f61,0x6f2253,.28);
-      rails.fillRect(FRAME_WALL-8,18,8,FRAME_FLOOR-18);
-      rails.fillRect(W-FRAME_WALL,18,8,FRAME_FLOOR-18);
-
-      rails.fillGradientStyle(0xffed9e,0xffbd3f,0xb13f61,0x6a1f52,.28);
-      rails.fillRect(FRAME_WALL,FRAME_FLOOR,W-FRAME_WALL*2,10);
-
-      rails.lineStyle(2,0xffd666,.14);
-      rails.strokeRect(FRAME_WALL,19,W-FRAME_WALL*2,FRAME_FLOOR-19);
+      rails.fillGradientStyle(0xffed9e,0xffbd3f,0xb13f61,0x6a1f52,.24);
+      rails.fillRect(FRAME_WALL,FRAME_FLOOR,W-FRAME_WALL*2,8);
 
       const sparkleColors=[0xffc65b,0xf36ac8,0xa46cff];
       for(let i=0;i<28;i++){
@@ -1301,6 +1366,7 @@
       for(const gem of [...this.gems]) this.removeGem(gem);
       this.gems.length=0;
       this.pendingMerges.length=0;
+      this.activeGemGlints=0;
       this.dropGateGem=null;
       this.tumbleState=null;
       if(this.matter&&this.matter.world&&this.matter.world.engine){
@@ -1421,6 +1487,11 @@
 
       const i=this.gems.indexOf(gem);
       if(i>=0) this.gems.splice(i,1);
+
+      if(gem.glintActive){
+        this.activeGemGlints=Math.max(0,this.activeGemGlints-1);
+        gem.glintActive=false;
+      }
 
       if(gem.glint&&gem.glint.active) gem.glint.destroy();
       gem.glint=null;
