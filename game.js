@@ -1388,15 +1388,13 @@
         return;
       }
 
-      const cos=Math.cos(gem.rotation);
-      const sin=Math.sin(gem.rotation);
-      const x=gem.glintOffsetX*cos-gem.glintOffsetY*sin;
-      const y=gem.glintOffsetX*sin+gem.glintOffsetY*cos;
+      const x=gem.glintOffsetX;
+      const y=gem.glintOffsetY;
       const pulse=Math.sin(Math.PI*p);
 
       glint.x=gem.x+x;
       glint.y=gem.y+y;
-      glint.rotation=-gem.rotation*.18;
+      glint.rotation=-GEM_WORLD_LIGHT_ANGLE*.18;
       glint.setScale(gem.glintBaseScale*(.72+pulse*.48));
       glint.setAlpha(pulse*.34);
     }
