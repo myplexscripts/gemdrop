@@ -2460,3 +2460,638 @@ body{
   background-size:100% 100%!important;
   background-position:center center!important;
 }
+
+
+/* === TREASURE PROGRESSION 2026-09-21 === */
+.treasure-meter{
+  --treasure-progress:0;
+  position:absolute;
+  z-index:12;
+  left:50%;
+  bottom:1px;
+  transform:translate(-50%,50%);
+  width:min(210px,42vw);
+  height:34px;
+  min-width:150px;
+  min-height:34px;
+  padding:0 34px 0 7px;
+  border:0;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  cursor:default;
+}
+.treasure-meter:disabled{opacity:1}
+.treasure-meter__track{
+  position:relative;
+  display:block;
+  width:100%;
+  height:9px;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(13,5,20,.72);
+  border:1px solid rgba(255,224,172,.18);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.42);
+}
+.treasure-meter__fill{
+  position:absolute;
+  inset:0 auto 0 0;
+  width:0%;
+  border-radius:inherit;
+  background:
+    linear-gradient(90deg,#8b3ed0 0%,#d45bd8 48%,#ffd164 100%);
+  box-shadow:
+    0 0 11px rgba(225,81,210,.28),
+    inset 0 1px 0 rgba(255,255,255,.30);
+  transition:width .38s cubic-bezier(.2,.8,.2,1);
+}
+.treasure-meter__chest{
+  position:absolute;
+  right:0;
+  top:50%;
+  width:34px;
+  height:34px;
+  transform:translateY(-50%);
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  color:#c8abc9;
+  background:linear-gradient(180deg,rgba(80,29,91,.96),rgba(37,11,48,.98));
+  border:1px solid rgba(255,211,119,.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 5px 12px rgba(0,0,0,.26);
+}
+.treasure-meter__chest svg{width:19px;height:19px}
+.treasure-meter.ready{cursor:pointer}
+.treasure-meter.ready .treasure-meter__track{
+  border-color:rgba(255,222,132,.46);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,.42),
+    0 0 14px rgba(255,193,74,.16);
+}
+.treasure-meter.ready .treasure-meter__chest{
+  color:#3d1f12;
+  background:linear-gradient(180deg,#ffe28c,#d99d34);
+  border-color:rgba(255,246,200,.72);
+  animation:treasureReady 1.15s ease-in-out infinite;
+}
+@keyframes treasureReady{
+  0%,100%{transform:translateY(-50%) scale(1) rotate(0)}
+  35%{transform:translateY(-55%) scale(1.08) rotate(-4deg)}
+  65%{transform:translateY(-55%) scale(1.08) rotate(4deg)}
+}
+
+.collection-tabs{
+  position:sticky;
+  top:calc(88px + env(safe-area-inset-top));
+  z-index:4;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  padding:8px 12px;
+  background:rgba(18,8,23,.94);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,226,179,.07);
+}
+.collection-tab{
+  min-height:44px;
+  border:0;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  color:#a991ad;
+  background:rgba(255,255,255,.035);
+  font-weight:800;
+}
+.collection-tab svg{width:18px;height:18px}
+.collection-tab.active{
+  color:#fff0cc;
+  background:
+    linear-gradient(180deg,rgba(113,42,126,.86),rgba(59,19,70,.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 5px 14px rgba(0,0,0,.18);
+}
+
+.gem-card__count{
+  position:absolute;
+  z-index:7;
+  right:12px;
+  top:12px;
+  min-width:34px;
+  height:26px;
+  padding:0 8px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  color:#fff4d8;
+  font-size:12px;
+  line-height:1;
+  font-weight:900;
+  background:rgba(18,8,23,.78);
+  border:1px solid rgba(255,228,177,.13);
+  box-shadow:0 5px 12px rgba(0,0,0,.20);
+}
+
+.treasure-collection{
+  height:calc(100dvh - 154px - env(safe-area-inset-top));
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:12px 10px calc(30px + env(safe-area-inset-bottom));
+}
+.vault-meta-panel{
+  margin:0 2px 13px;
+  padding:13px;
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 15% 0,rgba(194,76,215,.13),transparent 42%),
+    linear-gradient(180deg,rgba(49,20,58,.86),rgba(20,9,27,.94));
+  border:1px solid rgba(255,225,176,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 9px 22px rgba(0,0,0,.17);
+}
+.vault-bank{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+}
+.vault-bank span,
+.vault-theme-title{
+  color:#ad98b2;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+.vault-bank strong{
+  color:#ffd46e;
+  font-size:24px;
+  line-height:1;
+}
+.vault-theme-title{margin-top:14px;margin-bottom:7px}
+.vault-themes{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+.vault-theme{
+  min-width:0;
+  min-height:48px;
+  padding:7px 9px;
+  border-radius:13px;
+  border:1px solid rgba(255,231,189,.08);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  color:#dbcde0;
+  background:rgba(15,8,19,.52);
+}
+.vault-theme span{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+  font-weight:800;
+}
+.vault-theme strong{
+  margin-top:2px;
+  color:#ac96b3;
+  font-size:10px;
+  letter-spacing:.06em;
+}
+.vault-theme.active{
+  border-color:rgba(255,207,101,.34);
+  background:linear-gradient(180deg,rgba(116,44,125,.72),rgba(49,18,58,.86));
+}
+.vault-theme.active strong{color:#ffd36d}
+.vault-theme.shake{animation:themeShake .28s linear}
+@keyframes themeShake{
+  25%{transform:translateX(-3px)}
+  50%{transform:translateX(3px)}
+  75%{transform:translateX(-2px)}
+}
+
+.treasure-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.treasure-card{
+  position:relative;
+  min-width:0;
+  min-height:222px;
+  padding:7px;
+  overflow:hidden;
+  border-radius:22px;
+  border:1px solid rgba(255,228,185,.12);
+  color:#fff3ec;
+  background:
+    radial-gradient(circle at 50% 26%,rgba(194,81,209,.12),transparent 46%),
+    linear-gradient(180deg,rgba(48,20,57,.94),rgba(17,8,23,.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 9px 22px rgba(0,0,0,.22);
+}
+.treasure-card:disabled{opacity:.66}
+.treasure-card__art{
+  height:164px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 50% 46%,rgba(255,218,146,.06),transparent 51%),
+    rgba(9,5,12,.45);
+}
+.treasure-card__art svg{
+  width:94%;
+  height:94%;
+  overflow:visible;
+  filter:drop-shadow(0 10px 11px rgba(0,0,0,.36));
+}
+.treasure-card.locked .treasure-card__art svg{
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.30));
+}
+.treasure-card__meta{
+  position:relative;
+  min-height:45px;
+  padding:8px 5px 3px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:
+    "name count"
+    "rarity complete";
+  align-items:center;
+  column-gap:6px;
+}
+.treasure-card__meta strong{
+  grid-area:name;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:14px;
+}
+.treasure-card__rarity{
+  grid-area:rarity;
+  color:#a992ae;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.treasure-card__count{
+  grid-area:count;
+  color:#ffd36e;
+  font-size:13px;
+  font-weight:900;
+}
+.treasure-card__complete{
+  grid-area:complete;
+  color:#8edeb7;
+  font-size:9px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.treasure-card.rarity-exceptional{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 9px 22px rgba(0,0,0,.24),
+    0 0 20px rgba(156,94,255,.10);
+}
+
+.treasure-modal,
+.treasure-detail-overlay,
+.gem-picker-overlay{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  display:none;
+}
+.treasure-modal.visible,
+.treasure-detail-overlay.visible,
+.gem-picker-overlay.visible{display:grid}
+.treasure-modal{
+  place-items:center;
+  padding:calc(18px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));
+  background:rgba(8,3,12,.80);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+.treasure-reward-card{
+  position:relative;
+  width:min(390px,100%);
+  padding:24px 20px 20px;
+  text-align:center;
+  overflow:hidden;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 50% 18%,rgba(234,91,231,.18),transparent 36%),
+    linear-gradient(180deg,#2b0e36,#13081a);
+  border:1px solid rgba(255,213,126,.25);
+  box-shadow:0 28px 74px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.treasure-close{
+  width:44px;
+  height:44px;
+  min-width:44px;
+  min-height:44px;
+  border:0;
+  border-radius:15px;
+  display:grid;
+  place-items:center;
+  color:#d9c8dd;
+  background:rgba(255,255,255,.055);
+}
+.treasure-reward-card>.treasure-close{
+  position:absolute;
+  right:12px;
+  top:12px;
+  z-index:4;
+}
+.treasure-close svg{width:20px;height:20px}
+.treasure-chest-reveal{
+  width:86px;
+  height:74px;
+  margin:7px auto 2px;
+  display:grid;
+  place-items:center;
+  color:#ffd36d;
+}
+.treasure-chest-reveal svg{width:62px;height:62px}
+.treasure-modal.opening .treasure-chest-reveal{animation:chestOpen .50s cubic-bezier(.2,.85,.25,1)}
+@keyframes chestOpen{
+  0%{transform:scale(.7);filter:brightness(.8)}
+  40%{transform:scale(1.14) rotate(-4deg)}
+  70%{transform:scale(1.08) rotate(4deg);filter:brightness(1.8)}
+  100%{transform:scale(1);filter:brightness(1)}
+}
+.treasure-reward-art{
+  width:260px;
+  height:210px;
+  margin:-3px auto 0;
+  opacity:0;
+  transform:scale(.72) translateY(12px);
+}
+.treasure-reward-art svg{width:100%;height:100%;filter:drop-shadow(0 14px 18px rgba(0,0,0,.40))}
+.treasure-modal.revealed .treasure-reward-art{
+  opacity:1;
+  transform:none;
+  transition:opacity .25s ease,transform .42s cubic-bezier(.18,.9,.2,1.18);
+}
+.treasure-modal.revealed .treasure-chest-reveal{display:none}
+.treasure-reward-card h2{margin:2px 0 7px;font-size:30px}
+.treasure-reward-copy{margin:0 auto 18px;max-width:300px;color:#c6b3ca;font-size:14px;line-height:1.45}
+
+.treasure-detail-overlay{
+  place-items:stretch center;
+  background:#110717;
+}
+.treasure-detail-screen{
+  width:min(100%,560px);
+  height:100dvh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  background:
+    radial-gradient(circle at 50% 25%,rgba(130,47,155,.20),transparent 33%),
+    linear-gradient(180deg,#1d0926,#0e0712);
+}
+.treasure-detail-header{
+  flex:0 0 auto;
+  min-height:calc(82px + env(safe-area-inset-top));
+  padding:calc(9px + env(safe-area-inset-top)) 12px 9px;
+  display:grid;
+  grid-template-columns:50px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  border-bottom:1px solid rgba(255,224,173,.08);
+  background:rgba(23,9,29,.88);
+}
+.treasure-detail-header h2{
+  margin:1px 0 0;
+  font-size:25px;
+  line-height:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.treasure-detail-body{
+  flex:1 1 auto;
+  overflow-y:auto;
+  padding:12px 14px calc(22px + env(safe-area-inset-bottom));
+}
+.treasure-display{
+  position:relative;
+  width:min(100%,430px);
+  aspect-ratio:320/260;
+  margin:2px auto 8px;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 50% 43%,rgba(255,214,137,.07),transparent 44%),
+    linear-gradient(180deg,rgba(15,7,20,.62),rgba(7,4,10,.78));
+  border:1px solid rgba(255,229,190,.07);
+  box-shadow:inset 0 14px 30px rgba(0,0,0,.30),0 12px 28px rgba(0,0,0,.18);
+}
+.treasure-detail-art,
+.treasure-sockets{
+  position:absolute;
+  inset:0;
+}
+.treasure-detail-art svg{
+  width:100%;
+  height:100%;
+  filter:drop-shadow(0 16px 16px rgba(0,0,0,.38));
+}
+.treasure-sockets{z-index:4;pointer-events:none}
+.treasure-socket{
+  position:absolute;
+  width:48px;
+  height:48px;
+  min-width:48px;
+  min-height:48px;
+  transform:translate(-50%,-50%);
+  padding:0;
+  border-radius:50%;
+  pointer-events:auto;
+  display:grid;
+  place-items:center;
+  overflow:visible;
+  color:#dec5df;
+  background:rgba(22,10,28,.86);
+  border:2px solid rgba(255,221,160,.38);
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,.58),
+    0 0 0 3px rgba(42,16,51,.38),
+    0 6px 12px rgba(0,0,0,.22);
+}
+.treasure-socket:not(:disabled):active{transform:translate(-50%,-50%) scale(.92)}
+.treasure-socket.filled{
+  background:rgba(11,5,15,.70);
+  border-color:rgba(255,235,200,.25);
+}
+.treasure-socket canvas{width:62px;height:62px;max-width:none;pointer-events:none}
+.socket-plus{font-size:27px;line-height:1;font-weight:700;color:#bba0bf}
+.socket-fallback-gem{
+  width:34px;height:34px;border-radius:50%;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.24),0 0 10px currentColor;
+}
+.treasure-complete-pop{animation:treasureComplete .62s cubic-bezier(.16,.9,.28,1.22)}
+@keyframes treasureComplete{
+  0%{transform:scale(.96);filter:brightness(1)}
+  45%{transform:scale(1.025);filter:brightness(1.5)}
+  100%{transform:scale(1);filter:brightness(1)}
+}
+
+.treasure-copy-nav{
+  width:min(100%,430px);
+  margin:0 auto 10px;
+  display:grid;
+  grid-template-columns:48px 1fr 48px;
+  align-items:center;
+  gap:8px;
+}
+.treasure-copy-nav button{
+  width:48px;height:44px;min-width:48px;min-height:44px;
+  border-radius:14px;border:1px solid rgba(255,225,176,.10);
+  color:#d5c1d9;background:rgba(255,255,255,.035);
+}
+.treasure-copy-nav button:disabled{opacity:.22}
+.treasure-copy-nav span{text-align:center;color:#b8a2bd;font-size:12px;font-weight:800}
+.treasure-value-panel{
+  width:min(100%,430px);
+  margin:0 auto 12px;
+  padding:4px 13px;
+  border-radius:20px;
+  background:rgba(10,5,14,.54);
+  border:1px solid rgba(255,229,190,.07);
+}
+.treasure-value-panel>div{
+  min-height:43px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  border-bottom:1px solid rgba(255,255,255,.045);
+}
+.treasure-value-panel>div:last-child{border-bottom:0}
+.treasure-value-panel span{color:#a992ae;font-size:12px;font-weight:800}
+.treasure-value-panel strong{color:#eee2ef;font-size:14px}
+.treasure-value-panel .treasure-value-total span{color:#e6cee8}
+.treasure-value-panel .treasure-value-total strong{color:#ffd36e;font-size:23px}
+.treasure-detail-body>.primary-button,
+.treasure-detail-body>.secondary-button{
+  width:min(100%,430px);
+  margin-left:auto;
+  margin-right:auto;
+}
+.treasure-sell{margin-top:8px!important}
+
+.gem-picker-overlay{
+  z-index:75;
+  align-items:end;
+}
+.gem-picker-backdrop{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  background:rgba(5,2,8,.67);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.gem-picker-sheet{
+  position:relative;
+  z-index:2;
+  width:min(100%,560px);
+  max-height:min(76dvh,680px);
+  padding:9px 12px calc(14px + env(safe-area-inset-bottom));
+  overflow:hidden;
+  border-radius:28px 28px 0 0;
+  background:
+    radial-gradient(circle at 50% 0,rgba(139,51,164,.16),transparent 38%),
+    linear-gradient(180deg,#24102c,#100816);
+  border:1px solid rgba(255,224,177,.12);
+  box-shadow:0 -22px 54px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.05);
+  animation:pickerUp .28s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes pickerUp{from{transform:translateY(28%);opacity:.4}to{transform:none;opacity:1}}
+.gem-picker-handle{
+  width:42px;height:5px;margin:0 auto 9px;border-radius:999px;background:rgba(255,255,255,.16);
+}
+.gem-picker-heading{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 2px 10px;
+}
+.gem-picker-heading h2{margin:1px 0 0;font-size:25px}
+.gem-picker-list{
+  max-height:calc(min(76dvh,680px) - 150px);
+  overflow-y:auto;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  padding:2px 1px 10px;
+}
+.gem-picker-item{
+  min-width:0;
+  min-height:78px;
+  padding:7px;
+  border-radius:17px;
+  border:1px solid rgba(255,229,190,.08);
+  display:grid;
+  grid-template-columns:60px minmax(0,1fr) auto;
+  align-items:center;
+  gap:7px;
+  color:#f7edf8;
+  background:rgba(255,255,255,.035);
+  text-align:left;
+}
+.gem-picker-item.selected{border-color:rgba(255,208,102,.36);background:rgba(101,37,115,.30)}
+.gem-picker-item__art{width:60px;height:60px;display:grid;place-items:center}
+.gem-picker-item__art canvas{width:60px;height:60px}
+.gem-picker-item__copy{min-width:0;display:flex;flex-direction:column}
+.gem-picker-item__copy strong{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px
+}
+.gem-picker-item__copy small{margin-top:3px;color:#a991ad;font-size:10px}
+.gem-picker-item__count{color:#ffd26c;font-size:13px;font-weight:900}
+.remove-inlay{margin-top:2px!important;width:100%!important}
+
+/* Persistent vault themes unlocked with treasure sale proceeds. */
+body[data-vault-theme="midnight"] .game-app{
+  background:
+    radial-gradient(circle at 18% 10%,rgba(62,96,196,.18),transparent 31%),
+    radial-gradient(circle at 82% 24%,rgba(75,46,159,.16),transparent 34%),
+    linear-gradient(180deg,#091326 0%,#080c19 56%,#050710 100%)!important;
+}
+body[data-vault-theme="aurora"] .game-app{
+  background:
+    radial-gradient(circle at 18% 16%,rgba(67,223,188,.22),transparent 31%),
+    radial-gradient(circle at 84% 24%,rgba(151,77,226,.24),transparent 34%),
+    radial-gradient(circle at 48% 92%,rgba(63,135,234,.15),transparent 40%),
+    linear-gradient(180deg,#101b31 0%,#171229 58%,#090b17 100%)!important;
+}
+body[data-vault-theme="goldsmith"] .game-app{
+  background:
+    radial-gradient(circle at 18% 12%,rgba(229,169,65,.18),transparent 31%),
+    radial-gradient(circle at 82% 20%,rgba(143,77,35,.16),transparent 34%),
+    linear-gradient(180deg,#26180d 0%,#1a0d0a 58%,#0d0707 100%)!important;
+}
+
+@media(max-width:390px){
+  .treasure-meter{width:170px;left:51%}
+  .treasure-card{min-height:204px}
+  .treasure-card__art{height:148px}
+  .gem-picker-list{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .treasure-meter.ready .treasure-meter__chest,
+  .treasure-modal.opening .treasure-chest-reveal,
+  .treasure-complete-pop,
+  .gem-picker-sheet{animation:none!important}
+}
