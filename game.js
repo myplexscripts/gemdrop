@@ -681,6 +681,7 @@
       this.ready=false;
       this.running=false;
       this.paused=false;
+      this.metaPaused=false;
       this.pointerHeld=false;
       this.targetX=W/2;
       this.preview=null;
@@ -764,6 +765,7 @@
       this.unlockedTiers=this.loadUnlocked();
       this.discoveredCuts=new Set(this.unlockedTiers);
 
+      window.GemdropGameScene=this;
       this.bindUI();
       this.renderCollection();
       this.updateNextPreview();
@@ -824,6 +826,7 @@
       $('collectionButton').addEventListener('click',()=>{
         this.renderCollection();
         collectionOverlay.classList.add('visible');
+        if(window.GemdropMeta) window.GemdropMeta.selectCollectionTab('gems');
       });
 
       $('collectionBack').addEventListener('click',()=>{
@@ -1052,6 +1055,7 @@
         const unlocked=this.unlockedTiers.has(tier);
         const card=document.createElement('article');
         card.className='gem-card'+(unlocked?'':' locked');
+        card.dataset.gemTier=String(tier);
         card.setAttribute(
           'aria-label',
           unlocked
@@ -1079,7 +1083,11 @@
           value.className='gem-card__value';
           value.textContent='$'+fmt(t.score);
 
-          meta.append(name,value);
+          const count=document.createElement('span');
+          count.className='gem-card__count';
+          count.textContent='×'+(window.GemdropMeta?window.GemdropMeta.getGemCount(tier):0);
+
+          meta.append(name,value,count);
         }else{
           const unknown=document.createElement('span');
           unknown.className='gem-card__unknown';
@@ -1097,6 +1105,7 @@
       });
 
       collectionProgress.textContent=this.unlockedTiers.size+' / '+tiers.length;
+      if(window.GemdropMeta) window.GemdropMeta.updateGemBadges();
     }
 
     makeTextures() {
@@ -1385,6 +1394,7 @@
       this.ready=true;
       this.running=true;
       this.paused=false;
+      this.metaPaused=false;
       this.pointerHeld=false;
       this.targetX=W/2;
       this.lastDropAt=0;
@@ -1426,7 +1436,7 @@
     }
 
     createDropPreview(animate=false) {
-      if(!this.running||this.paused||!this.ready) return;
+      if(!this.running||this.paused||this.metaPaused||!this.ready) return;
       if(this.preview) this.preview.destroy();
 
       const t=tiers[this.currentTier];
@@ -1563,7 +1573,7 @@
     }
 
     dropCurrent() {
-      if(!this.running||this.paused||!this.ready) return;
+      if(!this.running||this.paused||this.metaPaused||!this.ready) return;
       if(this.time.now-this.lastDropAt<DROP_DELAY) return;
 
       const t=tiers[this.currentTier];
@@ -1731,6 +1741,7 @@
           this.cameras.main.shake(100,.0038);
           tone(760,.15,.042,'sine');
           haptic([14,17,22]);
+          if(window.GemdropMeta) window.GemdropMeta.onMerge(tier,this.mergeChain,{collect:false,master:true});
           if(gateInMerge) this.dropGateGem=null;
           continue;
         }
@@ -1749,6 +1760,8 @@
           : '+$'+tiers[next].score;
 
         this.floatText(x,y-8,label,'#ffe7c5',this.mergeChain>=2?20:17);
+
+        if(window.GemdropMeta) window.GemdropMeta.onMerge(next,this.mergeChain);
 
         this.cameras.main.shake(70,next>=7?.0028:.0015);
         tone(270+next*43,.07+next*.004,.022+Math.min(.017,next*.0018),'sine');
@@ -1954,7 +1967,7 @@
     }
 
     updatePowerButtons() {
-      const active=this.running&&!this.paused;
+      const active=this.running&&!this.paused&&!this.metaPaused;
       const canCascade=this.matchingPairs().length>0;
       const buttons={
         tumble:$('powerTumble'),
@@ -2144,6 +2157,7 @@
       this.running=false;
       this.ready=false;
       this.paused=false;
+      this.metaPaused=false;
       this.pointerHeld=false;
       this.clearRun();
       this.clearStatus();
@@ -2170,7 +2184,20 @@
         }
         this.matter.world.pause();
         this.tweens.pauseAll();
-      }else{
+      }else if(!this.metaPaused){
+        this.matter.world.resume();
+        this.tweens.resumeAll();
+      }
+    }
+
+    setMetaPaused(value) {
+      if(!this.running) return;
+      this.metaPaused=!!value;
+      this.updatePowerButtons();
+      if(this.metaPaused){
+        this.matter.world.pause();
+        this.tweens.pauseAll();
+      }else if(!this.paused){
         this.matter.world.resume();
         this.tweens.resumeAll();
       }
@@ -2181,6 +2208,7 @@
 
       this.running=false;
       this.ready=false;
+      this.metaPaused=false;
       this.pointerHeld=false;
       this.tumbleState=null;
       this.matter.world.engine.gravity.x=0;
@@ -2216,14 +2244,14 @@
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
       this.animateGemLights(time);
-      this.updateTumble(time);
+      if(!this.paused&&!this.metaPaused) this.updateTumble(time);
 
-      if(this.running&&!this.paused&&!this.ready&&!this.dropGateGem&&time-this.lastDropAt>=DROP_DELAY){
+      if(this.running&&!this.paused&&!this.metaPaused&&!this.ready&&!this.dropGateGem&&time-this.lastDropAt>=DROP_DELAY){
         this.ready=true;
         this.createDropPreview(true);
       }
 
-      if(this.running&&!this.paused&&!this.ready&&this.dropGateGem){
+      if(this.running&&!this.paused&&!this.metaPaused&&!this.ready&&this.dropGateGem){
         const gate=this.dropGateGem;
         if(!gate.active||!gate.body){
           this.dropGateGem=null;
@@ -2239,7 +2267,7 @@
         }
       }
 
-      if(this.running&&!this.paused){
+      if(this.running&&!this.paused&&!this.metaPaused){
         this.scanForRestingMatches();
         this.processMerges();
 
