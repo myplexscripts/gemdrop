@@ -3095,3 +3095,90 @@ body[data-vault-theme="goldsmith"] .game-app{
   .treasure-complete-pop,
   .gem-picker-sheet{animation:none!important}
 }
+
+
+/* === TREASURE INLAY CLEANUP 2026-09-21 === */
+
+/* Explicitly keep the two collection categories exclusive. Some of the
+   collection grid rules set display directly, so do not rely on UA [hidden]. */
+[hidden],
+.gem-collection[hidden],
+.treasure-collection[hidden]{
+  display:none!important;
+}
+
+/* Treasures occupy the collection viewport exactly like Gems. */
+.treasure-collection{
+  width:100%;
+  min-height:0;
+  height:calc(100dvh - 154px - env(safe-area-inset-top));
+  padding:12px 10px calc(30px + env(safe-area-inset-bottom));
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+/* The setting itself is the hit target. Its visible silhouette and the
+   inserted gem are drawn from the same authored gem cut canvas, so they
+   cannot drift out of alignment. */
+.treasure-socket{
+  min-width:0!important;
+  min-height:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  display:grid!important;
+  place-items:center!important;
+  transform:translate(-50%,-50%)!important;
+}
+.treasure-socket:active{
+  transform:translate(-50%,-50%) scale(.94)!important;
+}
+.treasure-socket canvas{
+  position:absolute;
+  inset:0;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:contain;
+  pointer-events:none;
+  filter:
+    drop-shadow(0 3px 4px rgba(0,0,0,.62))
+    drop-shadow(0 0 1px rgba(255,228,188,.24));
+}
+.treasure-socket:not(.filled) canvas{
+  opacity:.96;
+  filter:
+    drop-shadow(0 3px 4px rgba(0,0,0,.72))
+    drop-shadow(0 0 1px rgba(255,224,177,.38));
+}
+.treasure-socket.filled canvas{
+  filter:
+    drop-shadow(0 4px 5px rgba(0,0,0,.62))
+    drop-shadow(0 0 5px rgba(255,255,255,.08));
+}
+.treasure-socket .socket-plus{
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:2;
+  transform:translate(-50%,-50%);
+  color:rgba(255,239,207,.48);
+  font-size:18px;
+  line-height:1;
+  font-weight:800;
+  text-shadow:0 1px 3px rgba(0,0,0,.8);
+  pointer-events:none;
+}
+
+/* The detail screen has one contextual action only: Sell, once every
+   setting has been filled. */
+.treasure-sell{
+  margin-top:8px!important;
+  margin-bottom:2px!important;
+}
+.treasure-copy-nav[hidden]{
+  display:none!important;
+}
