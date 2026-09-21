@@ -160,7 +160,7 @@
   // 20 progression tiers. Only these six authored cuts are reused;
   // progression beyond six is colour + size, never new gem geometry.
   const tiers = [
-    {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:48, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
+    {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:54, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
     {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:53, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
     {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:58, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
     {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:63, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
