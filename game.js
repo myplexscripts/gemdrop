@@ -1642,7 +1642,7 @@
       const t=tiers[this.currentTier];
       const min=WALL+t.r*COLLIDER_SCALE;
       const max=W-WALL-t.r*COLLIDER_SCALE;
-      const x=clamp(this.preview?this.preview.x:this.targetX,min,max);
+      const x=clamp(this.targetX,min,max);
 
       if(this.preview){
         this.preview.destroy();
