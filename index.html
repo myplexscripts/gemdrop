@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260921-treasureart2" />
+  <link rel="stylesheet" href="styles.css?v=20260921-chestreveal1" />
 </head>
 <body>
   <main class="game-app" id="gameApp">
@@ -138,16 +138,29 @@
       <button id="treasureRewardClose" class="treasure-close" type="button" aria-label="Close treasure reward">
         <i data-lucide="x" aria-hidden="true"></i>
       </button>
+
+      <div class="treasure-reward-kicker" aria-hidden="true">TREASURE FOUND</div>
+
       <div id="treasureChestReveal" class="treasure-chest-reveal" aria-hidden="true">
-        <i data-lucide="archive"></i>
+        <div class="treasure-chest-aura"></div>
+        <div class="treasure-chest-rays"></div>
+        <div class="treasure-chest-shockwave"></div>
+        <img class="treasure-chest-image treasure-chest-closed" src="assets/treasures/chest-closed.webp?v=20260921-chestreveal1" alt="">
+        <img class="treasure-chest-image treasure-chest-open" src="assets/treasures/chest-open.webp?v=20260921-chestreveal1" alt="">
+        <div class="treasure-reward-sparkles">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
       </div>
-      <div id="treasureRewardArt" class="treasure-reward-art"></div>
-      <p id="treasureRewardRarity" class="eyebrow">TREASURE FOUND</p>
-      <h2 id="treasureRewardTitle">Treasure</h2>
-      <p id="treasureRewardCopy" class="treasure-reward-copy">Added to your Treasure Vault.</p>
-      <button id="treasureRewardView" class="primary-button" type="button">
-        <i data-lucide="crown" aria-hidden="true"></i><span>VIEW TREASURE</span>
-      </button>
+
+      <div class="treasure-reward-result">
+        <div id="treasureRewardArt" class="treasure-reward-art"></div>
+        <p id="treasureRewardRarity" class="eyebrow">TREASURE FOUND</p>
+        <h2 id="treasureRewardTitle">Treasure</h2>
+        <p id="treasureRewardCopy" class="treasure-reward-copy">Added to your Treasure Vault.</p>
+        <button id="treasureRewardView" class="primary-button treasure-reward-view" type="button">
+          <i data-lucide="crown" aria-hidden="true"></i><span>VIEW TREASURE</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -241,7 +254,7 @@
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="reactive-gem-system.js?v=20260921-treasureart2"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
-  <script src="meta.js?v=20260921-treasureart3"></script>
+  <script src="meta.js?v=20260921-chestreveal1"></script>
   <script src="game.js?v=20260921-treasureart2"></script>
 </body>
 </html>

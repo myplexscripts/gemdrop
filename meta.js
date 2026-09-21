@@ -400,6 +400,13 @@
     return copy;
   }
 
+  let rewardTimers=[];
+
+  function clearRewardTimers(){
+    rewardTimers.forEach(id=>window.clearTimeout(id));
+    rewardTimers=[];
+  }
+
   function claimTreasure(){
     if(state.chest<CHEST_TARGET) return;
     const treasure=randomTreasure();
@@ -416,19 +423,35 @@
     $('treasureRewardTitle').textContent=treasure.name;
     $('treasureRewardCopy').textContent='Added to your Treasure Vault with '+treasure.sockets.length+' inlay '+(treasure.sockets.length===1?'socket.':'sockets.');
     art.innerHTML=treasureSVG(treasure,false);
-    overlay.classList.remove('revealed');
+
+    clearRewardTimers();
+    overlay.classList.remove('opening','burst','revealed');
+    void overlay.offsetWidth;
     overlay.classList.add('visible','opening');
     pauseForMeta(true);
-    window.setTimeout(()=>{
+
+    const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const burstAt=reduced?90:760;
+    const revealAt=reduced?150:1120;
+
+    rewardTimers.push(window.setTimeout(()=>{
+      overlay.classList.add('burst');
+      if(navigator.vibrate) navigator.vibrate([18,28,42]);
+    },burstAt));
+
+    rewardTimers.push(window.setTimeout(()=>{
       overlay.classList.remove('opening');
       overlay.classList.add('revealed');
-    },520);
+      rewardTimers=[];
+    },revealAt));
+
     refreshIcons();
   }
 
   function closeReward(resume=true){
+    clearRewardTimers();
     const overlay=$('treasureRewardOverlay');
-    overlay.classList.remove('visible','opening','revealed');
+    overlay.classList.remove('visible','opening','burst','revealed');
     if(resume) pauseForMeta(false);
   }
 
