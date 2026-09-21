@@ -1350,7 +1350,7 @@
       const glint=gem.glint;
 
       if(!gem.glintActive&&time>=gem.nextGlintAt){
-        if(this.activeGemGlints>=2){
+        if(this.activeGemGlints>=1){
           gem.nextGlintAt=time+Phaser.Math.Between(350,1000);
           return;
         }
@@ -1384,7 +1384,7 @@
         gem.glintActive=false;
         glint.setAlpha(0);
         this.activeGemGlints=Math.max(0,this.activeGemGlints-1);
-        gem.nextGlintAt=time+Phaser.Math.Between(1800,6200);
+        gem.nextGlintAt=time+Phaser.Math.Between(2600,7600);
         return;
       }
 
@@ -1396,7 +1396,7 @@
       glint.y=gem.y+y;
       glint.rotation=-GEM_WORLD_LIGHT_ANGLE*.18;
       glint.setScale(gem.glintBaseScale*(.72+pulse*.48));
-      glint.setAlpha(pulse*.34);
+      glint.setAlpha(pulse*.28);
     }
 
     drawVaultBackdrop() {
