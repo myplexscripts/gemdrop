@@ -1587,8 +1587,10 @@
         this.preview=null;
       }
 
-      const gem=this.createGem(x,DROP_Y,this.currentTier);
+      const droppedTier=this.currentTier;
+      const gem=this.createGem(x,DROP_Y,droppedTier);
       gem.setVelocity(0,.15);
+      if(window.GemdropMeta) window.GemdropMeta.onDrop(droppedTier);
 
       this.lastDropAt=this.time.now;
       this.ready=false;
