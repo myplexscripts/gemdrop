@@ -278,11 +278,35 @@
     return '<circle cx="160" cy="130" r="74" '+common+'/>';
   }
 
+  const TREASURE_ART_SHEET={
+    'sun-brooch':[0,0],
+    'heart-pendant':[1,0],
+    'signet-ring':[0,1],
+    'moon-necklace':[1,1],
+    'ceremonial-goblet':[0,2],
+    'ornate-chalice':[1,2],
+    'moon-tiara':[0,3],
+    'crown-reliquary':[1,3],
+    'sovereign-crown':[0,4],
+    'star-sceptre':[1,4]
+  };
+
   function treasureSVG(treasure,silhouette=false){
-    if(treasure.id==='silver-ring'&&!silhouette){
-      return '<svg viewBox="0 0 320 260" role="img" aria-label="'+treasure.name+'">'+
-        '<image href="assets/treasures/silver-ring.png?v=20260921-art1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
-      '</svg>';
+    if(!silhouette){
+      if(treasure.id==='silver-ring'){
+        return '<svg viewBox="0 0 320 260" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
+          '<image href="assets/treasures/silver-ring.png?v=20260921-treasureart2" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+        '</svg>';
+      }
+
+      const cell=TREASURE_ART_SHEET[treasure.id];
+      if(cell){
+        const x=-(cell[0]*320);
+        const y=-(cell[1]*260);
+        return '<svg viewBox="0 0 320 260" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
+          '<image href="assets/treasures/treasure-art-sheet.png?v=20260921-treasureart2" x="'+x+'" y="'+y+'" width="640" height="1300" preserveAspectRatio="none"/>'+
+        '</svg>';
+      }
     }
 
     const colours=metalColours(treasure.rarity);
