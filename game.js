@@ -1685,10 +1685,10 @@
           const gapX=Math.max(0,Math.max(A.min.x-B.max.x,B.min.x-A.max.x));
           const gapY=Math.max(0,Math.max(A.min.y-B.max.y,B.min.y-A.max.y));
 
-          if(gapX>2.5||gapY>2.5) continue;
+          if(gapX>4||gapY>4) continue;
 
           const distance=Phaser.Math.Distance.Between(a.x,a.y,b.x,b.y);
-          const maxDistance=(tiers[a.tier].r*COLLIDER_SCALE)*2.12;
+          const maxDistance=(tiers[a.tier].r*COLLIDER_SCALE)*2.17;
 
           if(distance<=maxDistance){
             this.queueMerge(a,b);
@@ -2270,10 +2270,6 @@
 
           this.syncGemOptics(gem,time);
           this.syncGemShadow(gem);
-
-          if(gem.body.isSleeping){
-            Phaser.Physics.Matter.Matter.Sleeping.set(gem.body,false);
-          }
 
           if(
             time-gem.born>800 &&
