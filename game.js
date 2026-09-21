@@ -1587,10 +1587,8 @@
         this.preview=null;
       }
 
-      const droppedTier=this.currentTier;
-      const gem=this.createGem(x,DROP_Y,droppedTier);
+      const gem=this.createGem(x,DROP_Y,this.currentTier);
       gem.setVelocity(0,.15);
-      if(window.GemdropMeta) window.GemdropMeta.onDrop(droppedTier);
 
       this.lastDropAt=this.time.now;
       this.ready=false;
@@ -1744,7 +1742,7 @@
           this.cameras.main.shake(100,.0038);
           tone(760,.15,.042,'sine');
           haptic([14,17,22]);
-          if(window.GemdropMeta) window.GemdropMeta.onMerge(tier,this.mergeChain,{collect:false,master:true});
+          if(window.GemdropMeta) window.GemdropMeta.onMerge(tier,this.mergeChain,{master:true,resultTier:tier});
           if(gateInMerge) this.dropGateGem=null;
           continue;
         }
@@ -1764,7 +1762,7 @@
 
         this.floatText(x,y-8,label,'#ffe7c5',this.mergeChain>=2?20:17);
 
-        if(window.GemdropMeta) window.GemdropMeta.onMerge(next,this.mergeChain);
+        if(window.GemdropMeta) window.GemdropMeta.onMerge(tier,this.mergeChain,{resultTier:next});
 
         this.cameras.main.shake(70,next>=7?.0028:.0015);
         tone(270+next*43,.07+next*.004,.022+Math.min(.017,next*.0018),'sine');
