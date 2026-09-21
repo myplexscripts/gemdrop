@@ -48,15 +48,17 @@
       <span class="frame-jewel frame-jewel--tr" aria-hidden="true"></span>
       <span class="frame-jewel frame-jewel--bl" aria-hidden="true"></span>
       <span class="frame-jewel frame-jewel--br" aria-hidden="true"></span>
+      <div class="next-chip" aria-label="Next gem">
+        <span>NEXT</span>
+        <canvas id="nextPreview" width="128" height="128" aria-hidden="true"></canvas>
+      </div>
       <div id="game" role="application" aria-label="Gem Drop jewel vault"></div>
     </section>
 
     <section id="aimStrip" class="aim-strip" aria-label="Gem drop control">
       <i data-lucide="chevron-left" aria-hidden="true"></i>
       <div class="aim-track" aria-hidden="true">
-        <span id="aimHandle" class="aim-handle">
-          <canvas id="nextPreview" width="192" height="192" aria-hidden="true"></canvas>
-        </span>
+        <span id="aimHandle" class="aim-handle" aria-hidden="true"></span>
       </div>
       <i data-lucide="chevron-right" aria-hidden="true"></i>
     </section>
