@@ -2225,3 +2225,58 @@ body{
     gap:14px!important;
   }
 }
+
+
+/* === TALL GEM-BOUND PLAYFIELD 2026-09-20 === */
+.hud{
+  min-height:calc(86px + env(safe-area-inset-top))!important;
+  padding-top:calc(8px + env(safe-area-inset-top))!important;
+  padding-bottom:6px!important;
+}
+.play-shell{
+  width:90%!important;
+  max-width:500px!important;
+  aspect-ratio:640/936!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.play-shell::before,
+.play-shell::after{
+  display:none!important;
+}
+#game,
+#game canvas{
+  border-radius:0!important;
+}
+.aim-strip{
+  width:88%!important;
+  max-width:492px!important;
+  flex-basis:66px!important;
+  min-height:66px!important;
+  max-height:66px!important;
+  margin-top:4px!important;
+}
+.power-dock{
+  width:88%!important;
+  max-width:492px!important;
+  min-height:70px!important;
+  padding-top:3px!important;
+}
+@media(max-width:420px){
+  .play-shell{width:90%!important}
+}
+@media(max-height:760px){
+  .hud{
+    min-height:calc(80px + env(safe-area-inset-top))!important;
+    padding-top:calc(6px + env(safe-area-inset-top))!important;
+  }
+  .play-shell{width:86%!important}
+  .aim-strip{
+    flex-basis:62px!important;
+    min-height:62px!important;
+    max-height:62px!important;
+  }
+  .power-dock{min-height:66px!important}
+}
