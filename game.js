@@ -2408,11 +2408,12 @@
 
     drawLimitLine(time) {
       const active=this.dangerTime>.08;
-      const pulse=.60+.20*Math.sin(time*.009);
+      const progress=clamp(this.dangerTime/DANGER_GRACE,0,1);
+      const pulse=.60+.20*Math.sin(time*(.009+progress*.008));
       const color=active?0xff5d86:0xffca58;
 
       this.limitLine.clear();
-      this.limitLine.lineStyle(active?3:2,color,active?pulse:.72);
+      this.limitLine.lineStyle(active?2.4+progress*1.8:2,color,active?Math.min(.98,pulse+progress*.18):.72);
       this.limitLine.beginPath();
       this.limitLine.moveTo(WALL+18+LIMIT_OPTICAL_X,LIMIT_Y);
       this.limitLine.lineTo(W-WALL-18+LIMIT_OPTICAL_X,LIMIT_Y);
