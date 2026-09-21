@@ -2280,3 +2280,80 @@ body{
   }
   .power-dock{min-height:66px!important}
 }
+
+/* === GEM FRAME FIT + CLEAN BACKGROUND 2026-09-20 === */
+.game-app::before{
+  animation:none!important;
+}
+
+.hud,
+.aim-strip,
+.power-dock{
+  width:78%!important;
+  max-width:440px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+
+.hud{
+  min-height:calc(82px + env(safe-area-inset-top))!important;
+  padding:calc(8px + env(safe-area-inset-top)) 0 6px!important;
+}
+
+.play-shell{
+  width:90%!important;
+  max-width:500px!important;
+  aspect-ratio:640/936!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+
+.play-shell::before,
+.play-shell::after{
+  display:none!important;
+}
+
+#game,
+#game canvas{
+  border-radius:0!important;
+}
+
+.status-hud,
+.status-hud.show{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+
+.aim-strip{
+  flex-basis:64px!important;
+  min-height:64px!important;
+  max-height:64px!important;
+  margin-top:2px!important;
+  padding:6px 10px!important;
+}
+
+.aim-strip::before{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+
+.power-dock{
+  min-height:68px!important;
+  padding-top:0!important;
+  background:transparent!important;
+}
+
+@media(max-width:420px){
+  .hud,
+  .aim-strip,
+  .power-dock{
+    width:80%!important;
+  }
+
+  .play-shell{
+    width:90%!important;
+  }
+}
