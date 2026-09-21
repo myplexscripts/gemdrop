@@ -187,7 +187,6 @@
   function reservedCounts(){
     const out=Array(GEMS.length).fill(0);
     for(const copy of state.treasures){
-      if(copy.completed) continue;
       for(const tier of copy.inlays||[]){
         if(Number.isInteger(tier)&&tier>=0&&tier<GEMS.length) out[tier]++;
       }
@@ -388,7 +387,7 @@
     $('treasureRewardRarity').textContent=treasure.rarity.toUpperCase()+' TREASURE';
     $('treasureRewardTitle').textContent=treasure.name;
     $('treasureRewardCopy').textContent='Added to your Treasure Vault with '+treasure.sockets.length+' inlay '+(treasure.sockets.length===1?'socket.':'sockets.');
-    art.innerHTML=treasureSVG(treasure,false,null);
+    art.innerHTML=treasureSVG(treasure,false);
     overlay.classList.remove('revealed');
     overlay.classList.add('visible','opening');
     pauseForMeta(true);
@@ -672,7 +671,7 @@
 
   function openGemPicker(index){
     const copy=getCurrentCopy();
-    if(!copy||copy.completed) return;
+    if(!copy) return;
     currentSocketIndex=index;
     renderGemPicker();
     $('gemPickerOverlay').classList.add('visible');
