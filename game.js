@@ -10,7 +10,8 @@
   const WALL = 16;
   const FLOOR = 880;
   const DROP_Y = 72;
-  const LIMIT_Y = 158;
+  const LIMIT_Y = 146;
+  const LIMIT_OPTICAL_X = 6;
   const DROP_DELAY = 300;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
@@ -718,8 +719,8 @@
       this.limitLine=this.add.graphics().setDepth(6);
       this.dropper=this.add.graphics().setDepth(30);
       this.limitJewels=[
-        this.add.rectangle(WALL+17,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7),
-        this.add.rectangle(W-WALL-17,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7)
+        this.add.rectangle(WALL+17+LIMIT_OPTICAL_X,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7),
+        this.add.rectangle(W-WALL-17+LIMIT_OPTICAL_X,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7)
       ];
 
       this.aimStrip=$('aimStrip');
@@ -1295,9 +1296,6 @@
 
     drawVaultBackdrop() {
       const bg=this.add.graphics().setDepth(0);
-      bg.fillStyle(0x15091c,.20);
-      bg.fillRect(0,0,W,H);
-
       const rails=this.add.graphics().setDepth(18);
 
       rails.fillGradientStyle(0xffed9e,0xffbd3f,0xb13f61,0x6a1f52,.24);
@@ -2269,8 +2267,8 @@
       this.limitLine.clear();
       this.limitLine.lineStyle(active?3:2,color,active?pulse:.72);
       this.limitLine.beginPath();
-      this.limitLine.moveTo(WALL+18,LIMIT_Y);
-      this.limitLine.lineTo(W-WALL-18,LIMIT_Y);
+      this.limitLine.moveTo(WALL+18+LIMIT_OPTICAL_X,LIMIT_Y);
+      this.limitLine.lineTo(W-WALL-18+LIMIT_OPTICAL_X,LIMIT_Y);
       this.limitLine.strokePath();
 
       for(const j of this.limitJewels){
