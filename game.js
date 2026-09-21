@@ -376,6 +376,72 @@
     return GEM_NOTE_SET[Math.abs(tier)%GEM_NOTE_SET.length];
   }
 
+  const MERGE_SCALE_STEPS=[0,2,4,7,9,12,14,16,19,21,24,26,28,31,33,36,38,40,43,48];
+
+  function playMergeTone(tier,chain=1,x=W/2) {
+    if(!audioCtx||!gemAudioMaster||audioCtx.state!=='running') return;
+
+    const index=clamp(tier,0,MERGE_SCALE_STEPS.length-1);
+    const hz=392*Math.pow(2,MERGE_SCALE_STEPS[index]/12);
+    const richness=index/(MERGE_SCALE_STEPS.length-1);
+    const t=audioCtx.currentTime;
+    const duration=.16+richness*.24;
+    const voice=audioCtx.createGain();
+    const pan=typeof audioCtx.createStereoPanner==='function'
+      ? audioCtx.createStereoPanner()
+      : null;
+
+    voice.gain.setValueAtTime(.0001,t);
+    voice.gain.exponentialRampToValueAtTime(.11+richness*.07,t+.006);
+    voice.gain.exponentialRampToValueAtTime(.0001,t+duration);
+
+    if(pan){
+      pan.pan.value=clamp((x/W)*2-1,-.64,.64);
+      voice.connect(pan);
+      pan.connect(gemAudioDry);
+      pan.connect(gemAudioWet);
+    }else{
+      voice.connect(gemAudioDry);
+      voice.connect(gemAudioWet);
+    }
+
+    const partials=[
+      {ratio:1,level:1},
+      {ratio:2,level:.30+richness*.18},
+      {ratio:1.5,level:richness>.28?.16+richness*.10:0},
+      {ratio:.5,level:richness>.66?.07+richness*.04:0}
+    ];
+
+    for(const partial of partials){
+      if(partial.level<=0) continue;
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+      osc.type='sine';
+      osc.frequency.value=Math.max(90,hz*partial.ratio);
+      gain.gain.setValueAtTime(.0001,t);
+      gain.gain.exponentialRampToValueAtTime(.11*partial.level,t+.005);
+      gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+      osc.connect(gain);
+      gain.connect(voice);
+      osc.start(t);
+      osc.stop(t+duration+.03);
+    }
+
+    if(chain>=2){
+      const chime=audioCtx.createOscillator();
+      const chimeGain=audioCtx.createGain();
+      chime.type='sine';
+      chime.frequency.value=hz*2;
+      chimeGain.gain.setValueAtTime(.0001,t);
+      chimeGain.gain.exponentialRampToValueAtTime(.018+Math.min(chain,6)*.003,t+.012);
+      chimeGain.gain.exponentialRampToValueAtTime(.0001,t+.11);
+      chime.connect(chimeGain);
+      chimeGain.connect(gemAudioWet);
+      chime.start(t);
+      chime.stop(t+.14);
+    }
+  }
+
   function playbackRateForSemitones(semitones) {
     return Math.pow(2,semitones/12);
   }
