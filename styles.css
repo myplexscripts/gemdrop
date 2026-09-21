@@ -2489,3 +2489,53 @@ body{
 .aim-strip:active .aim-handle{
   transform:translate(-50%,-50%) rotate(45deg) scale(1.06);
 }
+
+
+/* Single-frame game layout: all controls live inside one visual bounding box */
+.game-app{
+  background:#1d0828;
+  border:2px solid rgba(255,191,80,.74);
+  box-shadow:
+    0 0 0 3px rgba(93,22,111,.88),
+    0 0 0 5px rgba(255,175,57,.14),
+    0 22px 50px rgba(0,0,0,.42),
+    inset 0 0 34px rgba(210,54,194,.10);
+}
+.hud{
+  min-height:calc(82px + env(safe-area-inset-top));
+  padding:calc(9px + env(safe-area-inset-top)) 12px 7px;
+  background:transparent;
+}
+.play-shell{
+  flex:1 1 auto;
+  min-height:0;
+  width:100%;
+  aspect-ratio:auto;
+  margin:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.play-shell::before{
+  display:none;
+}
+.aim-strip{
+  flex:0 0 66px;
+  min-height:66px;
+  max-height:66px;
+  margin:0 10px;
+  padding:6px 14px;
+}
+.aim-strip::before{
+  display:none;
+}
+.power-dock{
+  flex:0 0 auto;
+  min-height:64px;
+  padding:5px 10px calc(8px + env(safe-area-inset-bottom));
+  background:transparent;
+}
+.power-button{
+  min-height:50px;
+}
