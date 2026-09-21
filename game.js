@@ -1087,7 +1087,8 @@
           count.className='gem-card__count';
           count.textContent='×'+(window.GemdropMeta?window.GemdropMeta.getGemCount(tier):0);
 
-          meta.append(name,value,count);
+          meta.append(name,value);
+          art.appendChild(count);
         }else{
           const unknown=document.createElement('span');
           unknown.className='gem-card__unknown';
