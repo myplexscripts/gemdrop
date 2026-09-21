@@ -1035,7 +1035,7 @@
       const firstR=tiers[0].r;
       const lastR=tiers[tiers.length-1].r;
       const sizeT=clamp((t.r-firstR)/(lastR-firstR),0,1);
-      const cavityRadius=58+sizeT*10;
+      const cavityRadius=68+sizeT*32;
       const exact=window.ReactiveGemSystem
         ? window.ReactiveGemSystem.collisionShape(t.reactiveCut,cavityRadius)
         : null;
@@ -1099,7 +1099,7 @@
           0,
           256
         );
-        const max=cavityRadius*1.78;
+        const max=cavityRadius*1.90;
         const scale=Math.min(max/source.width,max/source.height);
         const gw=source.width*scale;
         const gh=source.height*scale;
