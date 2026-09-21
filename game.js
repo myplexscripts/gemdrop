@@ -727,9 +727,9 @@
       this.matter.set60Hz();
 
       const engine=this.matter.world.engine;
-      engine.positionIterations=10;
-      engine.velocityIterations=8;
-      engine.constraintIterations=2;
+      engine.positionIterations=14;
+      engine.velocityIterations=10;
+      engine.constraintIterations=3;
       engine.gravity.x=0;
       engine.gravity.y=this.baseGravityY;
       engine.gravity.scale=.001;
@@ -2367,7 +2367,7 @@
       default:'matter',
       matter:{
         gravity:{x:0,y:1},
-        enableSleeping:false,
+        enableSleeping:true,
         runner:{
           fps:60,
           maxUpdates:5,
