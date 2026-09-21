@@ -279,6 +279,12 @@
   }
 
   function treasureSVG(treasure,silhouette=false){
+    if(treasure.id==='silver-ring'&&!silhouette){
+      return '<svg viewBox="0 0 320 260" role="img" aria-label="'+treasure.name+'">'+
+        '<image href="assets/treasures/silver-ring.png?v=20260921-art1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+      '</svg>';
+    }
+
     const colours=metalColours(treasure.rarity);
     const gid='m-'+treasure.id.replace(/[^a-z0-9]/g,'');
     const fill=silhouette?'#23182a':'url(#'+gid+')';
