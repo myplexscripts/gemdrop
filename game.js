@@ -178,8 +178,8 @@
     {name:'Emerald', cut:'Rectangular Brilliant', cutKey:'scissor', reactiveCut:'rectangular_brilliant', r:178, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
     {name:'Ruby', cut:'Heart', cutKey:'pendeloque', reactiveCut:'heart', r:190, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
     {name:'Alexandrite', cut:'Tanzanite', cutKey:'trapeze', reactiveCut:'tanzanite', r:203, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
-    {name:'Starstone', cut:'Rectangular', cutKey:'navette', reactiveCut:'rectangular', r:192, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
-    {name:'Crownstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:206, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
+    {name:'Starstone', cut:'Rectangular', cutKey:'navette', reactiveCut:'rectangular', r:217, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
+    {name:'Crownstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:232, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
   function gemTextureKey(tier) {
