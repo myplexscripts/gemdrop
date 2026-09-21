@@ -1460,6 +1460,7 @@
       this.dangerTime=0;
       this.mergeWindow=0;
       this.mergeChain=0;
+      this.nextMergeAt=0;
       this.discoveredCuts=new Set(this.unlockedTiers);
       this.powerCharge={tumble:1,cascade:1,prism:1};
 
