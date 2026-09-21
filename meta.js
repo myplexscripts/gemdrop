@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY='gemdrop-meta-v1';
-  const CHEST_TARGET=100;
+  const CHEST_TARGET=120;
 
   const GEMS=[
     {name:'Quartz',score:1,color:'#D7EBF2',accent:'#EDF6F9',dark:'#859296',cut:'rectangular'},
@@ -280,22 +280,17 @@
     });
   }
 
-  function onDrop(tier){
-    if(!Number.isInteger(tier)||tier<0||tier>=GEMS.length) return;
-    state.gemCounts[tier]=(state.gemCounts[tier]||0)+1;
-    state.highestTier=Math.max(state.highestTier,tier);
-    save();
-    updateGemBadges();
-  }
-
   function onMerge(tier,chain=1,options={}){
     state.totalMerges++;
+    const resultTier=Number.isInteger(options.resultTier)?options.resultTier:tier;
     if(Number.isInteger(tier)&&tier>=0&&tier<GEMS.length){
-      state.highestTier=Math.max(state.highestTier,tier);
       if(options.collect!==false) state.gemCounts[tier]=(state.gemCounts[tier]||0)+1;
     }
-    const level=Number.isInteger(tier)?tier:0;
-    const gain=4.5+Math.min(level,12)*.85+Math.min(Math.max(0,chain-1),4)*1.8+(options.master?8:0);
+    if(Number.isInteger(resultTier)&&resultTier>=0&&resultTier<GEMS.length){
+      state.highestTier=Math.max(state.highestTier,resultTier);
+    }
+    const level=Number.isInteger(resultTier)?resultTier:0;
+    const gain=2.15+Math.min(level,12)*.30+Math.min(Math.max(0,chain-1),4)*.65+(options.master?5:0);
     state.chest=clamp(state.chest+gain,0,CHEST_TARGET);
     save();
     updateMeter();
@@ -752,7 +747,6 @@
   window.GemdropMeta={
     init,
     onMerge,
-    onDrop,
     getGemCount:tier=>state.gemCounts[tier]||0,
     updateGemBadges,
     showCollection,
