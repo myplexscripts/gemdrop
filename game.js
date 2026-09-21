@@ -207,6 +207,39 @@
     return Math.round(h);
   }
 
+  let gameMuted=false;
+  try{
+    gameMuted=localStorage.getItem('gemdrop-muted')==='1';
+  }catch{}
+
+  function syncMuteButton() {
+    const button=$('muteButton');
+    if(!button) return;
+
+    button.setAttribute('aria-pressed',gameMuted?'true':'false');
+    button.setAttribute('aria-label',gameMuted?'Unmute game':'Mute game');
+    button.title=gameMuted?'Unmute game':'Mute game';
+  }
+
+  function setGameMuted(value) {
+    gameMuted=!!value;
+
+    try{
+      localStorage.setItem('gemdrop-muted',gameMuted?'1':'0');
+    }catch{}
+
+    if(gemAudioMaster&&audioCtx){
+      gemAudioMaster.gain.cancelScheduledValues(audioCtx.currentTime);
+      gemAudioMaster.gain.setTargetAtTime(
+        gameMuted?0:1.08,
+        audioCtx.currentTime,
+        .018
+      );
+    }
+
+    syncMuteButton();
+  }
+
   let audioCtx = null;
   let dingBuffer = null;
   let dingLoadPromise = null;
@@ -329,7 +362,7 @@
 
     gemAudioDry.gain.value=.918;
     gemAudioWet.gain.value=.164;
-    gemAudioMaster.gain.value=1.08;
+    gemAudioMaster.gain.value=gameMuted?0:1.08;
 
     gemAudioDry.connect(gemAudioToneBus);
     gemAudioWet.connect(gemAudioConvolver);
@@ -536,7 +569,7 @@
   }
 
   function tone(freq,duration=.055,volume=.022,type='sine') {
-    if (!audioCtx) return;
+    if (!audioCtx||gameMuted) return;
     const osc=audioCtx.createOscillator();
     const gain=audioCtx.createGain();
     osc.type=type;
@@ -799,6 +832,11 @@
 
       $('homeButton').addEventListener('click',()=>this.returnToMenu());
       $('pauseButton').addEventListener('click',()=>this.setPaused(true));
+      $('muteButton').addEventListener('click',()=>{
+        unlockAudio();
+        setGameMuted(!gameMuted);
+      });
+      syncMuteButton();
       $('resumeButton').addEventListener('click',()=>this.setPaused(false));
 
       $('restartFromPause').addEventListener('click',()=>{
