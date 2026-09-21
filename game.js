@@ -12,7 +12,7 @@
   const DROP_Y = 72;
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
-  const DROP_DELAY = 300;
+  const DROP_DELAY = 340;
   const DANGER_GRACE = 2.4;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
@@ -2343,8 +2343,8 @@
           this.ready=true;
           this.createDropPreview(true);
         }else if(
-          time-this.lastDropAt>=90 &&
-          gate.body.bounds.min.y>LIMIT_Y+2
+          time-this.lastDropAt>=170 &&
+          gate.body.bounds.min.y>LIMIT_Y+12
         ){
           this.dropGateGem=null;
           this.ready=true;
