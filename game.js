@@ -1832,7 +1832,7 @@
 
         this.bestTierReached=Math.max(this.bestTierReached,next);
         this.addScore(tiers[next].score);
-        this.mergeBurst(x,y,tiers[next],next>=6||this.mergeChain>=3);
+        this.mergeBurst(x,y,tiers[next],next>=6);
 
         const label=this.mergeChain>=2
           ? this.mergeChain+'× CHAIN  +$'+tiers[next].score
