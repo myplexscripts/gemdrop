@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260920-hotfix3" />
+  <link rel="stylesheet" href="styles.css?v=20260920-mute1" />
 </head>
 <body>
   <main class="game-app" id="gameApp">
@@ -48,17 +48,15 @@
       <span class="frame-jewel frame-jewel--tr" aria-hidden="true"></span>
       <span class="frame-jewel frame-jewel--bl" aria-hidden="true"></span>
       <span class="frame-jewel frame-jewel--br" aria-hidden="true"></span>
-      <div class="next-chip" aria-label="Next gem">
-        <span>NEXT</span>
-        <canvas id="nextPreview" width="128" height="128" aria-hidden="true"></canvas>
-      </div>
       <div id="game" role="application" aria-label="Gem Drop jewel vault"></div>
     </section>
 
     <section id="aimStrip" class="aim-strip" aria-label="Gem drop control">
       <i data-lucide="chevron-left" aria-hidden="true"></i>
       <div class="aim-track" aria-hidden="true">
-        <span id="aimHandle" class="aim-handle" aria-hidden="true"></span>
+        <span id="aimHandle" class="aim-handle">
+          <canvas id="nextPreview" width="192" height="192" aria-hidden="true"></canvas>
+        </span>
       </div>
       <i data-lucide="chevron-right" aria-hidden="true"></i>
     </section>
@@ -149,8 +147,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-  <script src="reactive-gem-system.js?v=20260920-suika2"></script>
+  <script src="reactive-gem-system.js?v=20260920-mute1"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
-  <script src="game.js?v=20260920-hotfix3"></script>
+  <script src="game.js?v=20260920-mute1"></script>
 </body>
 </html>

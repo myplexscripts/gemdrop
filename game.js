@@ -12,8 +12,7 @@
   const DROP_Y = 72;
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
-  const DROP_DELAY = 340;
-  const DANGER_GRACE = 2.4;
+  const DROP_DELAY = 300;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
   const RENDER_SCALE = 2;
@@ -161,26 +160,26 @@
   // 20 progression tiers. Only these six authored cuts are reused;
   // progression beyond six is colour + size, never new gem geometry.
   const tiers = [
-    {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:54, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
-    {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:59, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
-    {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:64, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
-    {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:70, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
-    {name:'Peridot', cut:'Heart', cutKey:'princess', reactiveCut:'heart', r:76, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
-    {name:'Garnet', cut:'Tanzanite', cutKey:'radiant', reactiveCut:'tanzanite', r:83, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
-    {name:'Topaz', cut:'Rectangular', cutKey:'square', reactiveCut:'rectangular', r:90, score:30, color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
-    {name:'Moonstone', cut:'Circular Starcut', cutKey:'french', reactiveCut:'circular_starcut', r:98, score:40, color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
-    {name:'Zircon', cut:'Emerald Stepcut', cutKey:'oval', reactiveCut:'emerald_stepcut', r:106, score:52, color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
-    {name:'Morganite', cut:'Rectangular Brilliant', cutKey:'asscher', reactiveCut:'rectangular_brilliant', r:115, score:66, color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
-    {name:'Aquamarine', cut:'Heart', cutKey:'pear', reactiveCut:'heart', r:124, score:82, color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
-    {name:'Tourmaline', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:134, score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
-    {name:'Tanzanite', cut:'Rectangular', cutKey:'octagon', reactiveCut:'rectangular', r:144, score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
-    {name:'Spinel', cut:'Circular Starcut', cutKey:'rectangle', reactiveCut:'circular_starcut', r:155, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
-    {name:'Sapphire', cut:'Emerald Stepcut', cutKey:'step', reactiveCut:'emerald_stepcut', r:166, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
-    {name:'Emerald', cut:'Rectangular Brilliant', cutKey:'scissor', reactiveCut:'rectangular_brilliant', r:178, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
-    {name:'Ruby', cut:'Heart', cutKey:'pendeloque', reactiveCut:'heart', r:190, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
-    {name:'Alexandrite', cut:'Tanzanite', cutKey:'trapeze', reactiveCut:'tanzanite', r:203, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
-    {name:'Starstone', cut:'Rectangular', cutKey:'navette', reactiveCut:'rectangular', r:217, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
-    {name:'Crownstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:232, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
+    {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:48, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
+    {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:53, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
+    {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:58, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
+    {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:63, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
+    {name:'Peridot', cut:'Heart', cutKey:'princess', reactiveCut:'heart', r:69, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
+    {name:'Garnet', cut:'Tanzanite', cutKey:'radiant', reactiveCut:'tanzanite', r:75, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
+    {name:'Topaz', cut:'Rectangular', cutKey:'square', reactiveCut:'rectangular', r:81, score:30, color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
+    {name:'Moonstone', cut:'Circular Starcut', cutKey:'french', reactiveCut:'circular_starcut', r:88, score:40, color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
+    {name:'Zircon', cut:'Emerald Stepcut', cutKey:'oval', reactiveCut:'emerald_stepcut', r:95, score:52, color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
+    {name:'Morganite', cut:'Rectangular Brilliant', cutKey:'asscher', reactiveCut:'rectangular_brilliant', r:102, score:66, color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
+    {name:'Aquamarine', cut:'Heart', cutKey:'pear', reactiveCut:'heart', r:110, score:82, color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
+    {name:'Tourmaline', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:118, score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
+    {name:'Tanzanite', cut:'Rectangular', cutKey:'octagon', reactiveCut:'rectangular', r:127, score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
+    {name:'Spinel', cut:'Circular Starcut', cutKey:'rectangle', reactiveCut:'circular_starcut', r:136, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
+    {name:'Sapphire', cut:'Emerald Stepcut', cutKey:'step', reactiveCut:'emerald_stepcut', r:146, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
+    {name:'Emerald', cut:'Rectangular Brilliant', cutKey:'scissor', reactiveCut:'rectangular_brilliant', r:156, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
+    {name:'Ruby', cut:'Heart', cutKey:'pendeloque', reactiveCut:'heart', r:167, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
+    {name:'Alexandrite', cut:'Tanzanite', cutKey:'trapeze', reactiveCut:'tanzanite', r:179, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
+    {name:'Starstone', cut:'Rectangular', cutKey:'navette', reactiveCut:'rectangular', r:192, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
+    {name:'Crownstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:206, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
   function gemTextureKey(tier) {
@@ -375,72 +374,6 @@
 
   function gemNoteForTier(tier) {
     return GEM_NOTE_SET[Math.abs(tier)%GEM_NOTE_SET.length];
-  }
-
-  const MERGE_SCALE_STEPS=[0,2,4,7,9,12,14,16,19,21,24,26,28,31,33,36,38,40,43,48];
-
-  function playMergeTone(tier,chain=1,x=W/2) {
-    if(!audioCtx||!gemAudioMaster||audioCtx.state!=='running') return;
-
-    const index=clamp(tier,0,MERGE_SCALE_STEPS.length-1);
-    const hz=392*Math.pow(2,MERGE_SCALE_STEPS[index]/12);
-    const richness=index/(MERGE_SCALE_STEPS.length-1);
-    const t=audioCtx.currentTime;
-    const duration=.16+richness*.24;
-    const voice=audioCtx.createGain();
-    const pan=typeof audioCtx.createStereoPanner==='function'
-      ? audioCtx.createStereoPanner()
-      : null;
-
-    voice.gain.setValueAtTime(.0001,t);
-    voice.gain.exponentialRampToValueAtTime(.11+richness*.07,t+.006);
-    voice.gain.exponentialRampToValueAtTime(.0001,t+duration);
-
-    if(pan){
-      pan.pan.value=clamp((x/W)*2-1,-.64,.64);
-      voice.connect(pan);
-      pan.connect(gemAudioDry);
-      pan.connect(gemAudioWet);
-    }else{
-      voice.connect(gemAudioDry);
-      voice.connect(gemAudioWet);
-    }
-
-    const partials=[
-      {ratio:1,level:1},
-      {ratio:2,level:.30+richness*.18},
-      {ratio:1.5,level:richness>.28?.16+richness*.10:0},
-      {ratio:.5,level:richness>.66?.07+richness*.04:0}
-    ];
-
-    for(const partial of partials){
-      if(partial.level<=0) continue;
-      const osc=audioCtx.createOscillator();
-      const gain=audioCtx.createGain();
-      osc.type='sine';
-      osc.frequency.value=Math.max(90,hz*partial.ratio);
-      gain.gain.setValueAtTime(.0001,t);
-      gain.gain.exponentialRampToValueAtTime(.11*partial.level,t+.005);
-      gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
-      osc.connect(gain);
-      gain.connect(voice);
-      osc.start(t);
-      osc.stop(t+duration+.03);
-    }
-
-    if(chain>=2){
-      const chime=audioCtx.createOscillator();
-      const chimeGain=audioCtx.createGain();
-      chime.type='sine';
-      chime.frequency.value=hz*2;
-      chimeGain.gain.setValueAtTime(.0001,t);
-      chimeGain.gain.exponentialRampToValueAtTime(.018+Math.min(chain,6)*.003,t+.012);
-      chimeGain.gain.exponentialRampToValueAtTime(.0001,t+.11);
-      chime.connect(chimeGain);
-      chimeGain.connect(gemAudioWet);
-      chime.start(t);
-      chime.stop(t+.14);
-    }
   }
 
   function playbackRateForSemitones(semitones) {
@@ -699,14 +632,12 @@
     '  material=mix(material,uAccentColor,high*.72);',
     '  vec3 viewDir=vec3(0.0,0.0,1.0);',
     '  vec3 reflected=reflect(-lightDir,normal);',
-    '  float spec=pow(max(dot(reflected,viewDir),0.0),mix(15.0,13.0,uStepCut));',
-    '  float caustic=pow(transmission,mix(2.7,2.45,uStepCut))*.24;',
-    '  float shimmerWave=max(0.0,sin(uTime*.92+style*18.0+normal.x*7.0-normal.y*5.0));',
-    '  float shimmer=pow(shimmerWave,18.0)*(.05+diffuse*.13);',
-    '  float flash=clamp(spec*1.42+caustic+diffuse*.045+shimmer,0.0,mix(.46,.38,uStepCut));',
+    '  float spec=pow(max(dot(reflected,viewDir),0.0),mix(18.0,16.0,uStepCut));',
+    '  float caustic=pow(transmission,mix(3.0,2.8,uStepCut))*.18;',
+    '  float flash=clamp(spec*1.15+caustic+diffuse*.03,0.0,mix(.34,.28,uStepCut));',
     '  vec3 color=material;',
-    '  color=mix(color,uAccentColor,flash*.82);',
-    '  color+=uAccentColor*flash*.46;',
+    '  color=mix(color,uAccentColor,flash*.72);',
+    '  color+=uAccentColor*flash*.34;',
     '  color*=.92+style*.16;',
     '  gl_FragColor=vec4(color,src.a);',
     '}'
@@ -727,29 +658,13 @@
       this.set3f('uGemColor',d.gemColor[0],d.gemColor[1],d.gemColor[2]);
       this.set3f('uDeepColor',d.deepColor[0],d.deepColor[1],d.deepColor[2]);
       this.set3f('uAccentColor',d.accentColor[0],d.accentColor[1],d.accentColor[2]);
-      const lightTime=this.game.loop.time*.001;
-      const lightSway=Math.sin(lightTime*.42)*.11+Math.sin(lightTime*.17)*.045;
-      this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE+lightSway-(gameObject.rotation||0));
-      this.set1f('uTime',lightTime);
+      this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE-(gameObject.rotation||0));
+      this.set1f('uTime',this.game.loop.time*.001);
       this.set1f('uStepCut',d.stepCut?1:0);
     }
 
     onBatch(gameObject) {
-      if(!gameObject) return;
-      this.flush();
-
-      const d=gameObject.pipelineData;
-      if(!d) return;
-
-      const lightTime=this.game.loop.time*.001;
-      const lightSway=Math.sin(lightTime*.42)*.11+Math.sin(lightTime*.17)*.045;
-
-      this.set3f('uGemColor',d.gemColor[0],d.gemColor[1],d.gemColor[2]);
-      this.set3f('uDeepColor',d.deepColor[0],d.deepColor[1],d.deepColor[2]);
-      this.set3f('uAccentColor',d.accentColor[0],d.accentColor[1],d.accentColor[2]);
-      this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE+lightSway-(gameObject.rotation||0));
-      this.set1f('uTime',lightTime);
-      this.set1f('uStepCut',d.stepCut?1:0);
+      if(gameObject) this.flush();
     }
   }
   class GameScene extends Phaser.Scene {
@@ -774,7 +689,6 @@
       this.dangerTime=0;
       this.mergeWindow=0;
       this.mergeChain=0;
-      this.nextMergeAt=0;
       this.discoveredCuts=new Set([0]);
       this.unlockedTiers=new Set([0]);
       this.limitLine=null;
@@ -813,9 +727,9 @@
       this.matter.set60Hz();
 
       const engine=this.matter.world.engine;
-      engine.positionIterations=14;
-      engine.velocityIterations=10;
-      engine.constraintIterations=3;
+      engine.positionIterations=10;
+      engine.velocityIterations=8;
+      engine.constraintIterations=2;
       engine.gravity.x=0;
       engine.gravity.y=this.baseGravityY;
       engine.gravity.scale=.001;
@@ -843,7 +757,6 @@
       ];
 
       this.aimStrip=$('aimStrip');
-      this.aimTrack=this.aimStrip.querySelector('.aim-track');
       this.aimHandle=$('aimHandle');
 
       this.best=this.loadBest();
@@ -953,7 +866,7 @@
       });
 
       const aimFromEvent=e=>{
-        const rect=(this.aimTrack||this.aimStrip).getBoundingClientRect();
+        const rect=this.aimStrip.getBoundingClientRect();
         const u=clamp((e.clientX-rect.left)/rect.width,0,1);
         const t=tiers[this.currentTier];
         const min=WALL+t.r*COLLIDER_SCALE;
@@ -1053,7 +966,7 @@
       const firstR=tiers[0].r;
       const lastR=tiers[tiers.length-1].r;
       const sizeT=clamp((t.r-firstR)/(lastR-firstR),0,1);
-      const cavityRadius=68+sizeT*32;
+      const cavityRadius=58+sizeT*10;
       const exact=window.ReactiveGemSystem
         ? window.ReactiveGemSystem.collisionShape(t.reactiveCut,cavityRadius)
         : null;
@@ -1117,7 +1030,7 @@
           0,
           256
         );
-        const max=cavityRadius*1.90;
+        const max=cavityRadius*1.78;
         const scale=Math.min(max/source.width,max/source.height);
         const gw=source.width*scale;
         const gh=source.height*scale;
@@ -1359,7 +1272,7 @@
       gem.glintOffsetX=0;
       gem.glintOffsetY=0;
       gem.glintBaseScale=.12;
-      gem.nextGlintAt=this.time.now+Phaser.Math.Between(650,2600);
+      gem.nextGlintAt=this.time.now+Phaser.Math.Between(900,4200);
     }
 
     syncGemOptics(gem,time) {
@@ -1374,15 +1287,15 @@
         }
 
         const t=tiers[gem.tier];
-        const lightAngle=GEM_WORLD_LIGHT_ANGLE+Phaser.Math.FloatBetween(-.24,.24);
-        const radius=t.r*Phaser.Math.FloatBetween(.12,.32);
+        const angle=Phaser.Math.FloatBetween(0,Math.PI*2);
+        const radius=t.r*Phaser.Math.FloatBetween(.08,.28);
 
-        gem.glintOffsetX=Math.cos(lightAngle)*radius;
-        gem.glintOffsetY=Math.sin(lightAngle)*radius;
-        gem.glintDuration=Phaser.Math.Between(260,420);
+        gem.glintOffsetX=Math.cos(angle)*radius;
+        gem.glintOffsetY=Math.sin(angle)*radius;
+        gem.glintDuration=Phaser.Math.Between(280,440);
         gem.glintStartedAt=time;
-        gem.glintBaseScale=Phaser.Math.FloatBetween(.115,.17)*
-          (1+Math.min(.32,gem.tier*.013));
+        gem.glintBaseScale=Phaser.Math.FloatBetween(.105,.155)*
+          (1+Math.min(.30,gem.tier*.012));
         gem.glintActive=true;
         this.activeGemGlints++;
       }
@@ -1402,19 +1315,21 @@
         gem.glintActive=false;
         glint.setAlpha(0);
         this.activeGemGlints=Math.max(0,this.activeGemGlints-1);
-        gem.nextGlintAt=time+Phaser.Math.Between(1500,5200);
+        gem.nextGlintAt=time+Phaser.Math.Between(1800,6200);
         return;
       }
 
-      const x=gem.glintOffsetX;
-      const y=gem.glintOffsetY;
+      const cos=Math.cos(gem.rotation);
+      const sin=Math.sin(gem.rotation);
+      const x=gem.glintOffsetX*cos-gem.glintOffsetY*sin;
+      const y=gem.glintOffsetX*sin+gem.glintOffsetY*cos;
       const pulse=Math.sin(Math.PI*p);
 
       glint.x=gem.x+x;
       glint.y=gem.y+y;
-      glint.rotation=-GEM_WORLD_LIGHT_ANGLE*.18;
+      glint.rotation=-gem.rotation*.18;
       glint.setScale(gem.glintBaseScale*(.72+pulse*.48));
-      glint.setAlpha(pulse*.38);
+      glint.setAlpha(pulse*.34);
     }
 
     drawVaultBackdrop() {
@@ -1426,7 +1341,7 @@
 
       const sparkleColors=[0xffc65b,0xf36ac8,0xa46cff,0xffffff];
 
-      for(let i=0;i<24;i++){
+      for(let i=0;i<28;i++){
         const x=(i*173.7)%W;
         const y=(i*109.3)%H;
         const s=this.add.circle(
@@ -1437,15 +1352,15 @@
           .16
         ).setDepth(1);
 
-        const driftX=Phaser.Math.FloatBetween(-30,30);
-        const driftY=Phaser.Math.FloatBetween(-30,30);
+        const driftX=Phaser.Math.Between(-18,18);
+        const driftY=Phaser.Math.Between(-18,18);
 
         this.tweens.add({
           targets:s,
           x:x+driftX,
           y:y+driftY,
           alpha:{from:.05,to:.24},
-          duration:Phaser.Math.Between(2200,4600),
+          duration:1800+(i%5)*260,
           yoyo:true,
           repeat:-1,
           ease:'Sine.inOut',
@@ -1478,7 +1393,6 @@
       this.dangerTime=0;
       this.mergeWindow=0;
       this.mergeChain=0;
-      this.nextMergeAt=0;
       this.discoveredCuts=new Set(this.unlockedTiers);
       this.powerCharge={tumble:1,cascade:1,prism:1};
 
@@ -1559,17 +1473,14 @@
         t.r*COLLIDER_SCALE
       );
 
-      const tierWeight=tier/(tiers.length-1);
-      const gemDensity=.00112+tierWeight*.00078;
-      const gemAir=.0036+tierWeight*.0017;
       const bodyOptions={
-        restitution:.004,
-        friction:.026,
-        frictionStatic:.018,
-        frictionAir:gemAir,
-        density:gemDensity,
-        sleepThreshold:52,
-        slop:.014
+        restitution:.006,
+        friction:.032,
+        frictionStatic:.022,
+        frictionAir:.0028,
+        density:.0012,
+        sleepThreshold:0,
+        slop:.018
       };
 
       if(exactShape&&exactShape.type==='circle'){
@@ -1587,10 +1498,10 @@
         gem.setBody({type:'fromVertices',verts:cutVerts},bodyOptions);
       }
 
-      gem.setBounce(.004);
-      gem.setFriction(.026,gemAir,.018);
-      gem.setDensity(gemDensity);
-      gem.setSleepThreshold(52);
+      gem.setBounce(.006);
+      gem.setFriction(.032,.0028,.022);
+      gem.setDensity(.0012);
+      gem.setSleepThreshold(0);
 
       // Real gems are never released with mathematically perfect balance.
       let releaseAngle=Phaser.Math.FloatBetween(-7.5,7.5);
@@ -1659,7 +1570,7 @@
       const t=tiers[this.currentTier];
       const min=WALL+t.r*COLLIDER_SCALE;
       const max=W-WALL-t.r*COLLIDER_SCALE;
-      const x=clamp(this.targetX,min,max);
+      const x=clamp(this.preview?this.preview.x:this.targetX,min,max);
 
       if(this.preview){
         this.preview.destroy();
@@ -1771,10 +1682,10 @@
           const gapX=Math.max(0,Math.max(A.min.x-B.max.x,B.min.x-A.max.x));
           const gapY=Math.max(0,Math.max(A.min.y-B.max.y,B.min.y-A.max.y));
 
-          if(gapX>4||gapY>4) continue;
+          if(gapX>2.5||gapY>2.5) continue;
 
           const distance=Phaser.Math.Distance.Between(a.x,a.y,b.x,b.y);
-          const maxDistance=(tiers[a.tier].r*COLLIDER_SCALE)*2.17;
+          const maxDistance=(tiers[a.tier].r*COLLIDER_SCALE)*2.12;
 
           if(distance<=maxDistance){
             this.queueMerge(a,b);
@@ -1819,7 +1730,7 @@
           this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',21);
           this.showStatus('MASTER CUT +$'+masterValue,'reward',1450,'gem',tier);
           this.cameras.main.shake(100,.0038);
-          playMergeTone(tier,Math.max(4,this.mergeChain),x);
+          tone(760,.15,.042,'sine');
           haptic([14,17,22]);
           if(gateInMerge) this.dropGateGem=null;
           continue;
@@ -1841,7 +1752,7 @@
         this.floatText(x,y-8,label,'#ffe7c5',this.mergeChain>=2?20:17);
 
         this.cameras.main.shake(70,next>=7?.0028:.0015);
-        playMergeTone(next,this.mergeChain,x);
+        tone(270+next*43,.07+next*.004,.022+Math.min(.017,next*.0018),'sine');
         haptic(next>=8?15:8);
 
         if(!this.unlockedTiers.has(next)){
@@ -1882,22 +1793,7 @@
         });
       }
 
-      const flash=this.add.image(x,y,'gem-sparkle')
-        .setDepth(41)
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setAlpha(big?.92:.76)
-        .setScale(big?.34:.24);
-
-      this.tweens.add({
-        targets:flash,
-        alpha:0,
-        scale:big?.82:.58,
-        duration:big?260:210,
-        ease:'Quad.Out',
-        onComplete:()=>flash.destroy()
-      });
-
-      const ring=this.add.circle(x,y,14,color,.08).setStrokeStyle(big?3:2,color,.68).setDepth(39);
+      const ring=this.add.circle(x,y,14,color,.08).setStrokeStyle(2,color,.68).setDepth(39);
 
       this.tweens.add({
         targets:ring,
@@ -2043,9 +1939,9 @@
 
     rechargePowers(amount=1) {
       const gains={
-        tumble:.16,
-        prism:.105,
-        cascade:.072
+        tumble:.18,
+        prism:.125,
+        cascade:.09
       };
 
       for(const key of Object.keys(gains)){
@@ -2335,8 +2231,8 @@
           this.ready=true;
           this.createDropPreview(true);
         }else if(
-          time-this.lastDropAt>=170 &&
-          gate.body.bounds.min.y>LIMIT_Y+12
+          time-this.lastDropAt>=90 &&
+          gate.body.bounds.min.y>LIMIT_Y+2
         ){
           this.dropGateGem=null;
           this.ready=true;
@@ -2360,7 +2256,7 @@
           this.preview.x=Phaser.Math.Linear(
             this.preview.x,
             target,
-            this.pointerHeld?.70:.48
+            this.pointerHeld?.48:.30
           );
         }
 
@@ -2371,6 +2267,10 @@
 
           this.syncGemOptics(gem,time);
           this.syncGemShadow(gem);
+
+          if(gem.body.isSleeping){
+            Phaser.Physics.Matter.Matter.Sleeping.set(gem.body,false);
+          }
 
           if(
             time-gem.born>800 &&
@@ -2385,12 +2285,12 @@
         else this.dangerTime=Math.max(0,this.dangerTime-dt*3.8);
 
         if(this.dangerTime>=.18){
-          if(this.statusKind!=='danger') this.showStatus('DANGER · CLEAR THE SEAL','danger',0,'triangle-alert');
+          if(this.statusKind!=='danger') this.showStatus('TOO HIGH','danger',0,'triangle-alert');
         }else if(this.statusKind==='danger'){
           this.clearStatus();
         }
 
-        if(this.dangerTime>=DANGER_GRACE) this.endGame();
+        if(this.dangerTime>=1.75) this.endGame();
       }
 
       this.drawLimitLine(time);
@@ -2399,12 +2299,11 @@
 
     drawLimitLine(time) {
       const active=this.dangerTime>.08;
-      const progress=clamp(this.dangerTime/DANGER_GRACE,0,1);
-      const pulse=.60+.20*Math.sin(time*(.009+progress*.008));
+      const pulse=.60+.20*Math.sin(time*.009);
       const color=active?0xff5d86:0xffca58;
 
       this.limitLine.clear();
-      this.limitLine.lineStyle(active?2.4+progress*1.8:2,color,active?Math.min(.98,pulse+progress*.18):.72);
+      this.limitLine.lineStyle(active?3:2,color,active?pulse:.72);
       this.limitLine.beginPath();
       this.limitLine.moveTo(WALL+18+LIMIT_OPTICAL_X,LIMIT_Y);
       this.limitLine.lineTo(W-WALL-18+LIMIT_OPTICAL_X,LIMIT_Y);
@@ -2468,7 +2367,7 @@
       default:'matter',
       matter:{
         gravity:{x:0,y:1},
-        enableSleeping:true,
+        enableSleeping:false,
         runner:{
           fps:60,
           maxUpdates:5,
