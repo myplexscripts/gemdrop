@@ -13,6 +13,7 @@
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
   const DROP_DELAY = 300;
+  const DANGER_GRACE = 2.4;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
   const RENDER_SCALE = 2;
@@ -2393,12 +2394,12 @@
         else this.dangerTime=Math.max(0,this.dangerTime-dt*3.8);
 
         if(this.dangerTime>=.18){
-          if(this.statusKind!=='danger') this.showStatus('TOO HIGH','danger',0,'triangle-alert');
+          if(this.statusKind!=='danger') this.showStatus('DANGER · CLEAR THE SEAL','danger',0,'triangle-alert');
         }else if(this.statusKind==='danger'){
           this.clearStatus();
         }
 
-        if(this.dangerTime>=1.75) this.endGame();
+        if(this.dangerTime>=DANGER_GRACE) this.endGame();
       }
 
       this.drawLimitLine(time);
