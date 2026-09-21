@@ -161,11 +161,11 @@
   // progression beyond six is colour + size, never new gem geometry.
   const tiers = [
     {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:54, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
-    {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:53, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
-    {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:58, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
-    {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:63, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
-    {name:'Peridot', cut:'Heart', cutKey:'princess', reactiveCut:'heart', r:69, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
-    {name:'Garnet', cut:'Tanzanite', cutKey:'radiant', reactiveCut:'tanzanite', r:75, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
+    {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:59, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
+    {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:64, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
+    {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:70, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
+    {name:'Peridot', cut:'Heart', cutKey:'princess', reactiveCut:'heart', r:76, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
+    {name:'Garnet', cut:'Tanzanite', cutKey:'radiant', reactiveCut:'tanzanite', r:83, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
     {name:'Topaz', cut:'Rectangular', cutKey:'square', reactiveCut:'rectangular', r:81, score:30, color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
     {name:'Moonstone', cut:'Circular Starcut', cutKey:'french', reactiveCut:'circular_starcut', r:88, score:40, color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
     {name:'Zircon', cut:'Emerald Stepcut', cutKey:'oval', reactiveCut:'emerald_stepcut', r:95, score:52, color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
