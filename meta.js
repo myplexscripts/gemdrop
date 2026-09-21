@@ -279,30 +279,30 @@
   }
 
   const TREASURE_ART_FILES={
-    'sun-brooch':'assets/treasures/02_sun-brooch.svg',
-    'heart-pendant':'assets/treasures/03_heart-pendant.svg',
-    'signet-ring':'assets/treasures/04_signet-ring.svg',
-    'moon-necklace':'assets/treasures/05_moon-necklace.svg',
-    'ceremonial-goblet':'assets/treasures/06_ceremonial-goblet.svg',
-    'ornate-chalice':'assets/treasures/07_ornate-chalice.svg',
-    'moon-tiara':'assets/treasures/08_moon-tiara.svg',
-    'crown-reliquary':'assets/treasures/09_crown-reliquary.svg',
-    'sovereign-crown':'assets/treasures/10_sovereign-crown.svg',
-    'star-sceptre':'assets/treasures/11_star-sceptre.svg'
+    'sun-brooch':'assets/treasures/sun-brooch.png',
+    'heart-pendant':'assets/treasures/heart-pendant.png',
+    'signet-ring':'assets/treasures/signet-ring.png',
+    'moon-necklace':'assets/treasures/moon-necklace.png',
+    'ceremonial-goblet':'assets/treasures/ceremonial-goblet.png',
+    'ornate-chalice':'assets/treasures/ornate-chalice.png',
+    'moon-tiara':'assets/treasures/moon-tiara.png',
+    'crown-reliquary':'assets/treasures/crown-reliquary.png',
+    'sovereign-crown':'assets/treasures/sovereign-crown.png',
+    'star-sceptre':'assets/treasures/star-sceptre.png'
   };
 
   function treasureSVG(treasure,silhouette=false){
     if(!silhouette){
       if(treasure.id==='silver-ring'){
         return '<svg viewBox="0 0 320 260" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
-          '<image href="assets/treasures/silver-ring.png?v=20260921-treasureart2" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+          '<image href="assets/treasures/silver-ring.png?v=20260921-pngart1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
         '</svg>';
       }
 
       const artFile=TREASURE_ART_FILES[treasure.id];
       if(artFile){
         return '<svg viewBox="0 0 320 260" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
-          '<image href="'+artFile+'?v=20260921-treasureart3" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+          '<image href="'+artFile+'?v=20260921-pngart1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
         '</svg>';
       }
     }
