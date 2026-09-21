@@ -167,6 +167,10 @@
       return {name:'Perfect Match',multiplier:2.0,hidden:false,id:'perfect-match'};
     }
 
+    if(inlays.length>=4&&inlays.every(v=>v<=4)){
+      return {name:'Pavé Setting',multiplier:1.55,hidden:false,id:'pave'};
+    }
+
     const families=inlays.map(v=>FAMILY[v]);
     if(families.every(v=>v===families[0])&&inlays.length>1){
       return {name:'Colour Harmony',multiplier:1.65,hidden:false,id:'harmony'};
