@@ -68,6 +68,7 @@
       discoveredTreasures:[],
       treasures:[],
       comboDiscoveries:[],
+      treasureRecords:{},
       gold:0,
       lifetimeTreasureSales:0,
       ownedThemes:['velvet'],
@@ -86,6 +87,7 @@
     if(!Array.isArray(base.discoveredTreasures)) base.discoveredTreasures=[];
     if(!Array.isArray(base.treasures)) base.treasures=[];
     if(!Array.isArray(base.comboDiscoveries)) base.comboDiscoveries=[];
+    if(!base.treasureRecords||typeof base.treasureRecords!=='object') base.treasureRecords={};
     if(!Array.isArray(base.ownedThemes)) base.ownedThemes=['velvet'];
     if(!base.ownedThemes.includes('velvet')) base.ownedThemes.unshift('velvet');
     try{
@@ -392,7 +394,7 @@
         '<strong>'+(discovered?treasure.name:'Undiscovered')+'</strong>'+
         '<span class="treasure-card__rarity">'+(discovered?treasure.rarity:'???')+'</span>'+
         '<span class="treasure-card__count">'+(discovered?'×'+copies.length:'')+'</span>'+
-        (completed?'<span class="treasure-card__complete">'+completed+' finished</span>':'')+
+        (completed?'<span class="treasure-card__complete">'+completed+' finished'+(state.treasureRecords[treasure.id]?' · best '+money(state.treasureRecords[treasure.id]):'')+'</span>':'')+
       '</div>';
     if(copies.length) button.addEventListener('click',()=>openTreasureDetail(treasure.id));
     return button;
@@ -640,6 +642,7 @@
     copy.finalValue=calc.total;
     copy.comboId=calc.combo.id;
     copy.completedAt=Date.now();
+    state.treasureRecords[treasure.id]=Math.max(state.treasureRecords[treasure.id]||0,calc.total);
     if(calc.combo.id!=='none'&&!state.comboDiscoveries.includes(calc.combo.id)){
       state.comboDiscoveries.push(calc.combo.id);
     }
