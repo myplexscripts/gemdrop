@@ -3182,3 +3182,20 @@ body[data-vault-theme="goldsmith"] .game-app{
 .treasure-copy-nav[hidden]{
   display:none!important;
 }
+
+
+.gem-picker-empty{
+  grid-column:1/-1;
+  min-height:140px;
+  padding:26px 22px;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  color:#aa95af;
+  font-size:13px;
+  font-weight:750;
+  line-height:1.45;
+  border-radius:18px;
+  border:1px dashed rgba(255,226,181,.10);
+  background:rgba(255,255,255,.022);
+}
