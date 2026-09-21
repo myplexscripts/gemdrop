@@ -1767,8 +1767,10 @@
 
     processMerges() {
       if(!this.pendingMerges.length) return;
+      if(this.time.now<this.nextMergeAt) return;
 
-      const queue=this.pendingMerges.splice(0);
+      const queue=[this.pendingMerges.shift()];
+      this.nextMergeAt=this.time.now+(this.mergeChain>0?72:0);
 
       for(const pair of queue){
         const a=pair[0];
