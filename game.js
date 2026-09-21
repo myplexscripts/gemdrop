@@ -10,7 +10,7 @@
   const WALL = 16;
   const FLOOR = 880;
   const DROP_Y = 72;
-  const LIMIT_Y = 146;
+  const LIMIT_Y = 158;
   const DROP_DELAY = 300;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
@@ -1298,25 +1298,33 @@
       bg.fillStyle(0x15091c,.20);
       bg.fillRect(0,0,W,H);
 
-      bg.fillStyle(0x552063,.045);
-      bg.fillEllipse(W*.5,H*.72,W*.82,H*.40);
-
       const rails=this.add.graphics().setDepth(18);
 
       rails.fillGradientStyle(0xffed9e,0xffbd3f,0xb13f61,0x6a1f52,.24);
       rails.fillRect(FRAME_WALL,FRAME_FLOOR,W-FRAME_WALL*2,8);
 
-      const sparkleColors=[0xffc65b,0xf36ac8,0xa46cff];
+      const sparkleColors=[0xffc65b,0xf36ac8,0xa46cff,0xffffff];
+
       for(let i=0;i<28;i++){
         const x=(i*173.7)%W;
         const y=(i*109.3)%H;
-        const s=this.add.circle(x,y,.75+(i%3)*.24,sparkleColors[i%3],.18).setDepth(1);
+        const s=this.add.circle(
+          x,
+          y,
+          .75+(i%3)*.24,
+          sparkleColors[i%sparkleColors.length],
+          .16
+        ).setDepth(1);
+
+        const driftX=Phaser.Math.Between(-18,18);
+        const driftY=Phaser.Math.Between(-18,18);
 
         this.tweens.add({
           targets:s,
-          alpha:{from:.06,to:.28},
-          y:y-4-(i%4),
-          duration:1500+(i%5)*220,
+          x:x+driftX,
+          y:y+driftY,
+          alpha:{from:.05,to:.24},
+          duration:1800+(i%5)*260,
           yoyo:true,
           repeat:-1,
           ease:'Sine.inOut',
