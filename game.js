@@ -9,7 +9,7 @@
   const FRAME_FLOOR = 900;
   const WALL = 16;
   const FLOOR = 880;
-  const DROP_Y = 72;
+  const DROP_Y = 104;
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
   const DROP_DELAY = 300;
@@ -807,7 +807,7 @@
     createGemMask() {
       this.gemMaskShape=this.make.graphics({x:0,y:0,add:false});
       this.gemMaskShape.fillStyle(0xffffff,1);
-      this.gemMaskShape.fillRect(WALL,16,W-WALL*2,FRAME_FLOOR+20);
+      this.gemMaskShape.fillRect(WALL,0,W-WALL*2,FRAME_FLOOR+36);
       this.gemMask=this.gemMaskShape.createGeometryMask();
     }
 
@@ -831,7 +831,6 @@
       });
 
       $('homeButton').addEventListener('click',()=>this.returnToMenu());
-      $('pauseButton').addEventListener('click',()=>this.setPaused(true));
       $('muteButton').addEventListener('click',()=>{
         unlockAudio();
         setGameMuted(!gameMuted);
