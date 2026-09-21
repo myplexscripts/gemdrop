@@ -2282,15 +2282,68 @@ body{
 }
 
 /* === GEM FRAME FIT + CLEAN BACKGROUND 2026-09-20 === */
-.game-app::before{
-  animation:none!important;
+.game-app{
+  background:
+    linear-gradient(
+      180deg,
+      #250b3d 0%,
+      #1d092f 42%,
+      #170724 72%,
+      #110619 100%
+    )!important;
 }
 
+/* The global dust field now wanders in several directions instead of scrolling upward. */
+.game-app::before{
+  opacity:.66!important;
+  animation:gemDustWander 24s ease-in-out infinite alternate!important;
+  will-change:background-position;
+}
+
+@keyframes gemDustWander{
+  0%{
+    background-position:
+      17px 29px,
+      73px 11px,
+      29px 97px,
+      143px 61px;
+  }
+  25%{
+    background-position:
+      37px 12px,
+      52px 31px,
+      46px 75px,
+      121px 88px;
+  }
+  50%{
+    background-position:
+      8px 42px,
+      88px 23px,
+      15px 119px,
+      158px 45px;
+  }
+  75%{
+    background-position:
+      31px 55px,
+      61px -4px,
+      55px 89px,
+      126px 72px;
+  }
+  100%{
+    background-position:
+      5px 18px,
+      96px 39px,
+      22px 67px,
+      166px 93px;
+  }
+}
+
+/* Keep the interactive UI visibly inside the crystal opening. */
 .hud,
 .aim-strip,
 .power-dock{
-  width:78%!important;
-  max-width:440px!important;
+  width:76%!important;
+  max-width:426px!important;
   margin-left:auto!important;
   margin-right:auto!important;
 }
@@ -2309,19 +2362,20 @@ body{
   border-radius:0!important;
   box-shadow:none!important;
 }
-
 .play-shell::before,
 .play-shell::after{
   display:none!important;
 }
-
 #game,
 #game canvas{
   border-radius:0!important;
+  background:transparent!important;
 }
 
+/* Do not create lighter/darker bands behind the score or controls. */
 .status-hud,
-.status-hud.show{
+.status-hud.show,
+.power-dock{
   background:transparent!important;
   box-shadow:none!important;
 }
@@ -2331,29 +2385,27 @@ body{
   min-height:64px!important;
   max-height:64px!important;
   margin-top:2px!important;
-  padding:6px 10px!important;
+  padding:6px 8px!important;
 }
-
 .aim-strip::before{
-  background:transparent!important;
-  border:0!important;
+  background:rgba(31,8,43,.30)!important;
+  border:1px solid rgba(255,205,104,.14)!important;
   box-shadow:none!important;
 }
 
 .power-dock{
   min-height:68px!important;
   padding-top:0!important;
-  background:transparent!important;
 }
 
 @media(max-width:420px){
   .hud,
   .aim-strip,
   .power-dock{
-    width:80%!important;
+    width:76%!important;
   }
-
   .play-shell{
     width:90%!important;
   }
 }
+
