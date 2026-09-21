@@ -613,6 +613,8 @@
     $('treasureTotalValue').textContent=money(calc.total);
     $('treasureCopyStatus').textContent=calc.full?'Complete · keep it or sell it':'Tap a setting to choose a gem';
 
+    const copyNav=document.querySelector('.treasure-copy-nav');
+    if(copyNav) copyNav.hidden=copies.length<2;
     $('treasurePrevCopy').disabled=copies.length<2;
     $('treasureNextCopy').disabled=copies.length<2;
 
@@ -692,10 +694,12 @@
     $('gemPickerTitle').textContent='Choose a '+CUT_LABELS[socket.cut]+' gem';
     root.innerHTML='';
 
+    let choices=0;
     GEMS.forEach((gem,tier)=>{
       if(gem.cut!==socket.cut) return;
       const available=availableGemCount(tier,currentTier);
       if(available<=0&&currentTier!==tier) return;
+      choices++;
 
       const button=document.createElement('button');
       button.type='button';
@@ -718,6 +722,13 @@
       button.addEventListener('click',()=>chooseGem(tier));
       root.appendChild(button);
     });
+
+    if(!choices){
+      const empty=document.createElement('div');
+      empty.className='gem-picker-empty';
+      empty.textContent='No '+CUT_LABELS[socket.cut].toLowerCase()+' gems in your collection yet.';
+      root.appendChild(empty);
+    }
 
     $('removeInlayButton').hidden=!Number.isInteger(currentTier);
   }
