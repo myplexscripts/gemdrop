@@ -735,7 +735,21 @@
     }
 
     onBatch(gameObject) {
-      if(gameObject) this.flush();
+      if(!gameObject) return;
+      this.flush();
+
+      const d=gameObject.pipelineData;
+      if(!d) return;
+
+      const lightTime=this.game.loop.time*.001;
+      const lightSway=Math.sin(lightTime*.42)*.11+Math.sin(lightTime*.17)*.045;
+
+      this.set3f('uGemColor',d.gemColor[0],d.gemColor[1],d.gemColor[2]);
+      this.set3f('uDeepColor',d.deepColor[0],d.deepColor[1],d.deepColor[2]);
+      this.set3f('uAccentColor',d.accentColor[0],d.accentColor[1],d.accentColor[2]);
+      this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE+lightSway-(gameObject.rotation||0));
+      this.set1f('uTime',lightTime);
+      this.set1f('uStepCut',d.stepCut?1:0);
     }
   }
   class GameScene extends Phaser.Scene {
