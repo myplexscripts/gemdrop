@@ -2409,3 +2409,44 @@ body{
   }
 }
 
+
+
+/* === GAME MUTE CONTROL 2026-09-20 === */
+.hud-button--mute{
+  position:relative;
+}
+.hud-button--mute .mute-icon{
+  position:absolute;
+  inset:50% auto auto 50%;
+  transform:translate(-50%,-50%);
+}
+.hud-button--mute .mute-icon--muted{
+  display:none;
+}
+.hud-button--mute[aria-pressed="true"] .mute-icon--sound{
+  display:none;
+}
+.hud-button--mute[aria-pressed="true"] .mute-icon--muted{
+  display:block;
+}
+.hud-button--mute[aria-pressed="true"]{
+  background:
+    linear-gradient(180deg,rgba(83,29,91,.88),rgba(43,15,52,.94))!important;
+}
+@media(max-width:420px){
+  .hud-controls{
+    gap:6px!important;
+  }
+  .hud-controls .hud-button{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+    min-height:42px!important;
+    border-radius:14px!important;
+  }
+  .hud-controls .hud-button svg{
+    width:21px!important;
+    height:21px!important;
+  }
+}
+
