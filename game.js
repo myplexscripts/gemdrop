@@ -699,12 +699,14 @@
     '  material=mix(material,uAccentColor,high*.72);',
     '  vec3 viewDir=vec3(0.0,0.0,1.0);',
     '  vec3 reflected=reflect(-lightDir,normal);',
-    '  float spec=pow(max(dot(reflected,viewDir),0.0),mix(18.0,16.0,uStepCut));',
-    '  float caustic=pow(transmission,mix(3.0,2.8,uStepCut))*.18;',
-    '  float flash=clamp(spec*1.15+caustic+diffuse*.03,0.0,mix(.34,.28,uStepCut));',
+    '  float spec=pow(max(dot(reflected,viewDir),0.0),mix(15.0,13.0,uStepCut));',
+    '  float caustic=pow(transmission,mix(2.7,2.45,uStepCut))*.24;',
+    '  float shimmerWave=max(0.0,sin(uTime*.92+style*18.0+normal.x*7.0-normal.y*5.0));',
+    '  float shimmer=pow(shimmerWave,18.0)*(.05+diffuse*.13);',
+    '  float flash=clamp(spec*1.42+caustic+diffuse*.045+shimmer,0.0,mix(.46,.38,uStepCut));',
     '  vec3 color=material;',
-    '  color=mix(color,uAccentColor,flash*.72);',
-    '  color+=uAccentColor*flash*.34;',
+    '  color=mix(color,uAccentColor,flash*.82);',
+    '  color+=uAccentColor*flash*.46;',
     '  color*=.92+style*.16;',
     '  gl_FragColor=vec4(color,src.a);',
     '}'
@@ -725,8 +727,10 @@
       this.set3f('uGemColor',d.gemColor[0],d.gemColor[1],d.gemColor[2]);
       this.set3f('uDeepColor',d.deepColor[0],d.deepColor[1],d.deepColor[2]);
       this.set3f('uAccentColor',d.accentColor[0],d.accentColor[1],d.accentColor[2]);
-      this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE-(gameObject.rotation||0));
-      this.set1f('uTime',this.game.loop.time*.001);
+      const lightTime=this.game.loop.time*.001;
+      const lightSway=Math.sin(lightTime*.42)*.11+Math.sin(lightTime*.17)*.045;
+      this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE+lightSway-(gameObject.rotation||0));
+      this.set1f('uTime',lightTime);
       this.set1f('uStepCut',d.stepCut?1:0);
     }
 
