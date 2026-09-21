@@ -1359,7 +1359,7 @@
       gem.glintOffsetX=0;
       gem.glintOffsetY=0;
       gem.glintBaseScale=.12;
-      gem.nextGlintAt=this.time.now+Phaser.Math.Between(900,4200);
+      gem.nextGlintAt=this.time.now+Phaser.Math.Between(650,2600);
     }
 
     syncGemOptics(gem,time) {
@@ -1368,21 +1368,21 @@
       const glint=gem.glint;
 
       if(!gem.glintActive&&time>=gem.nextGlintAt){
-        if(this.activeGemGlints>=1){
+        if(this.activeGemGlints>=2){
           gem.nextGlintAt=time+Phaser.Math.Between(350,1000);
           return;
         }
 
         const t=tiers[gem.tier];
-        const angle=Phaser.Math.FloatBetween(0,Math.PI*2);
-        const radius=t.r*Phaser.Math.FloatBetween(.08,.28);
+        const lightAngle=GEM_WORLD_LIGHT_ANGLE+Phaser.Math.FloatBetween(-.24,.24);
+        const radius=t.r*Phaser.Math.FloatBetween(.12,.32);
 
-        gem.glintOffsetX=Math.cos(angle)*radius;
-        gem.glintOffsetY=Math.sin(angle)*radius;
-        gem.glintDuration=Phaser.Math.Between(280,440);
+        gem.glintOffsetX=Math.cos(lightAngle)*radius;
+        gem.glintOffsetY=Math.sin(lightAngle)*radius;
+        gem.glintDuration=Phaser.Math.Between(260,420);
         gem.glintStartedAt=time;
-        gem.glintBaseScale=Phaser.Math.FloatBetween(.105,.155)*
-          (1+Math.min(.30,gem.tier*.012));
+        gem.glintBaseScale=Phaser.Math.FloatBetween(.115,.17)*
+          (1+Math.min(.32,gem.tier*.013));
         gem.glintActive=true;
         this.activeGemGlints++;
       }
@@ -1402,7 +1402,7 @@
         gem.glintActive=false;
         glint.setAlpha(0);
         this.activeGemGlints=Math.max(0,this.activeGemGlints-1);
-        gem.nextGlintAt=time+Phaser.Math.Between(2600,7600);
+        gem.nextGlintAt=time+Phaser.Math.Between(1500,5200);
         return;
       }
 
@@ -1414,7 +1414,7 @@
       glint.y=gem.y+y;
       glint.rotation=-GEM_WORLD_LIGHT_ANGLE*.18;
       glint.setScale(gem.glintBaseScale*(.72+pulse*.48));
-      glint.setAlpha(pulse*.28);
+      glint.setAlpha(pulse*.38);
     }
 
     drawVaultBackdrop() {
