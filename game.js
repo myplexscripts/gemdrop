@@ -2051,9 +2051,9 @@
 
     rechargePowers(amount=1) {
       const gains={
-        tumble:.18,
-        prism:.125,
-        cascade:.09
+        tumble:.16,
+        prism:.105,
+        cascade:.072
       };
 
       for(const key of Object.keys(gains)){
