@@ -1821,7 +1821,22 @@
         });
       }
 
-      const ring=this.add.circle(x,y,14,color,.08).setStrokeStyle(2,color,.68).setDepth(39);
+      const flash=this.add.image(x,y,'gem-sparkle')
+        .setDepth(41)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setAlpha(big?.92:.76)
+        .setScale(big?.34:.24);
+
+      this.tweens.add({
+        targets:flash,
+        alpha:0,
+        scale:big?.82:.58,
+        duration:big?260:210,
+        ease:'Quad.Out',
+        onComplete:()=>flash.destroy()
+      });
+
+      const ring=this.add.circle(x,y,14,color,.08).setStrokeStyle(big?3:2,color,.68).setDepth(39);
 
       this.tweens.add({
         targets:ring,
