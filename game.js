@@ -1846,7 +1846,7 @@
         this.floatText(x,y-8,label,'#ffe7c5',this.mergeChain>=2?20:17);
 
         this.cameras.main.shake(70,next>=7?.0028:.0015);
-        tone(270+next*43,.07+next*.004,.022+Math.min(.017,next*.0018),'sine');
+        playMergeTone(next,this.mergeChain,x);
         haptic(next>=8?15:8);
 
         if(!this.unlockedTiers.has(next)){
