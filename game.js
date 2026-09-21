@@ -1744,6 +1744,31 @@
         gem.setVelocity(vx,vy);
         gem.setAngularVelocity(clamp(av,-.025,.025));
 
+        const settleScaleX=gem.scaleX;
+        const settleScaleY=gem.scaleY;
+        gem.setScale(settleScaleX*.84,settleScaleY*.84);
+        this.tweens.add({
+          targets:gem,
+          scaleX:settleScaleX,
+          scaleY:settleScaleY,
+          duration:170,
+          ease:'Back.Out'
+        });
+
+        const reactionRadius=tiers[next].r*2.45;
+        for(const other of this.gems){
+          if(!other||other===gem||!other.active||!other.body) continue;
+          const dx=other.x-x;
+          const dy=other.y-y;
+          const d=Math.max(1,Math.hypot(dx,dy));
+          if(d>reactionRadius) continue;
+          const kick=(1-d/reactionRadius)*(.18+Math.min(next,10)*.008);
+          other.setVelocity(
+            other.body.velocity.x+(dx/d)*kick,
+            other.body.velocity.y+(dy/d)*kick-.025
+          );
+        }
+
         this.bestTierReached=Math.max(this.bestTierReached,next);
         this.addScore(tiers[next].score);
         this.mergeBurst(x,y,tiers[next],next>=6);
