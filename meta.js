@@ -280,6 +280,14 @@
     });
   }
 
+  function onDrop(tier){
+    if(!Number.isInteger(tier)||tier<0||tier>=GEMS.length) return;
+    state.gemCounts[tier]=(state.gemCounts[tier]||0)+1;
+    state.highestTier=Math.max(state.highestTier,tier);
+    save();
+    updateGemBadges();
+  }
+
   function onMerge(tier,chain=1,options={}){
     state.totalMerges++;
     if(Number.isInteger(tier)&&tier>=0&&tier<GEMS.length){
@@ -744,6 +752,7 @@
   window.GemdropMeta={
     init,
     onMerge,
+    onDrop,
     getGemCount:tier=>state.gemCounts[tier]||0,
     updateGemBadges,
     showCollection,
