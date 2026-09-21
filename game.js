@@ -2370,7 +2370,7 @@
           this.preview.x=Phaser.Math.Linear(
             this.preview.x,
             target,
-            this.pointerHeld?.48:.30
+            this.pointerHeld?.70:.48
           );
         }
 
