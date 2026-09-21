@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260921-dropfix1" />
+  <link rel="stylesheet" href="styles.css?v=20260921-treasure1" />
 </head>
 <body>
   <main class="game-app" id="gameApp">
@@ -38,6 +38,15 @@
         <span>VALUE</span>
         <strong id="score">$0</strong>
       </div>
+
+      <button id="treasureMeter" class="treasure-meter" type="button" aria-label="Treasure chest progress" aria-disabled="true">
+        <span class="treasure-meter__track" aria-hidden="true">
+          <span id="treasureMeterFill" class="treasure-meter__fill"></span>
+        </span>
+        <span class="treasure-meter__chest" aria-hidden="true">
+          <i data-lucide="archive"></i>
+        </span>
+      </button>
     </header>
 
     <section class="play-shell">
@@ -94,7 +103,7 @@
       </button>
       <button id="collectionButton" class="secondary-button" type="button">
         <i data-lucide="gem" aria-hidden="true"></i>
-        <span>GEM SHOWCASE</span>
+        <span>COLLECTION</span>
       </button>
     </div>
   </section>
@@ -111,7 +120,96 @@
         </div>
         <div id="collectionProgress" class="collection-progress">1 / 20</div>
       </header>
+      <nav class="collection-tabs" aria-label="Collection category">
+        <button id="collectionTabGems" class="collection-tab active" type="button" aria-selected="true">
+          <i data-lucide="gem" aria-hidden="true"></i><span>Gems</span>
+        </button>
+        <button id="collectionTabTreasures" class="collection-tab" type="button" aria-selected="false">
+          <i data-lucide="crown" aria-hidden="true"></i><span>Treasures</span>
+        </button>
+      </nav>
       <div id="gemCollection" class="gem-collection" aria-label="Gem showcase"></div>
+      <div id="treasureCollection" class="treasure-collection" aria-label="Treasure collection" hidden></div>
+    </div>
+  </section>
+
+  <section id="treasureRewardOverlay" class="treasure-modal" aria-modal="true" role="dialog" aria-labelledby="treasureRewardTitle">
+    <div class="treasure-reward-card">
+      <button id="treasureRewardClose" class="treasure-close" type="button" aria-label="Close treasure reward">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+      <div id="treasureChestReveal" class="treasure-chest-reveal" aria-hidden="true">
+        <i data-lucide="archive"></i>
+      </div>
+      <div id="treasureRewardArt" class="treasure-reward-art"></div>
+      <p id="treasureRewardRarity" class="eyebrow">TREASURE FOUND</p>
+      <h2 id="treasureRewardTitle">Treasure</h2>
+      <p id="treasureRewardCopy" class="treasure-reward-copy">Added to your Treasure Vault.</p>
+      <button id="treasureRewardView" class="primary-button" type="button">
+        <i data-lucide="crown" aria-hidden="true"></i><span>VIEW TREASURE</span>
+      </button>
+    </div>
+  </section>
+
+  <section id="treasureDetailOverlay" class="treasure-detail-overlay" aria-modal="true" role="dialog" aria-labelledby="treasureDetailTitle">
+    <div class="treasure-detail-screen">
+      <header class="treasure-detail-header">
+        <button id="treasureDetailBack" class="collection-back" type="button" aria-label="Back to treasures">
+          <i data-lucide="chevron-left" aria-hidden="true"></i>
+        </button>
+        <div>
+          <p id="treasureDetailRarity" class="eyebrow">TREASURE</p>
+          <h2 id="treasureDetailTitle">Treasure</h2>
+        </div>
+        <div id="treasureCopyCount" class="collection-progress">1 / 1</div>
+      </header>
+
+      <div class="treasure-detail-body">
+        <div class="treasure-display">
+          <div id="treasureDetailArt" class="treasure-detail-art"></div>
+          <div id="treasureSockets" class="treasure-sockets" aria-label="Gem inlay sockets"></div>
+        </div>
+
+        <div class="treasure-copy-nav">
+          <button id="treasurePrevCopy" type="button" aria-label="Previous copy"><i data-lucide="chevron-left"></i></button>
+          <span id="treasureCopyStatus">Unfinished</span>
+          <button id="treasureNextCopy" type="button" aria-label="Next copy"><i data-lucide="chevron-right"></i></button>
+        </div>
+
+        <section class="treasure-value-panel">
+          <div><span>Base value</span><strong id="treasureBaseValue">$0</strong></div>
+          <div><span>Gem value</span><strong id="treasureGemValue">$0</strong></div>
+          <div><span id="treasureBonusLabel">Setting bonus</span><strong id="treasureMultiplier">×1.00</strong></div>
+          <div class="treasure-value-total"><span>Total value</span><strong id="treasureTotalValue">$0</strong></div>
+        </section>
+
+        <button id="completeInlayButton" class="primary-button" type="button" disabled>
+          <i data-lucide="sparkles" aria-hidden="true"></i><span>COMPLETE INLAY</span>
+        </button>
+        <button id="sellTreasureButton" class="secondary-button treasure-sell" type="button" hidden>
+          <i data-lucide="coins" aria-hidden="true"></i><span>SELL TREASURE</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="gemPickerOverlay" class="gem-picker-overlay" aria-modal="true" role="dialog" aria-labelledby="gemPickerTitle">
+    <button id="gemPickerBackdrop" class="gem-picker-backdrop" type="button" aria-label="Close gem picker"></button>
+    <div class="gem-picker-sheet">
+      <div class="gem-picker-handle" aria-hidden="true"></div>
+      <div class="gem-picker-heading">
+        <div>
+          <p class="eyebrow">CHOOSE AN INLAY</p>
+          <h2 id="gemPickerTitle">Select a gem</h2>
+        </div>
+        <button id="gemPickerClose" class="treasure-close" type="button" aria-label="Close gem picker">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div id="gemPickerList" class="gem-picker-list"></div>
+      <button id="removeInlayButton" class="secondary-button remove-inlay" type="button" hidden>
+        <i data-lucide="undo-2" aria-hidden="true"></i><span>REMOVE GEM</span>
+      </button>
     </div>
   </section>
 
@@ -146,6 +244,7 @@
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="reactive-gem-system.js?v=20260921-dropfix1"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
-  <script src="game.js?v=20260921-dropfix1"></script>
+  <script src="meta.js?v=20260921-treasure1"></script>
+  <script src="game.js?v=20260921-treasure1"></script>
 </body>
 </html>
