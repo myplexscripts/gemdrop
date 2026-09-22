@@ -5157,3 +5157,52 @@ body{
     bottom:0!important;
   }
 }
+
+
+/* === IOS EDGE FILL WITHOUT MOVING CONTENT 2026-09-22 === */
+html,
+body{
+  background:#110619!important;
+}
+
+/* Paint behind the web-app viewport/safe-area edges without changing layout. */
+.viewport-bleed{
+  position:fixed;
+  top:-160px;
+  right:0;
+  bottom:-220px;
+  left:0;
+  z-index:0;
+  pointer-events:none;
+  background:#110619;
+}
+
+/* The app itself stays in the real viewport. Safe-area padding on the HUD
+   and power dock keeps controls clear of the status bar/home indicator. */
+.game-app{
+  z-index:1!important;
+  top:0!important;
+  right:auto!important;
+  bottom:0!important;
+  left:50%!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+}
+
+/* Override the previous mobile bleed rule that moved the whole UI upward. */
+@media (max-width:560px){
+  .game-app{
+    top:0!important;
+    bottom:0!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+  }
+
+  .hud{
+    padding-top:calc(8px + env(safe-area-inset-top))!important;
+  }
+
+  .power-dock{
+    padding-bottom:max(12px,calc(8px + env(safe-area-inset-bottom)))!important;
+  }
+}
