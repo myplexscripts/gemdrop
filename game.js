@@ -162,26 +162,26 @@
   // 20 progression tiers. Only these six authored cuts are reused;
   // progression beyond six is colour + size, never new gem geometry.
   const tiers = [
-    {name:'Quartz', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:48, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
-    {name:'Citrine', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:53, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
-    {name:'Sunstone', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:58, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
-    {name:'Amethyst', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:63, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
-    {name:'Peridot', cut:'Heart', cutKey:'princess', reactiveCut:'heart', r:69, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
-    {name:'Garnet', cut:'Tanzanite', cutKey:'radiant', reactiveCut:'tanzanite', r:75, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
-    {name:'Topaz', cut:'Rectangular', cutKey:'square', reactiveCut:'rectangular', r:81, score:30, color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
-    {name:'Moonstone', cut:'Circular Starcut', cutKey:'french', reactiveCut:'circular_starcut', r:88, score:40, color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
-    {name:'Zircon', cut:'Emerald Stepcut', cutKey:'oval', reactiveCut:'emerald_stepcut', r:95, score:52, color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
-    {name:'Morganite', cut:'Rectangular Brilliant', cutKey:'asscher', reactiveCut:'rectangular_brilliant', r:102, score:66, color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
-    {name:'Aquamarine', cut:'Heart', cutKey:'pear', reactiveCut:'heart', r:110, score:82, color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
-    {name:'Tourmaline', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:118, score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
-    {name:'Tanzanite', cut:'Rectangular', cutKey:'octagon', reactiveCut:'rectangular', r:127, score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
-    {name:'Spinel', cut:'Circular Starcut', cutKey:'rectangle', reactiveCut:'circular_starcut', r:136, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
-    {name:'Sapphire', cut:'Emerald Stepcut', cutKey:'step', reactiveCut:'emerald_stepcut', r:146, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
-    {name:'Emerald', cut:'Rectangular Brilliant', cutKey:'scissor', reactiveCut:'rectangular_brilliant', r:156, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
-    {name:'Ruby', cut:'Heart', cutKey:'pendeloque', reactiveCut:'heart', r:167, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
-    {name:'Alexandrite', cut:'Tanzanite', cutKey:'trapeze', reactiveCut:'tanzanite', r:179, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
-    {name:'Starstone', cut:'Rectangular', cutKey:'navette', reactiveCut:'rectangular', r:192, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
-    {name:'Crownstone', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:206, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
+    {name:'Quartz',description:'A pale crystal that catches even the faintest light.', cut:'Rectangular', cutKey:'rose', reactiveCut:'rectangular', r:48, score:1, color:'#D7EBF2', accent:'#EDF6F9', dark:'#859296'},
+    {name:'Citrine',description:'A warm golden gem with the glow of bottled sunlight.', cut:'Circular Starcut', cutKey:'trillion', reactiveCut:'circular_starcut', r:53, score:3, color:'#E9B11E', accent:'#F5DC9A', dark:'#906E13'},
+    {name:'Sunstone',description:'A fiery stone that seems to hold a spark of dawn.', cut:'Emerald Stepcut', cutKey:'cushion', reactiveCut:'emerald_stepcut', r:58, score:6, color:'#E67A45', accent:'#F4C3AB', dark:'#8F4C2B'},
+    {name:'Amethyst',description:'Deep violet crystal with a calm, royal glow.', cut:'Rectangular Brilliant', cutKey:'emerald', reactiveCut:'rectangular_brilliant', r:63, score:10, color:'#A968E5', accent:'#D8BBF3', dark:'#69408E'},
+    {name:'Peridot',description:'Fresh green brilliance made for bold beginnings.', cut:'Heart', cutKey:'princess', reactiveCut:'heart', r:69, score:15, color:'#99D64D', accent:'#D1EDAF', dark:'#5F8530'},
+    {name:'Garnet',description:'A dark red jewel with the warmth of banked embers.', cut:'Tanzanite', cutKey:'radiant', reactiveCut:'tanzanite', r:75, score:22, color:'#B33149', accent:'#DDA2AD', dark:'#6F1E2D'},
+    {name:'Topaz',description:'Honey-gold facets that flash with quiet richness.', cut:'Rectangular', cutKey:'square', reactiveCut:'rectangular', r:81, score:30, color:'#D7902F', accent:'#EDCDA1', dark:'#85591D'},
+    {name:'Moonstone',description:'Milky light drifts across it like a moonlit tide.', cut:'Circular Starcut', cutKey:'french', reactiveCut:'circular_starcut', r:88, score:40, color:'#B9C9F2', accent:'#E0E7F9', dark:'#737D96'},
+    {name:'Zircon',description:'Clear blue fire with a sharp, electric sparkle.', cut:'Emerald Stepcut', cutKey:'oval', reactiveCut:'emerald_stepcut', r:95, score:52, color:'#42C7E8', accent:'#AAE6F5', dark:'#297B90'},
+    {name:'Morganite',description:'A blush-pink jewel with a soft romantic glow.', cut:'Rectangular Brilliant', cutKey:'asscher', reactiveCut:'rectangular_brilliant', r:102, score:66, color:'#F5B3C8', accent:'#FADDE6', dark:'#986F7C'},
+    {name:'Aquamarine',description:'Sea-green clarity that feels cool even in the hand.', cut:'Heart', cutKey:'pear', reactiveCut:'heart', r:110, score:82, color:'#63E3C4', accent:'#B9F2E4', dark:'#3D8D7A'},
+    {name:'Tourmaline',description:'Vivid violet colour with a restless inner shimmer.', cut:'Tanzanite', cutKey:'octagon', reactiveCut:'tanzanite', r:118, score:100, color:'#C447B6', accent:'#E4ACDE', dark:'#7A2C71'},
+    {name:'Tanzanite',description:'Rare blue-violet fire drawn from the edge of night.', cut:'Rectangular', cutKey:'octagon', reactiveCut:'rectangular', r:127, score:122, color:'#4F54D9', accent:'#B0B2EE', dark:'#313487'},
+    {name:'Spinel',description:'A brilliant pink-red jewel with a lively inner spark.', cut:'Circular Starcut', cutKey:'rectangle', reactiveCut:'circular_starcut', r:136, score:148, color:'#FF4F87', accent:'#FFB0C9', dark:'#9E3154'},
+    {name:'Sapphire',description:'Royal blue depth with a crisp, unwavering shine.', cut:'Emerald Stepcut', cutKey:'step', reactiveCut:'emerald_stepcut', r:146, score:178, color:'#2D63D6', accent:'#A0B9ED', dark:'#1C3D85'},
+    {name:'Emerald',description:'Lush green brilliance worthy of the finest vault.', cut:'Rectangular Brilliant', cutKey:'scissor', reactiveCut:'rectangular_brilliant', r:156, score:212, color:'#18B56A', accent:'#97DEBC', dark:'#0F7042'},
+    {name:'Ruby',description:'A fierce red jewel that burns like captured flame.', cut:'Heart', cutKey:'pendeloque', reactiveCut:'heart', r:167, score:250, color:'#E12F4F', accent:'#F2A1B0', dark:'#8C1D31'},
+    {name:'Alexandrite',description:'A mysterious gem whose colour never seems quite still.', cut:'Tanzanite', cutKey:'trapeze', reactiveCut:'tanzanite', r:179, score:292, color:'#47B38E', accent:'#ACDDCC', dark:'#2C6F58'},
+    {name:'Starstone',description:'An uncanny violet jewel lit by a star-like glow.', cut:'Rectangular', cutKey:'navette', reactiveCut:'rectangular', r:192, score:340, color:'#9B6BFF', accent:'#D2BCFF', dark:'#60429E'},
+    {name:'Crownstone',description:'The vault’s legendary prize, blazing with golden light.', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:206, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
   function gemTextureKey(tier) {
@@ -214,36 +214,21 @@
     gameMuted=localStorage.getItem('gemdrop-muted')==='1';
   }catch{}
 
-  const MUSIC_VOLUME={
-    menu:.34,
-    game:.30
-  };
-  const musicTracks={
-    menu:new Audio('assets/audio/menu.ogg'),
-    game:new Audio('assets/audio/main-loop.ogg')
-  };
-  let musicMode='menu';
+  const MUSIC_VOLUME=.32;
+  const backgroundMusic=new Audio('assets/audio/main-loop.ogg?v=20260922-looptrim1');
   let musicUnlocked=false;
   let musicFadeToken=0;
 
-  Object.values(musicTracks).forEach(track=>{
-    track.loop=true;
-    track.preload='auto';
-    track.volume=0;
-  });
+  backgroundMusic.loop=true;
+  backgroundMusic.preload='auto';
+  backgroundMusic.volume=0;
 
-  function musicTargetVolume(mode){
-    return gameMuted?0:(MUSIC_VOLUME[mode]||0);
-  }
-
-  function fadeMusicTrack(track,to,duration=320,token=musicFadeToken){
-    if(!track) return;
-    const from=Number(track.volume)||0;
+  function fadeMusic(to,duration=280,token=musicFadeToken){
+    const from=Number(backgroundMusic.volume)||0;
     const target=clamp(to,0,1);
 
     if(duration<=0||Math.abs(from-target)<.002){
-      track.volume=target;
-      if(target<=0&&track!==musicTracks[musicMode]) track.pause();
+      backgroundMusic.volume=target;
       return;
     }
 
@@ -252,40 +237,29 @@
       if(token!==musicFadeToken) return;
       const t=clamp((now-started)/duration,0,1);
       const eased=t*t*(3-2*t);
-      track.volume=from+(target-from)*eased;
-      if(t<1){
-        requestAnimationFrame(tick);
-      }else if(target<=0&&track!==musicTracks[musicMode]){
-        track.pause();
-      }
+      backgroundMusic.volume=from+(target-from)*eased;
+      if(t<1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }
 
-  function syncMusic(mode=musicMode,{instant=false}={}){
-    musicMode=mode==='game'?'game':'menu';
+  function syncMusic(options={}){
+    const instant=!!options.instant;
     const token=++musicFadeToken;
+    const shouldPlay=musicUnlocked&&!document.hidden&&!gameMuted;
 
-    for(const [key,track] of Object.entries(musicTracks)){
-      const active=key===musicMode;
-      if(active&&musicUnlocked&&!document.hidden&&!gameMuted){
-        const playPromise=track.play();
-        if(playPromise&&typeof playPromise.catch==='function') playPromise.catch(()=>{});
-      }
-
-      fadeMusicTrack(
-        track,
-        active&&musicUnlocked&&!document.hidden?musicTargetVolume(key):0,
-        instant?0:320,
-        token
-      );
+    if(shouldPlay){
+      const playPromise=backgroundMusic.play();
+      if(playPromise&&typeof playPromise.catch==='function') playPromise.catch(()=>{});
     }
+
+    fadeMusic(shouldPlay?MUSIC_VOLUME:0,instant?0:280,token);
   }
 
   function unlockMusic(){
     if(musicUnlocked) return;
     musicUnlocked=true;
-    syncMusic(musicMode,{instant:true});
+    syncMusic({instant:true});
   }
 
   function syncMuteButton() {
@@ -313,7 +287,7 @@
       );
     }
 
-    syncMusic(musicMode,{instant:false});
+    syncMusic({instant:false});
     syncMuteButton();
   }
 
@@ -928,12 +902,12 @@
 
       document.addEventListener('pointerdown',()=>{
         unlockAudio();
-        if(!this.running) syncMusic('menu');
+        if(!this.running) syncMusic();
       },{once:true,passive:true});
 
       $('collectionButton').addEventListener('click',()=>{
         unlockAudio();
-        syncMusic('menu');
+        syncMusic();
         this.renderCollection();
         collectionOverlay.classList.add('visible');
         if(window.GemdropMeta) window.GemdropMeta.selectCollectionTab('gems');
@@ -942,7 +916,7 @@
 
       $('collectionBack').addEventListener('click',()=>{
         collectionOverlay.classList.remove('visible');
-        syncMusic('menu');
+        syncMusic();
       });
 
       collectionOverlay.addEventListener('pointermove',event=>{
@@ -980,7 +954,7 @@
       $('resultCollectionButton').addEventListener('click',()=>{
         gameOverOverlay.classList.remove('visible');
         startOverlay.classList.add('visible');
-        syncMusic('menu');
+        syncMusic();
         if(window.GemdropMeta) window.GemdropMeta.showCollection('gems');
         collectionOverlay.classList.add('visible');
         this.startCollectionLighting();
@@ -992,10 +966,10 @@
 
       document.addEventListener('visibilitychange',()=>{
         if(document.hidden){
-          syncMusic(musicMode,{instant:true});
+          syncMusic({instant:true});
           if(this.running&&!this.paused) this.setPaused(true);
         }else{
-          syncMusic(musicMode,{instant:false});
+          syncMusic({instant:false});
         }
       });
 
@@ -1286,7 +1260,11 @@
           count.className='gem-card__count';
           count.textContent='×'+(window.GemdropMeta?window.GemdropMeta.getGemCount(tier):0);
 
-          meta.append(name,value);
+          const description=document.createElement('p');
+          description.className='gem-card__description';
+          description.textContent=t.description;
+
+          meta.append(name,value,description);
           art.appendChild(count);
         }else{
           const unknown=document.createElement('span');
@@ -1584,7 +1562,7 @@
 
     startRun() {
       unlockAudio();
-      syncMusic('game');
+      syncMusic();
       this.clearRun();
 
       this.runStartUnlocked=new Set(this.unlockedTiers);
@@ -2395,7 +2373,7 @@
       gameOverOverlay.classList.remove('visible');
       collectionOverlay.classList.remove('visible');
       startOverlay.classList.add('visible');
-      syncMusic('menu');
+      syncMusic();
       this.updatePowerButtons();
     }
 
@@ -2583,7 +2561,7 @@
       this.updateHomeProgress();
 
       gameOverOverlay.classList.add('visible');
-      syncMusic('menu');
+      syncMusic();
       if(window.lucide) window.lucide.createIcons({attrs:{'stroke-width':1.9}});
       haptic([36,26,36]);
     }
