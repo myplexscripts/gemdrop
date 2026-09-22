@@ -833,6 +833,10 @@
       this.paused=false;
       this.metaPaused=false;
       this.pointerHeld=false;
+      this.autoFireEnabled=false;
+      try{
+        this.autoFireEnabled=localStorage.getItem('gemdrop-autofire')==='1';
+      }catch{}
       this.targetX=W/2;
       this.preview=null;
       this.lastDropAt=0;
@@ -1050,6 +1054,31 @@
       $('powerCascade').addEventListener('click',()=>this.useCascade());
       $('powerPrism').addEventListener('click',()=>this.usePrism());
 
+      const autoFireToggle=$('autoFireToggle');
+      if(autoFireToggle){
+        autoFireToggle.checked=this.autoFireEnabled;
+        autoFireToggle.addEventListener('change',()=>{
+          this.autoFireEnabled=!!autoFireToggle.checked;
+          try{
+            localStorage.setItem('gemdrop-autofire',this.autoFireEnabled?'1':'0');
+          }catch{}
+        });
+      }
+
+      ['gesturestart','gesturechange','gestureend'].forEach(type=>{
+        document.addEventListener(type,event=>{
+          if(event.cancelable) event.preventDefault();
+        },{passive:false});
+      });
+      document.addEventListener('touchmove',event=>{
+        if(event.touches&&event.touches.length>1&&event.cancelable) event.preventDefault();
+      },{passive:false});
+      document.addEventListener('contextmenu',event=>event.preventDefault());
+      document.addEventListener('dragstart',event=>event.preventDefault());
+      document.addEventListener('selectstart',event=>event.preventDefault());
+      document.addEventListener('copy',event=>event.preventDefault());
+      document.addEventListener('cut',event=>event.preventDefault());
+
       document.addEventListener('visibilitychange',()=>{
         if(document.hidden){
           syncMusic({instant:true});
@@ -1091,6 +1120,7 @@
         e.preventDefault();
         this.pointerHeld=true;
         aimFromEvent(e);
+        if(this.autoFireEnabled) this.dropCurrent();
         try{this.aimStrip.setPointerCapture(e.pointerId)}catch{}
       });
 
@@ -1101,11 +1131,11 @@
       });
 
       const finishAim=e=>{
-        if(!this.pointerHeld||!this.running||this.paused||!this.ready) return;
+        if(!this.pointerHeld||!this.running||this.paused) return;
         e.preventDefault();
         aimFromEvent(e);
         this.pointerHeld=false;
-        this.dropCurrent();
+        if(!this.autoFireEnabled&&this.ready) this.dropCurrent();
         try{this.aimStrip.releasePointerCapture(e.pointerId)}catch{}
       };
 
@@ -2301,8 +2331,9 @@
       this.powerCharge.tumble=0;
       this.tumbleState={
         started:this.time.now,
-        duration:980,
-        nextKick:this.time.now
+        duration:1650,
+        nextKick:this.time.now,
+        kick:0
       };
 
       const shell=document.querySelector('.play-shell');
@@ -2310,23 +2341,36 @@
         shell.classList.remove('tumbling');
         void shell.offsetWidth;
         shell.classList.add('tumbling');
-        window.setTimeout(()=>shell.classList.remove('tumbling'),1080);
+        window.setTimeout(()=>shell.classList.remove('tumbling'),1750);
       }
 
       const M=Phaser.Physics.Matter.Matter;
       for(const gem of this.gems){
         if(!gem||!gem.active||!gem.body) continue;
+        M.Sleeping.set(gem.body,false);
         M.Body.setVelocity(gem.body,{
-          x:clamp(gem.body.velocity.x+Phaser.Math.FloatBetween(-1.15,1.15),-4.5,4.5),
-          y:clamp(gem.body.velocity.y+Phaser.Math.FloatBetween(-.75,.15),-3.6,5.0)
+          x:clamp(
+            gem.body.velocity.x+Phaser.Math.FloatBetween(-3.2,3.2),
+            -7.5,
+            7.5
+          ),
+          y:clamp(
+            gem.body.velocity.y+Phaser.Math.FloatBetween(-2.6,.8),
+            -5.8,
+            6.2
+          )
         });
         M.Body.setAngularVelocity(
           gem.body,
-          clamp(gem.body.angularVelocity+Phaser.Math.FloatBetween(-.035,.035),-.085,.085)
+          clamp(
+            gem.body.angularVelocity+Phaser.Math.FloatBetween(-.105,.105),
+            -.16,
+            .16
+          )
         );
       }
 
-      this.cameras.main.shake(820,.0055);
+      this.cameras.main.shake(1550,.011);
       this.showStatus('TUMBLE!','reward',1050,'rotate-cw');
       tone(210,.12,.028,'triangle');
       haptic([10,18,10,18,12]);
@@ -2341,40 +2385,41 @@
       const elapsed=time-state.started;
       const p=clamp(elapsed/state.duration,0,1);
       const envelope=Math.sin(Math.PI*p);
-      const wave=Math.sin(p*Math.PI*9);
+      const wave=Math.sin(p*Math.PI*14);
 
-      engine.gravity.x=wave*.64*envelope;
+      engine.gravity.x=wave*1.45*envelope;
       engine.gravity.y=this.baseGravityY-
-        Math.max(0,Math.sin(p*Math.PI*5))*.28*envelope;
+        Math.max(0,Math.sin(p*Math.PI*10))*1.7*envelope;
 
       if(time>=state.nextKick){
-        state.nextKick=time+150;
+        state.nextKick=time+85;
+        state.kick=(state.kick||0)+1;
         const M=Phaser.Physics.Matter.Matter;
-        const direction=wave>=0?1:-1;
+        const direction=state.kick%2?1:-1;
 
         for(const gem of this.gems){
           if(!gem||!gem.active||!gem.body) continue;
+          M.Sleeping.set(gem.body,false);
+
+          const horizontal=
+            direction*Phaser.Math.FloatBetween(.9,1.85)*envelope+
+            Phaser.Math.FloatBetween(-.85,.85);
+
+          const vertical=
+            Phaser.Math.FloatBetween(-1.35,.45)*envelope;
+
           M.Body.setVelocity(gem.body,{
-            x:clamp(
-              gem.body.velocity.x+
-              direction*Phaser.Math.FloatBetween(.28,.72)*envelope,
-              -4.8,
-              4.8
-            ),
-            y:clamp(
-              gem.body.velocity.y-
-              Phaser.Math.FloatBetween(.08,.34)*envelope,
-              -3.8,
-              5.2
-            )
+            x:clamp(gem.body.velocity.x+horizontal,-8.5,8.5),
+            y:clamp(gem.body.velocity.y+vertical,-6.4,6.8)
           });
+
           M.Body.setAngularVelocity(
             gem.body,
             clamp(
               gem.body.angularVelocity+
-              direction*Phaser.Math.FloatBetween(.008,.022),
-              -.09,
-              .09
+              Phaser.Math.FloatBetween(-.055,.055),
+              -.17,
+              .17
             )
           );
         }
@@ -2392,7 +2437,7 @@
 
       const pairs=this.matchingPairs();
       if(!pairs.length){
-        this.showStatus('NO MATCHES TO CASCADE','info',900,'circle-slash-2');
+        this.showStatus('NO MATCHES TO MERGE','info',900,'circle-slash-2');
         this.updatePowerButtons();
         return;
       }
@@ -2403,7 +2448,7 @@
         this.queueMerge(pair[0],pair[1]);
       }
 
-      this.showStatus('CASCADE ×'+pairs.length,'reward',1050,'sparkles');
+      this.showStatus('MERGE ×'+pairs.length,'reward',1050,'sparkles');
       this.cameras.main.shake(75,.002);
       tone(520,.11,.03,'sine');
       haptic([8,20,8]);
@@ -2432,7 +2477,7 @@
       }
 
       this.updateAimHandle();
-      this.showStatus('PRISM UPGRADE','reward',1100,'gem',this.currentTier);
+      this.showStatus('UPGRADE!','reward',1100,'gem',this.currentTier);
       tone(680,.11,.03,'sine');
       haptic([7,13,7]);
       this.updatePowerButtons();
@@ -2700,6 +2745,18 @@
           this.ready=true;
           this.createDropPreview(true);
         }
+      }
+
+      if(
+        this.autoFireEnabled&&
+        this.pointerHeld&&
+        this.running&&
+        !this.paused&&
+        !this.metaPaused&&
+        this.ready&&
+        time-this.lastDropAt>=DROP_DELAY
+      ){
+        this.dropCurrent();
       }
 
       if(this.running&&!this.paused&&!this.metaPaused){
