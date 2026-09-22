@@ -330,7 +330,7 @@
     if(gemAudioMaster&&audioCtx){
       gemAudioMaster.gain.cancelScheduledValues(audioCtx.currentTime);
       gemAudioMaster.gain.setTargetAtTime(
-        gameMuted?0:1.08,
+        gameMuted?0:.81,
         audioCtx.currentTime,
         .018
       );
@@ -462,7 +462,7 @@
 
     gemAudioDry.gain.value=.918;
     gemAudioWet.gain.value=.164;
-    gemAudioMaster.gain.value=gameMuted?0:1.08;
+    gemAudioMaster.gain.value=gameMuted?0:.81;
 
     gemAudioDry.connect(gemAudioToneBus);
     gemAudioWet.connect(gemAudioConvolver);
