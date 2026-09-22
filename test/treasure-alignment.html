@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>GemDrop Treasure Alignment Editor</title>
+  <style>
+    :root{
+      color-scheme:dark;
+      font-family:Manrope,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      --bg:#0d0611;
+      --panel:#17101c;
+      --panel2:#211329;
+      --line:rgba(255,255,255,.10);
+      --muted:#b7a6bd;
+      --text:#f7edf8;
+      --gold:#ffd46b;
+      --purple:#b96de9;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+    body{padding:20px}
+    button,input,select,textarea{font:inherit;font-size:14px}
+    button,input,select{min-height:44px}
+    button{color:var(--text);border:1px solid var(--line);background:#2a1733;border-radius:12px;padding:0 14px;font-weight:800}
+    button:hover{background:#35203f}
+    button.primary{background:linear-gradient(180deg,#ffe08a,#eeb54b);color:#301624;border-color:#ffe9ae}
+    button.danger{color:#ffb8c8}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+      outline:3px solid rgba(255,212,107,.45);outline-offset:2px
+    }
+    label{font-size:14px;font-weight:800;color:#d8c9dd}
+    .app{max-width:1280px;margin:0 auto}
+    .topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:16px}
+    .topbar h1{margin:0;font-size:28px;line-height:1.05}
+    .topbar p{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.45;max-width:760px}
+    .status{font-size:14px;color:#d8c9dd;white-space:nowrap}
+    .toolbar{
+      display:grid;grid-template-columns:minmax(190px,1.2fr) minmax(180px,1fr) auto auto;gap:10px;
+      padding:12px;border:1px solid var(--line);background:var(--panel);border-radius:16px;margin-bottom:14px
+    }
+    .field{display:grid;gap:6px;min-width:0}
+    select,input[type="number"],input[type="file"],textarea{
+      width:100%;color:var(--text);background:#0f0913;border:1px solid var(--line);border-radius:10px;padding:8px 10px
+    }
+    input[type="file"]{padding:8px}
+    .toggle{display:flex;align-items:center;gap:8px;padding-top:22px}
+    .toggle input{width:20px;height:20px}
+    .main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+    .workspace,.sidebar{border:1px solid var(--line);background:var(--panel);border-radius:18px}
+    .workspace{padding:14px}
+    .stage-shell{display:grid;place-items:center;min-height:520px;background:#08040b;border-radius:14px;overflow:hidden;padding:18px}
+    .stage-wrap{width:min(100%,820px);position:relative}
+    .stage{
+      position:relative;width:100%;aspect-ratio:320/260;overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);border-radius:18px;background:#110817;
+      touch-action:none;user-select:none;-webkit-user-select:none;
+    }
+    .stage.grid{
+      background-color:#110817;
+      background-image:
+        linear-gradient(rgba(255,255,255,.055) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px),
+        linear-gradient(rgba(255,212,107,.08) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,212,107,.08) 1px,transparent 1px);
+      background-size:3.125% 3.846%,3.125% 3.846%,12.5% 15.384%,12.5% 15.384%;
+    }
+    .stage::before,.stage::after{content:"";position:absolute;z-index:2;pointer-events:none;background:rgba(255,212,107,.18)}
+    .stage::before{left:50%;top:0;bottom:0;width:1px}
+    .stage::after{top:50%;left:0;right:0;height:1px}
+    #treasureArt{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
+    #socketLayer{position:absolute;inset:0;z-index:4}
+    .socket{
+      position:absolute;display:grid;place-items:center;transform-origin:center;
+      border:1px dashed rgba(255,255,255,.22);border-radius:10px;cursor:grab;
+      touch-action:none;
+    }
+    .socket:active{cursor:grabbing}
+    .socket.selected{
+      border:2px solid var(--gold);
+      box-shadow:0 0 0 2px rgba(0,0,0,.55),0 0 18px rgba(255,212,107,.22)
+    }
+    .socket canvas{width:100%;height:100%;display:block;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.62))}
+    .socket .index{
+      position:absolute;left:50%;top:-22px;transform:translateX(-50%);
+      min-width:22px;height:22px;padding:0 5px;display:grid;place-items:center;
+      border-radius:999px;background:#0b060e;border:1px solid rgba(255,212,107,.38);
+      color:var(--gold);font-size:14px;font-weight:900;pointer-events:none
+    }
+    .handle{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid #271322;z-index:6}
+    .handle.resize{right:-10px;bottom:-10px;cursor:nwse-resize}
+    .handle.rotate{right:-10px;top:-10px;cursor:crosshair;background:var(--purple)}
+    .stage-caption{display:flex;justify-content:space-between;gap:12px;margin-top:9px;color:var(--muted);font-size:14px}
+    .sidebar{padding:14px;display:grid;gap:14px}
+    .section{display:grid;gap:10px}
+    .section h2{margin:0;font-size:16px}
+    .socket-tabs{display:flex;flex-wrap:wrap;gap:7px}
+    .socket-tab{min-width:44px;height:44px;padding:0 10px}
+    .socket-tab.active{border-color:var(--gold);color:var(--gold);background:#352438}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .range-row{display:grid;grid-template-columns:1fr 88px;gap:8px;align-items:end}
+    input[type="range"]{width:100%;accent-color:#d288ef}
+    .nudge{display:grid;grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px;gap:5px;justify-content:center}
+    .nudge button{padding:0}
+    .nudge .up{grid-column:2}.nudge .left{grid-column:1;grid-row:2}.nudge .right{grid-column:3;grid-row:2}.nudge .down{grid-column:2;grid-row:3}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .output{min-height:164px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1.45}
+    .fine{color:var(--muted);font-size:14px;line-height:1.45}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 5px;color:#ddcfe1}
+    @media(max-width:900px){
+      body{padding:12px}
+      .toolbar{grid-template-columns:1fr 1fr}
+      .main{grid-template-columns:1fr}
+      .sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .sidebar .wide{grid-column:1/-1}
+      .stage-shell{min-height:0}
+    }
+    @media(max-width:560px){
+      .topbar{align-items:flex-start;flex-direction:column}
+      .toolbar{grid-template-columns:1fr}
+      .toggle{padding-top:0}
+      .sidebar{grid-template-columns:1fr}
+      .workspace{padding:8px}
+      .stage-shell{padding:8px}
+      .stage{border-radius:12px}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div>
+        <h1>Treasure Alignment Editor</h1>
+        <p>Line the real game gems up over each treasure's settings. Everything uses GemDrop's existing 320 × 260 treasure coordinate system, so the exported values map directly back to <code>meta.js</code>.</p>
+      </div>
+      <div id="status" class="status">Loading gem renderer…</div>
+    </div>
+
+    <section class="toolbar" aria-label="Treasure editor controls">
+      <div class="field">
+        <label for="treasureSelect">Treasure</label>
+        <select id="treasureSelect"></select>
+      </div>
+      <div class="field">
+        <label for="artUpload">Test future artwork</label>
+        <input id="artUpload" type="file" accept="image/png,image/webp,image/jpeg">
+      </div>
+      <label class="toggle"><input id="gridToggle" type="checkbox" checked> Show alignment grid</label>
+      <button id="resetArt" type="button">Use repo artwork</button>
+    </section>
+
+    <div class="main">
+      <section class="workspace">
+        <div class="stage-shell">
+          <div class="stage-wrap">
+            <div id="stage" class="stage grid" aria-label="Treasure alignment canvas">
+              <img id="treasureArt" alt="">
+              <div id="socketLayer"></div>
+            </div>
+            <div class="stage-caption">
+              <span>Game render: 320 × 260</span>
+              <span>Drag socket · gold handle resizes · purple handle rotates</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="section wide">
+          <h2>Sockets</h2>
+          <div id="socketTabs" class="socket-tabs"></div>
+          <div class="actions">
+            <button id="addSocket" type="button">Add socket</button>
+            <button id="deleteSocket" class="danger" type="button">Delete selected</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Selected socket</h2>
+          <div class="field">
+            <label for="cutSelect">Cut</label>
+            <select id="cutSelect"></select>
+          </div>
+          <div class="field">
+            <label for="gemSelect">Preview gem</label>
+            <select id="gemSelect"></select>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="xInput">X</label><input id="xInput" type="number" min="0" max="320" step="0.5"></div>
+            <div class="field"><label for="yInput">Y</label><input id="yInput" type="number" min="0" max="260" step="0.5"></div>
+          </div>
+          <div class="range-row">
+            <div class="field"><label for="sizeRange">Size</label><input id="sizeRange" type="range" min="12" max="120" step="0.5"></div>
+            <input id="sizeInput" type="number" min="12" max="120" step="0.5" aria-label="Socket size">
+          </div>
+          <div class="range-row">
+            <div class="field"><label for="rotationRange">Rotation</label><input id="rotationRange" type="range" min="-180" max="180" step="1"></div>
+            <input id="rotationInput" type="number" min="-180" max="180" step="1" aria-label="Socket rotation">
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Nudge</h2>
+          <div class="nudge" aria-label="Nudge selected socket">
+            <button class="up" data-dx="0" data-dy="-1" type="button">↑</button>
+            <button class="left" data-dx="-1" data-dy="0" type="button">←</button>
+            <button class="right" data-dx="1" data-dy="0" type="button">→</button>
+            <button class="down" data-dx="0" data-dy="1" type="button">↓</button>
+          </div>
+          <p class="fine">Arrow keys nudge 1 unit. Hold <span class="kbd">Shift</span> for 5.</p>
+        </section>
+
+        <section class="section wide">
+          <h2>Export</h2>
+          <textarea id="output" class="output" readonly></textarea>
+          <div class="actions">
+            <button id="copyOutput" class="primary" type="button">Copy sockets</button>
+            <button id="resetSockets" type="button">Reset treasure</button>
+          </div>
+          <p class="fine">Draft positions save automatically in this browser. Rotation is included only when non-zero, so the output stays compatible with the existing config unless you choose to use rotation later.</p>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script src="../reactive-gem-system.js"></script>
+  <script>
+  (() => {
+    'use strict';
+
+    const GEMS=[
+      {name:'Quartz',color:'#D7EBF2',accent:'#EDF6F9',dark:'#859296',cut:'rectangular'},
+      {name:'Citrine',color:'#E9B11E',accent:'#F5DC9A',dark:'#906E13',cut:'circular_starcut'},
+      {name:'Sunstone',color:'#E67A45',accent:'#F4C3AB',dark:'#8F4C2B',cut:'emerald_stepcut'},
+      {name:'Amethyst',color:'#A968E5',accent:'#D8BBF3',dark:'#69408E',cut:'rectangular_brilliant'},
+      {name:'Peridot',color:'#99D64D',accent:'#D1EDAF',dark:'#5F8530',cut:'heart'},
+      {name:'Garnet',color:'#B33149',accent:'#DDA2AD',dark:'#6F1E2D',cut:'tanzanite'},
+      {name:'Topaz',color:'#D7902F',accent:'#EDCDA1',dark:'#85591D',cut:'rectangular'},
+      {name:'Moonstone',color:'#B9C9F2',accent:'#E0E7F9',dark:'#737D96',cut:'circular_starcut'},
+      {name:'Zircon',color:'#42C7E8',accent:'#AAE6F5',dark:'#297B90',cut:'emerald_stepcut'},
+      {name:'Morganite',color:'#F5B3C8',accent:'#FADDE6',dark:'#986F7C',cut:'rectangular_brilliant'},
+      {name:'Aquamarine',color:'#63E3C4',accent:'#B9F2E4',dark:'#3D8D7A',cut:'heart'},
+      {name:'Tourmaline',color:'#C447B6',accent:'#E4ACDE',dark:'#7A2C71',cut:'tanzanite'},
+      {name:'Tanzanite',color:'#4F54D9',accent:'#B0B2EE',dark:'#313487',cut:'rectangular'},
+      {name:'Spinel',color:'#FF4F87',accent:'#FFB0C9',dark:'#9E3154',cut:'circular_starcut'},
+      {name:'Sapphire',color:'#2D63D6',accent:'#A0B9ED',dark:'#1C3D85',cut:'emerald_stepcut'},
+      {name:'Emerald',color:'#18B56A',accent:'#97DEBC',dark:'#0F7042',cut:'rectangular_brilliant'},
+      {name:'Ruby',color:'#E12F4F',accent:'#F2A1B0',dark:'#8C1D31',cut:'heart'},
+      {name:'Alexandrite',color:'#47B38E',accent:'#ACDDCC',dark:'#2C6F58',cut:'tanzanite'},
+      {name:'Starstone',color:'#9B6BFF',accent:'#D2BCFF',dark:'#60429E',cut:'rectangular'},
+      {name:'Crownstone',color:'#FFD24A',accent:'#FFEBAE',dark:'#9E822E',cut:'circular_starcut'}
+    ];
+
+    const TREASURES=[
+      {id:'silver-ring',name:'Silver Ring',sockets:[{x:160,y:92,cut:'circular_starcut',size:48}]},
+      {id:'sun-brooch',name:'Sunburst Brooch',sockets:[{x:125,y:128,cut:'heart',size:43},{x:195,y:128,cut:'circular_starcut',size:43}]},
+      {id:'heart-pendant',name:'Heart Pendant',sockets:[{x:160,y:112,cut:'rectangular_brilliant',size:45},{x:160,y:162,cut:'heart',size:45}]},
+      {id:'signet-ring',name:'Royal Signet',sockets:[{x:123,y:94,cut:'tanzanite',size:39},{x:160,y:76,cut:'rectangular',size:43},{x:197,y:94,cut:'tanzanite',size:39}]},
+      {id:'moon-necklace',name:'Moon Necklace',sockets:[{x:105,y:119,cut:'circular_starcut',size:38},{x:142,y:142,cut:'heart',size:38},{x:178,y:142,cut:'heart',size:38},{x:215,y:119,cut:'circular_starcut',size:38}]},
+      {id:'ceremonial-goblet',name:'Ceremonial Goblet',sockets:[{x:125,y:90,cut:'emerald_stepcut',size:40},{x:160,y:112,cut:'rectangular_brilliant',size:42},{x:195,y:90,cut:'emerald_stepcut',size:40}]},
+      {id:'ornate-chalice',name:'Ornate Chalice',sockets:[{x:112,y:92,cut:'tanzanite',size:38},{x:144,y:115,cut:'circular_starcut',size:38},{x:176,y:115,cut:'circular_starcut',size:38},{x:208,y:92,cut:'tanzanite',size:38}]},
+      {id:'moon-tiara',name:'Moon Tiara',sockets:[{x:94,y:126,cut:'heart',size:35},{x:127,y:102,cut:'rectangular_brilliant',size:36},{x:160,y:82,cut:'circular_starcut',size:39},{x:193,y:102,cut:'rectangular_brilliant',size:36},{x:226,y:126,cut:'heart',size:35}]},
+      {id:'crown-reliquary',name:'Crown Reliquary',sockets:[{x:112,y:102,cut:'emerald_stepcut',size:37},{x:160,y:82,cut:'rectangular',size:40},{x:208,y:102,cut:'emerald_stepcut',size:37},{x:132,y:150,cut:'heart',size:36},{x:188,y:150,cut:'heart',size:36}]},
+      {id:'sovereign-crown',name:'Sovereign Crown',sockets:[{x:84,y:130,cut:'tanzanite',size:34},{x:116,y:98,cut:'heart',size:34},{x:160,y:72,cut:'rectangular',size:39},{x:204,y:98,cut:'heart',size:34},{x:236,y:130,cut:'tanzanite',size:34},{x:160,y:146,cut:'circular_starcut',size:38}]},
+      {id:'star-sceptre',name:'Star Sceptre',sockets:[{x:160,y:60,cut:'circular_starcut',size:40},{x:126,y:91,cut:'tanzanite',size:34},{x:194,y:91,cut:'tanzanite',size:34},{x:160,y:126,cut:'rectangular_brilliant',size:37},{x:160,y:172,cut:'emerald_stepcut',size:37}]}
+    ];
+
+    const CUT_LABELS={
+      rectangular:'Rectangular',
+      circular_starcut:'Round',
+      emerald_stepcut:'Emerald',
+      rectangular_brilliant:'Brilliant',
+      heart:'Heart',
+      tanzanite:'Tanzanite'
+    };
+
+    const $=id=>document.getElementById(id);
+    const els={
+      status:$('status'),treasureSelect:$('treasureSelect'),artUpload:$('artUpload'),resetArt:$('resetArt'),
+      gridToggle:$('gridToggle'),stage:$('stage'),treasureArt:$('treasureArt'),socketLayer:$('socketLayer'),
+      socketTabs:$('socketTabs'),addSocket:$('addSocket'),deleteSocket:$('deleteSocket'),
+      cutSelect:$('cutSelect'),gemSelect:$('gemSelect'),xInput:$('xInput'),yInput:$('yInput'),
+      sizeRange:$('sizeRange'),sizeInput:$('sizeInput'),rotationRange:$('rotationRange'),rotationInput:$('rotationInput'),
+      output:$('output'),copyOutput:$('copyOutput'),resetSockets:$('resetSockets')
+    };
+
+    let current=0;
+    let selected=0;
+    let sockets=[];
+    let customArtUrl=null;
+    let reactiveReady=false;
+    let gesture=null;
+
+    const cloneSockets=list=>list.map(s=>({...s,rotation:Number(s.rotation)||0}));
+    const currentTreasure=()=>TREASURES[current];
+    const selectedSocket=()=>sockets[selected]||null;
+    const draftKey=()=> 'gemdrop-aligner-'+currentTreasure().id;
+    const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+    const roundHalf=n=>Math.round(n*2)/2;
+
+    function loadDraft(){
+      try{
+        const saved=JSON.parse(localStorage.getItem(draftKey())||'null');
+        if(Array.isArray(saved)&&saved.length) return cloneSockets(saved);
+      }catch{}
+      return cloneSockets(currentTreasure().sockets);
+    }
+
+    function saveDraft(){
+      try{localStorage.setItem(draftKey(),JSON.stringify(sockets));}catch{}
+    }
+
+    function setRepoArt(){
+      if(customArtUrl){URL.revokeObjectURL(customArtUrl);customArtUrl=null}
+      els.artUpload.value='';
+      els.treasureArt.src='../assets/treasures/'+currentTreasure().id+'.png';
+      els.treasureArt.alt=currentTreasure().name+' artwork';
+    }
+
+    function populateTreasureSelect(){
+      TREASURES.forEach((t,i)=>{
+        const option=document.createElement('option');
+        option.value=String(i);
+        option.textContent=t.name;
+        els.treasureSelect.appendChild(option);
+      });
+    }
+
+    function populateCutSelect(){
+      Object.entries(CUT_LABELS).forEach(([value,label])=>{
+        const option=document.createElement('option');
+        option.value=value; option.textContent=label;
+        els.cutSelect.appendChild(option);
+      });
+    }
+
+    function populateGemSelect(){
+      const socket=selectedSocket();
+      els.gemSelect.innerHTML='';
+      if(!socket) return;
+      const matches=GEMS.map((g,i)=>({g,i})).filter(x=>x.g.cut===socket.cut);
+      matches.forEach(({g,i})=>{
+        const option=document.createElement('option');
+        option.value=String(i);option.textContent=g.name;
+        els.gemSelect.appendChild(option);
+      });
+      if(matches.length) els.gemSelect.value=String(matches[0].i);
+    }
+
+    function gemForSocket(socket){
+      const chosen=Number(els.gemSelect.value);
+      if(Number.isInteger(chosen)&&GEMS[chosen]&&GEMS[chosen].cut===socket.cut) return GEMS[chosen];
+      return GEMS.find(g=>g.cut===socket.cut)||GEMS[0];
+    }
+
+    function drawGem(canvas,socket){
+      const ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,112,112);
+      if(!reactiveReady) return;
+      const gem=gemForSocket(socket);
+      try{
+        const source=window.ReactiveGemSystem.renderPreviewCanvas(socket.cut,gem.color,0,192,gem);
+        const scale=Math.min(112*.88/source.width,112*.88/source.height);
+        const w=source.width*scale,h=source.height*scale;
+        ctx.drawImage(source,(112-w)/2,(112-h)/2,w,h);
+      }catch(err){
+        console.error(err);
+      }
+    }
+
+    function styleSocket(node,socket){
+      node.style.left=(socket.x/320*100)+'%';
+      node.style.top=(socket.y/260*100)+'%';
+      node.style.width=(socket.size/320*100)+'%';
+      node.style.height=(socket.size/260*100)+'%';
+      node.style.transform='translate(-50%,-50%) rotate('+(Number(socket.rotation)||0)+'deg)';
+    }
+
+    function renderSockets(){
+      els.socketLayer.innerHTML='';
+      sockets.forEach((socket,index)=>{
+        const node=document.createElement('div');
+        node.className='socket'+(index===selected?' selected':'');
+        node.dataset.index=String(index);
+        styleSocket(node,socket);
+
+        const canvas=document.createElement('canvas');
+        canvas.width=112;canvas.height=112;
+        canvas.setAttribute('aria-hidden','true');
+        drawGem(canvas,socket);
+
+        const badge=document.createElement('span');
+        badge.className='index';badge.textContent=String(index+1);
+
+        node.append(canvas,badge);
+        if(index===selected){
+          const resize=document.createElement('span');resize.className='handle resize';resize.dataset.handle='resize';
+          const rotate=document.createElement('span');rotate.className='handle rotate';rotate.dataset.handle='rotate';
+          node.append(resize,rotate);
+        }
+        els.socketLayer.appendChild(node);
+      });
+      renderTabs();
+    }
+
+    function renderTabs(){
+      els.socketTabs.innerHTML='';
+      sockets.forEach((socket,index)=>{
+        const b=document.createElement('button');
+        b.type='button';b.className='socket-tab'+(index===selected?' active':'');
+        b.textContent=(index+1)+' · '+CUT_LABELS[socket.cut];
+        b.addEventListener('click',()=>selectSocket(index));
+        els.socketTabs.appendChild(b);
+      });
+    }
+
+    function selectSocket(index){
+      if(!sockets.length){selected=-1;syncInspector();renderSockets();return}
+      selected=clamp(index,0,sockets.length-1);
+      populateGemSelect();
+      syncInspector();
+      renderSockets();
+    }
+
+    function syncInspector(){
+      const s=selectedSocket();
+      const disabled=!s;
+      [els.cutSelect,els.gemSelect,els.xInput,els.yInput,els.sizeRange,els.sizeInput,els.rotationRange,els.rotationInput,els.deleteSocket]
+        .forEach(el=>el.disabled=disabled);
+      if(!s){updateOutput();return}
+      els.cutSelect.value=s.cut;
+      els.xInput.value=String(s.x);
+      els.yInput.value=String(s.y);
+      els.sizeRange.value=String(s.size);
+      els.sizeInput.value=String(s.size);
+      els.rotationRange.value=String(s.rotation||0);
+      els.rotationInput.value=String(s.rotation||0);
+      updateOutput();
+    }
+
+    function updateSelected(patch){
+      const s=selectedSocket();if(!s)return;
+      Object.assign(s,patch);
+      s.x=roundHalf(clamp(Number(s.x)||0,0,320));
+      s.y=roundHalf(clamp(Number(s.y)||0,0,260));
+      s.size=roundHalf(clamp(Number(s.size)||40,12,120));
+      s.rotation=Math.round(clamp(Number(s.rotation)||0,-180,180));
+      saveDraft();
+      syncInspector();
+      renderSockets();
+    }
+
+    function updateOutput(){
+      const lines=sockets.map(s=>{
+        let line='{x:'+formatNum(s.x)+',y:'+formatNum(s.y)+",cut:'"+s.cut+"',size:"+formatNum(s.size);
+        if(Number(s.rotation)) line+=',rotation:'+Math.round(s.rotation);
+        return line+'}';
+      });
+      els.output.value='sockets:['+(lines.length?'\n  '+lines.join(',\n  ')+'\n':'')+']';
+    }
+
+    function formatNum(n){
+      return Number.isInteger(Number(n))?String(Number(n)):String(Number(n).toFixed(1));
+    }
+
+    function switchTreasure(index){
+      current=clamp(index,0,TREASURES.length-1);
+      selected=0;
+      sockets=loadDraft();
+      els.treasureSelect.value=String(current);
+      setRepoArt();
+      populateGemSelect();
+      syncInspector();
+      renderSockets();
+    }
+
+    function stagePoint(event){
+      const rect=els.stage.getBoundingClientRect();
+      return {
+        x:clamp((event.clientX-rect.left)/rect.width*320,0,320),
+        y:clamp((event.clientY-rect.top)/rect.height*260,0,260)
+      };
+    }
+
+    function beginGesture(event,node){
+      const index=Number(node.dataset.index);
+      if(index!==selected) selectSocket(index);
+      const s=selectedSocket();if(!s)return;
+      const point=stagePoint(event);
+      const handle=event.target.dataset.handle||'move';
+      gesture={
+        pointerId:event.pointerId,
+        type:handle,
+        start:point,
+        original:{...s}
+      };
+      node.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    }
+
+    function moveGesture(event){
+      if(!gesture||event.pointerId!==gesture.pointerId)return;
+      const p=stagePoint(event);
+      const s=selectedSocket();if(!s)return;
+
+      if(gesture.type==='move'){
+        s.x=roundHalf(clamp(gesture.original.x+(p.x-gesture.start.x),0,320));
+        s.y=roundHalf(clamp(gesture.original.y+(p.y-gesture.start.y),0,260));
+      }else if(gesture.type==='resize'){
+        const dx=p.x-gesture.original.x,dy=p.y-gesture.original.y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        s.size=roundHalf(clamp(dist*2,12,120));
+      }else if(gesture.type==='rotate'){
+        const angle=Math.atan2(p.y-gesture.original.y,p.x-gesture.original.x)*180/Math.PI;
+        s.rotation=Math.round(angle+45);
+      }
+
+      saveDraft();
+      syncInspector();
+      renderSockets();
+      event.preventDefault();
+    }
+
+    function endGesture(event){
+      if(gesture&&event.pointerId===gesture.pointerId) gesture=null;
+    }
+
+    async function copyOutput(){
+      const text=els.output.value;
+      try{
+        await navigator.clipboard.writeText(text);
+        els.status.textContent='Copied sockets to clipboard';
+      }catch{
+        els.output.focus();els.output.select();
+        document.execCommand('copy');
+        els.status.textContent='Copied sockets to clipboard';
+      }
+    }
+
+    async function prepareReactive(){
+      if(!window.ReactiveGemSystem) throw new Error('ReactiveGemSystem unavailable');
+      const sources={};
+      for(const [key,cut] of Object.entries(window.ReactiveGemSystem.cuts)){
+        const response=await fetch('../'+cut.asset);
+        if(!response.ok) throw new Error('Could not load '+cut.asset);
+        sources[key]=await response.text();
+      }
+      window.ReactiveGemSystem.prepare(sources);
+      reactiveReady=true;
+      els.status.textContent='Ready · drafts save automatically';
+      renderSockets();
+    }
+
+    populateTreasureSelect();
+    populateCutSelect();
+    switchTreasure(0);
+
+    els.treasureSelect.addEventListener('change',()=>switchTreasure(Number(els.treasureSelect.value)));
+    els.gridToggle.addEventListener('change',()=>els.stage.classList.toggle('grid',els.gridToggle.checked));
+    els.resetArt.addEventListener('click',setRepoArt);
+    els.artUpload.addEventListener('change',()=>{
+      const file=els.artUpload.files&&els.artUpload.files[0];
+      if(!file)return;
+      if(customArtUrl)URL.revokeObjectURL(customArtUrl);
+      customArtUrl=URL.createObjectURL(file);
+      els.treasureArt.src=customArtUrl;
+      els.treasureArt.alt='Uploaded treasure artwork';
+    });
+
+    els.addSocket.addEventListener('click',()=>{
+      sockets.push({x:160,y:130,cut:'circular_starcut',size:40,rotation:0});
+      selected=sockets.length-1;
+      saveDraft();populateGemSelect();syncInspector();renderSockets();
+    });
+    els.deleteSocket.addEventListener('click',()=>{
+      if(selected<0||!sockets.length)return;
+      sockets.splice(selected,1);
+      selected=Math.min(selected,sockets.length-1);
+      saveDraft();populateGemSelect();syncInspector();renderSockets();
+    });
+    els.resetSockets.addEventListener('click',()=>{
+      try{localStorage.removeItem(draftKey())}catch{}
+      sockets=cloneSockets(currentTreasure().sockets);
+      selected=0;populateGemSelect();syncInspector();renderSockets();
+      els.status.textContent='Reset to current meta.js values';
+    });
+    els.copyOutput.addEventListener('click',copyOutput);
+
+    els.cutSelect.addEventListener('change',()=>{
+      updateSelected({cut:els.cutSelect.value});
+      populateGemSelect();renderSockets();
+    });
+    els.gemSelect.addEventListener('change',renderSockets);
+    els.xInput.addEventListener('input',()=>updateSelected({x:els.xInput.value}));
+    els.yInput.addEventListener('input',()=>updateSelected({y:els.yInput.value}));
+    els.sizeRange.addEventListener('input',()=>updateSelected({size:els.sizeRange.value}));
+    els.sizeInput.addEventListener('input',()=>updateSelected({size:els.sizeInput.value}));
+    els.rotationRange.addEventListener('input',()=>updateSelected({rotation:els.rotationRange.value}));
+    els.rotationInput.addEventListener('input',()=>updateSelected({rotation:els.rotationInput.value}));
+
+    document.querySelectorAll('.nudge button').forEach(button=>{
+      button.addEventListener('click',()=>{
+        const s=selectedSocket();if(!s)return;
+        updateSelected({x:s.x+Number(button.dataset.dx),y:s.y+Number(button.dataset.dy)});
+      });
+    });
+
+    els.socketLayer.addEventListener('pointerdown',event=>{
+      const node=event.target.closest('.socket');
+      if(node)beginGesture(event,node);
+    });
+    window.addEventListener('pointermove',moveGesture,{passive:false});
+    window.addEventListener('pointerup',endGesture);
+    window.addEventListener('pointercancel',endGesture);
+
+    document.addEventListener('keydown',event=>{
+      if(event.target.matches('input,select,textarea'))return;
+      const s=selectedSocket();if(!s)return;
+      const amount=event.shiftKey?5:1;
+      let dx=0,dy=0;
+      if(event.key==='ArrowLeft')dx=-amount;
+      else if(event.key==='ArrowRight')dx=amount;
+      else if(event.key==='ArrowUp')dy=-amount;
+      else if(event.key==='ArrowDown')dy=amount;
+      else return;
+      event.preventDefault();
+      updateSelected({x:s.x+dx,y:s.y+dy});
+    });
+
+    prepareReactive().catch(err=>{
+      console.error(err);
+      els.status.textContent='Gem renderer failed to load';
+    });
+  })();
+  </script>
+</body>
+</html>
