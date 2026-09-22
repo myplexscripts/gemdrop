@@ -1118,7 +1118,7 @@
       };
 
       this.aimStrip.addEventListener('pointerdown',e=>{
-        if(!this.running||this.paused||!this.ready) return;
+        if(!this.running||this.paused||this.metaPaused) return;
         unlockAudio();
         e.preventDefault();
         this.pointerHeld=true;
@@ -2334,7 +2334,7 @@
       this.powerCharge.tumble=0;
       this.tumbleState={
         started:this.time.now,
-        duration:1650,
+        duration:1950,
         nextKick:this.time.now,
         kick:0
       };
@@ -2344,7 +2344,7 @@
         shell.classList.remove('tumbling');
         void shell.offsetWidth;
         shell.classList.add('tumbling');
-        window.setTimeout(()=>shell.classList.remove('tumbling'),1750);
+        window.setTimeout(()=>shell.classList.remove('tumbling'),2050);
       }
 
       const M=Phaser.Physics.Matter.Matter;
@@ -2353,27 +2353,27 @@
         M.Sleeping.set(gem.body,false);
         M.Body.setVelocity(gem.body,{
           x:clamp(
-            gem.body.velocity.x+Phaser.Math.FloatBetween(-3.2,3.2),
-            -7.5,
-            7.5
+            gem.body.velocity.x+Phaser.Math.FloatBetween(-4.2,4.2),
+            -9.5,
+            9.5
           ),
           y:clamp(
-            gem.body.velocity.y+Phaser.Math.FloatBetween(-2.6,.8),
-            -5.8,
-            6.2
+            gem.body.velocity.y+Phaser.Math.FloatBetween(-3.4,1.0),
+            -7.4,
+            7.2
           )
         });
         M.Body.setAngularVelocity(
           gem.body,
           clamp(
-            gem.body.angularVelocity+Phaser.Math.FloatBetween(-.105,.105),
-            -.16,
-            .16
+            gem.body.angularVelocity+Phaser.Math.FloatBetween(-.14,.14),
+            -.21,
+            .21
           )
         );
       }
 
-      this.cameras.main.shake(1550,.011);
+      this.cameras.main.shake(1850,.0135);
       this.showStatus('TUMBLE!','reward',1050,'rotate-cw');
       tone(210,.12,.028,'triangle');
       haptic([10,18,10,18,12]);
@@ -2388,14 +2388,14 @@
       const elapsed=time-state.started;
       const p=clamp(elapsed/state.duration,0,1);
       const envelope=Math.sin(Math.PI*p);
-      const wave=Math.sin(p*Math.PI*14);
+      const wave=Math.sin(p*Math.PI*18);
 
-      engine.gravity.x=wave*1.45*envelope;
+      engine.gravity.x=wave*2.15*envelope;
       engine.gravity.y=this.baseGravityY-
-        Math.max(0,Math.sin(p*Math.PI*10))*1.7*envelope;
+        Math.max(0,Math.sin(p*Math.PI*12))*2.15*envelope;
 
       if(time>=state.nextKick){
-        state.nextKick=time+85;
+        state.nextKick=time+70;
         state.kick=(state.kick||0)+1;
         const M=Phaser.Physics.Matter.Matter;
         const direction=state.kick%2?1:-1;
@@ -2405,24 +2405,24 @@
           M.Sleeping.set(gem.body,false);
 
           const horizontal=
-            direction*Phaser.Math.FloatBetween(.9,1.85)*envelope+
-            Phaser.Math.FloatBetween(-.85,.85);
+            direction*Phaser.Math.FloatBetween(1.2,2.55)*envelope+
+            Phaser.Math.FloatBetween(-1.05,1.05);
 
           const vertical=
-            Phaser.Math.FloatBetween(-1.35,.45)*envelope;
+            Phaser.Math.FloatBetween(-1.75,.65)*envelope;
 
           M.Body.setVelocity(gem.body,{
-            x:clamp(gem.body.velocity.x+horizontal,-8.5,8.5),
-            y:clamp(gem.body.velocity.y+vertical,-6.4,6.8)
+            x:clamp(gem.body.velocity.x+horizontal,-10.0,10.0),
+            y:clamp(gem.body.velocity.y+vertical,-7.8,7.8)
           });
 
           M.Body.setAngularVelocity(
             gem.body,
             clamp(
               gem.body.angularVelocity+
-              Phaser.Math.FloatBetween(-.055,.055),
-              -.17,
-              .17
+              Phaser.Math.FloatBetween(-.075,.075),
+              -.22,
+              .22
             )
           );
         }
