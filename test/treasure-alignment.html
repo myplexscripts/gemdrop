@@ -68,7 +68,16 @@
     .stage::before,.stage::after{content:"";position:absolute;z-index:2;pointer-events:none;background:rgba(255,212,107,.18)}
     .stage::before{left:50%;top:0;bottom:0;width:1px}
     .stage::after{top:50%;left:0;right:0;height:1px}
-    #treasureArt{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
+    #gemLayer{position:absolute;inset:0;z-index:1;pointer-events:none}
+    #treasureArt{
+      position:absolute;
+      inset:0;
+      z-index:3;
+      width:100%;
+      height:100%;
+      object-fit:fill;
+      pointer-events:none
+    }
     #socketLayer{position:absolute;inset:0;z-index:4}
     .socket{
       position:absolute;display:grid;place-items:center;transform-origin:center;
@@ -80,9 +89,22 @@
       border:2px solid var(--gold);
       box-shadow:0 0 0 2px rgba(0,0,0,.55),0 0 18px rgba(255,212,107,.22)
     }
-    .socket canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-    .socket .gem-preview{
-      z-index:1;
+    .gem-placement{
+      position:absolute;
+      display:grid;
+      place-items:center;
+      transform-origin:center;
+      pointer-events:none;
+    }
+    .gem-placement canvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      display:block;
+      pointer-events:none;
+    }
+    .gem-placement .gem-preview{
       filter:
         drop-shadow(0 3px 4px rgba(0,0,0,.62))
         drop-shadow(0 0 3px rgba(255,255,255,.07));
@@ -162,12 +184,13 @@
         <div class="stage-shell">
           <div class="stage-wrap">
             <div id="stage" class="stage grid" aria-label="Treasure alignment canvas">
+              <div id="gemLayer" aria-hidden="true"></div>
               <img id="treasureArt" alt="">
               <div id="socketLayer"></div>
             </div>
             <div class="stage-caption">
               <span>Game render: 320 × 260</span>
-              <span>Drag gem · side handles reshape · corner changes ratio · facets redraw live</span>
+              <span>Gem sits behind artwork · side handles reshape · corner keeps aspect ratio</span>
             </div>
           </div>
         </div>
@@ -289,7 +312,7 @@
     const $=id=>document.getElementById(id);
     const els={
       status:$('status'),treasureSelect:$('treasureSelect'),artUpload:$('artUpload'),resetArt:$('resetArt'),
-      gridToggle:$('gridToggle'),stage:$('stage'),treasureArt:$('treasureArt'),socketLayer:$('socketLayer'),
+      gridToggle:$('gridToggle'),stage:$('stage'),treasureArt:$('treasureArt'),gemLayer:$('gemLayer'),socketLayer:$('socketLayer'),
       socketTabs:$('socketTabs'),addSocket:$('addSocket'),deleteSocket:$('deleteSocket'),
       cutSelect:$('cutSelect'),gemSelect:$('gemSelect'),xInput:$('xInput'),yInput:$('yInput'),
       widthRange:$('widthRange'),widthInput:$('widthInput'),heightRange:$('heightRange'),heightInput:$('heightInput'),
@@ -467,31 +490,56 @@
     }
 
     function renderSockets(){
+      els.gemLayer.innerHTML='';
       els.socketLayer.innerHTML='';
+
       sockets.forEach((socket,index)=>{
-        const node=document.createElement('div');
-        node.className='socket'+(index===selected?' selected':'');
-        node.dataset.index=String(index);
-        styleSocket(node,socket);
+        // The gem itself lives below the transparent treasure PNG.
+        const gemNode=document.createElement('div');
+        gemNode.className='gem-placement';
+        styleSocket(gemNode,socket);
 
         const canvas=document.createElement('canvas');
         canvas.className='gem-preview';
         canvas.setAttribute('aria-hidden','true');
         drawGem(canvas,socket);
+        gemNode.appendChild(canvas);
+        els.gemLayer.appendChild(gemNode);
+
+        // Only the editor controls live above the treasure artwork.
+        const node=document.createElement('div');
+        node.className='socket'+(index===selected?' selected':'');
+        node.dataset.index=String(index);
+        styleSocket(node,socket);
 
         const badge=document.createElement('span');
-        badge.className='index';badge.textContent=String(index+1);
+        badge.className='index';
+        badge.textContent=String(index+1);
+        node.appendChild(badge);
 
-        node.append(canvas,badge);
         if(index===selected){
-          const resizeX=document.createElement('span');resizeX.className='handle resize-x';resizeX.dataset.handle='resize-x';
-          const resizeY=document.createElement('span');resizeY.className='handle resize-y';resizeY.dataset.handle='resize-y';
-          const resizeXY=document.createElement('span');resizeXY.className='handle resize-xy';resizeXY.dataset.handle='resize-xy';
-          const rotate=document.createElement('span');rotate.className='handle rotate';rotate.dataset.handle='rotate';
+          const resizeX=document.createElement('span');
+          resizeX.className='handle resize-x';
+          resizeX.dataset.handle='resize-x';
+
+          const resizeY=document.createElement('span');
+          resizeY.className='handle resize-y';
+          resizeY.dataset.handle='resize-y';
+
+          const resizeXY=document.createElement('span');
+          resizeXY.className='handle resize-xy';
+          resizeXY.dataset.handle='resize-xy';
+
+          const rotate=document.createElement('span');
+          rotate.className='handle rotate';
+          rotate.dataset.handle='rotate';
+
           node.append(resizeX,resizeY,resizeXY,rotate);
         }
+
         els.socketLayer.appendChild(node);
       });
+
       renderTabs();
     }
 
@@ -601,13 +649,36 @@
       if(gesture.type==='move'){
         s.x=roundHalf(clamp(gesture.original.x+(p.x-gesture.start.x),0,320));
         s.y=roundHalf(clamp(gesture.original.y+(p.y-gesture.start.y),0,260));
-      }else if(gesture.type==='resize-x'){
-        s.width=roundHalf(clamp(Math.abs(p.x-gesture.original.x)*2,12,180));
-      }else if(gesture.type==='resize-y'){
-        s.height=roundHalf(clamp(Math.abs(p.y-gesture.original.y)*2,12,180));
-      }else if(gesture.type==='resize-xy'){
-        s.width=roundHalf(clamp(Math.abs(p.x-gesture.original.x)*2,12,180));
-        s.height=roundHalf(clamp(Math.abs(p.y-gesture.original.y)*2,12,180));
+      }else if(
+        gesture.type==='resize-x'||
+        gesture.type==='resize-y'||
+        gesture.type==='resize-xy'
+      ){
+        const rotation=-(Number(gesture.original.rotation)||0)*Math.PI/180;
+        const dx=p.x-gesture.original.x;
+        const dy=p.y-gesture.original.y;
+        const localX=dx*Math.cos(rotation)-dy*Math.sin(rotation);
+        const localY=dx*Math.sin(rotation)+dy*Math.cos(rotation);
+
+        if(gesture.type==='resize-x'){
+          s.width=roundHalf(clamp(Math.abs(localX)*2,12,180));
+        }else if(gesture.type==='resize-y'){
+          s.height=roundHalf(clamp(Math.abs(localY)*2,12,180));
+        }else{
+          // Corner handle is a proportional scale control. It preserves the
+          // currently authored width:height ratio while making the whole gem
+          // larger or smaller.
+          const originalW=Math.max(12,Number(gesture.original.width)||40);
+          const originalH=Math.max(12,Number(gesture.original.height)||40);
+          const originalRadius=Math.hypot(originalW*.5,originalH*.5)||1;
+          const pointerRadius=Math.hypot(localX,localY);
+          const minScale=Math.max(12/originalW,12/originalH);
+          const maxScale=Math.min(180/originalW,180/originalH);
+          const scale=clamp(pointerRadius/originalRadius,minScale,maxScale);
+
+          s.width=roundHalf(originalW*scale);
+          s.height=roundHalf(originalH*scale);
+        }
       }else if(gesture.type==='rotate'){
         const angle=Math.atan2(p.y-gesture.original.y,p.x-gesture.original.x)*180/Math.PI;
         s.rotation=Math.round(angle+45);
@@ -645,7 +716,7 @@
       }
       window.ReactiveGemSystem.prepare(sources);
       reactiveReady=true;
-      els.status.textContent='Ready · facet geometry and lighting redraw as width/height change';
+      els.status.textContent='Ready · gems render behind the transparent treasure artwork';
       renderSockets();
     }
 
