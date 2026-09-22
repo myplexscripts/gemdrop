@@ -215,45 +215,94 @@
   }catch{}
 
   const MUSIC_VOLUME=.32;
-  const backgroundMusic=new Audio('assets/audio/main-loop.ogg?v=20260922-looptrim1');
+  const MUSIC_URL='assets/audio/main-loop.ogg?v=20260922-looptrim2';
   let musicUnlocked=false;
-  let musicFadeToken=0;
+  let musicLoadPromise=null;
+  let backgroundMusicBuffer=null;
+  let backgroundMusicSource=null;
+  let backgroundMusicGain=null;
 
-  backgroundMusic.loop=true;
-  backgroundMusic.preload='auto';
-  backgroundMusic.volume=0;
+  function setupBackgroundMusicBus(){
+    if(!audioCtx||backgroundMusicGain) return;
+    backgroundMusicGain=audioCtx.createGain();
+    backgroundMusicGain.gain.value=0;
+    backgroundMusicGain.connect(audioCtx.destination);
+  }
 
-  function fadeMusic(to,duration=280,token=musicFadeToken){
-    const from=Number(backgroundMusic.volume)||0;
+  function loadBackgroundMusic(){
+    if(!audioCtx) return Promise.resolve(null);
+    if(backgroundMusicBuffer) return Promise.resolve(backgroundMusicBuffer);
+    if(musicLoadPromise) return musicLoadPromise;
+
+    musicLoadPromise=fetch(MUSIC_URL)
+      .then(response=>{
+        if(!response.ok) throw new Error('Could not load main-loop.ogg');
+        return response.arrayBuffer();
+      })
+      .then(data=>audioCtx.decodeAudioData(data.slice(0)))
+      .then(buffer=>{
+        backgroundMusicBuffer=buffer;
+        return buffer;
+      })
+      .catch(()=>{
+        musicLoadPromise=null;
+        return null;
+      });
+
+    return musicLoadPromise;
+  }
+
+  function startBackgroundMusic(){
+    if(!audioCtx||!backgroundMusicBuffer||backgroundMusicSource) return;
+    setupBackgroundMusicBus();
+    if(!backgroundMusicGain) return;
+
+    const source=audioCtx.createBufferSource();
+    source.buffer=backgroundMusicBuffer;
+    source.loop=true;
+    source.loopStart=0;
+
+    // Skip the final second of the source on every loop. This removes the
+    // awkward tail while keeping the original audio file untouched.
+    source.loopEnd=Math.max(.1,backgroundMusicBuffer.duration-1);
+    source.connect(backgroundMusicGain);
+    source.start(0);
+    backgroundMusicSource=source;
+  }
+
+  function fadeMusic(to,duration=280){
+    if(!audioCtx||!backgroundMusicGain) return;
+    const gain=backgroundMusicGain.gain;
+    const now=audioCtx.currentTime;
     const target=clamp(to,0,1);
 
-    if(duration<=0||Math.abs(from-target)<.002){
-      backgroundMusic.volume=target;
-      return;
-    }
+    gain.cancelScheduledValues(now);
+    gain.setValueAtTime(gain.value,now);
 
-    const started=performance.now();
-    const tick=now=>{
-      if(token!==musicFadeToken) return;
-      const t=clamp((now-started)/duration,0,1);
-      const eased=t*t*(3-2*t);
-      backgroundMusic.volume=from+(target-from)*eased;
-      if(t<1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+    if(duration<=0){
+      gain.setValueAtTime(target,now);
+    }else{
+      gain.linearRampToValueAtTime(target,now+duration/1000);
+    }
   }
 
   function syncMusic(options={}){
-    const instant=!!options.instant;
-    const token=++musicFadeToken;
-    const shouldPlay=musicUnlocked&&!document.hidden&&!gameMuted;
+    if(!musicUnlocked||!audioCtx) return;
+    setupBackgroundMusicBus();
 
-    if(shouldPlay){
-      const playPromise=backgroundMusic.play();
-      if(playPromise&&typeof playPromise.catch==='function') playPromise.catch(()=>{});
+    const instant=!!options.instant;
+    const shouldPlay=!document.hidden&&!gameMuted;
+
+    if(!shouldPlay){
+      fadeMusic(0,instant?0:280);
+      return;
     }
 
-    fadeMusic(shouldPlay?MUSIC_VOLUME:0,instant?0:280,token);
+    loadBackgroundMusic().then(buffer=>{
+      if(!buffer||!musicUnlocked||document.hidden||gameMuted) return;
+      startBackgroundMusic();
+      fadeMusic(MUSIC_VOLUME,instant?0:280);
+    });
   }
 
   function unlockMusic(){
