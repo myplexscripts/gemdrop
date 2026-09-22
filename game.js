@@ -49,6 +49,7 @@
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
   const DROP_DELAY = 300;
+  const AUTO_FIRE_DELAY = 390;
   const AIM_CONTROL_GAIN = 1.25;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
@@ -851,6 +852,9 @@
       this.runStartUnlocked=new Set([0]);
       this.runStartBest=0;
       this.runTreasureClaims=[];
+      this.runStartedAt=0;
+      this.runPausedTotal=0;
+      this.runPauseStartedAt=0;
       this.discoveredCuts=new Set([0]);
       this.unlockedTiers=new Set([0]);
       this.limitLine=null;
@@ -1036,19 +1040,7 @@
         this.startRun();
       });
 
-      $('restartButton').addEventListener('click',()=>{
-        gameOverOverlay.classList.remove('visible');
-        this.startRun();
-      });
-
-      $('resultCollectionButton').addEventListener('click',()=>{
-        gameOverOverlay.classList.remove('visible');
-        startOverlay.classList.add('visible');
-        syncMusic();
-        if(window.GemdropMeta) window.GemdropMeta.showCollection('gems');
-        collectionOverlay.classList.add('visible');
-        this.startCollectionLighting();
-      });
+      $('resultMenuButton').addEventListener('click',()=>this.returnToMenu());
 
       $('powerTumble').addEventListener('click',()=>this.useTumble());
       $('powerCascade').addEventListener('click',()=>this.useCascade());
@@ -1699,6 +1691,9 @@
       this.runChestGain=0;
       this.runGemGains=Array(tiers.length).fill(0);
       this.runTreasureClaims=[];
+      this.runStartedAt=performance.now();
+      this.runPausedTotal=0;
+      this.runPauseStartedAt=0;
 
       this.score=0;
       this.currentTier=this.randomSpawnTier();
@@ -2502,6 +2497,34 @@
       scoreEl.classList.add('bump');
     }
 
+    syncRunClockPause() {
+      if(!this.runStartedAt) return;
+      const shouldPause=this.running&&(this.paused||this.metaPaused);
+
+      if(shouldPause&&!this.runPauseStartedAt){
+        this.runPauseStartedAt=performance.now();
+      }else if(!shouldPause&&this.runPauseStartedAt){
+        this.runPausedTotal+=performance.now()-this.runPauseStartedAt;
+        this.runPauseStartedAt=0;
+      }
+    }
+
+    runElapsedMs() {
+      if(!this.runStartedAt) return 0;
+      const now=performance.now();
+      const currentPause=this.runPauseStartedAt
+        ? now-this.runPauseStartedAt
+        : 0;
+      return Math.max(0,now-this.runStartedAt-this.runPausedTotal-currentPause);
+    }
+
+    formatRunTime(ms) {
+      const total=Math.max(0,Math.floor(ms/1000));
+      const minutes=Math.floor(total/60);
+      const seconds=total%60;
+      return minutes+':'+String(seconds).padStart(2,'0');
+    }
+
     returnToMenu() {
       this.running=false;
       this.ready=false;
@@ -2523,6 +2546,7 @@
       if(!this.running) return;
 
       this.paused=value;
+      this.syncRunClockPause();
       pauseOverlay.classList.toggle('visible',value);
       this.updatePowerButtons();
 
@@ -2543,6 +2567,7 @@
     setMetaPaused(value) {
       if(!this.running) return;
       this.metaPaused=!!value;
+      this.syncRunClockPause();
       this.updatePowerButtons();
       if(this.metaPaused){
         this.matter.world.pause();
@@ -2570,34 +2595,26 @@
         : tiers[highest].name+' · '+(highest+1)+' / '+tiers.length;
     }
 
-    renderRunSummary(recordInfo=null){
+    renderRunSummary() {
       const mergesEl=$('runMerges');
       const chainEl=$('runBestChain');
-      const chestEl=$('runChestGain');
+      const timeEl=$('runTime');
       const totalEl=$('runGemTotal');
       const haul=$('runGemHaul');
-      const discovery=$('runDiscovery');
-      const discoveryText=$('runDiscoveryText');
-      const crownText=$('runCrownProgressText');
-      const crownFill=$('runCrownProgressFill');
-      const record=$('runRecord');
+      const treasureTotal=$('runTreasureTotal');
+      const treasureHaul=$('runTreasureHaul');
 
       if(mergesEl) mergesEl.textContent=String(this.runMerges);
       if(chainEl) chainEl.textContent=Math.max(1,this.runBestChain)+'×';
-
-      const chestTarget=window.GemdropMeta&&window.GemdropMeta.getChestTarget
-        ? window.GemdropMeta.getChestTarget()
-        : 100;
-      const chestPct=chestTarget>0?Math.round((this.runChestGain/chestTarget)*100):0;
-      if(chestEl) chestEl.textContent='+'+chestPct+'%';
+      if(timeEl) timeEl.textContent=this.formatRunTime(this.runElapsedMs());
 
       const totalGems=this.runGemGains.reduce((sum,count)=>sum+count,0);
       const earned=this.runGemGains
         .map((count,tier)=>({count,tier}))
         .filter(item=>item.count>0)
         .sort((a,b)=>b.tier-a.tier);
-      const typeCount=earned.length;
-      if(totalEl) totalEl.textContent=typeCount+' '+(typeCount===1?'TYPE':'TYPES');
+
+      if(totalEl) totalEl.textContent=String(totalGems);
 
       if(haul){
         haul.innerHTML='';
@@ -2605,10 +2622,10 @@
         if(!earned.length){
           const empty=document.createElement('span');
           empty.className='run-gem-haul__empty';
-          empty.textContent='No gems banked this run';
+          empty.textContent='No gems earned this run';
           haul.appendChild(empty);
         }else{
-          earned.slice(0,6).forEach(item=>{
+          earned.forEach(item=>{
             const t=tiers[item.tier];
             const chip=document.createElement('div');
             chip.className='run-gem-chip';
@@ -2636,45 +2653,52 @@
             chip.append(canvas,copy);
             haul.appendChild(chip);
           });
-
-          if(earned.length>6){
-            const more=document.createElement('span');
-            more.className='run-gem-haul__more';
-            more.textContent='+'+(earned.length-6)+' more';
-            haul.appendChild(more);
-          }
         }
       }
 
-      const discoveries=[...this.unlockedTiers]
-        .filter(tier=>!this.runStartUnlocked.has(tier))
-        .sort((a,b)=>a-b);
-      if(discovery&&discoveryText){
-        discovery.hidden=!discoveries.length;
-        discoveryText.textContent=discoveries.map(tier=>tiers[tier].name).join(' · ');
-      }
+      if(treasureTotal) treasureTotal.textContent=String(this.runTreasureClaims.length);
 
-      const highest=this.unlockedTiers.size?Math.max(...this.unlockedTiers):0;
-      const last=tiers.length-1;
-      if(crownFill) crownFill.style.width=((last>0?highest/last:1)*100).toFixed(1)+'%';
-      if(crownText) crownText.textContent=highest>=last
-        ? 'CROWNSTONE DISCOVERED'
-        : (highest+1)+' / '+tiers.length+' · '+tiers[highest].name;
+      if(treasureHaul){
+        treasureHaul.innerHTML='';
 
-      if(record){
-        const records=[];
-        if(this.score>this.runStartBest) records.push('BEST VALUE');
-        if(recordInfo&&recordInfo.newBestChain) records.push('BEST CHAIN');
-        if(recordInfo&&recordInfo.newBestMerges) records.push('MOST MERGES');
-        if(this.runTreasureClaims.length) records.push(this.runTreasureClaims.length+' TREASURE'+(this.runTreasureClaims.length===1?'':'S')+' FOUND');
-        record.hidden=!records.length;
-        record.textContent=records.join(' · ');
+        if(!this.runTreasureClaims.length){
+          const empty=document.createElement('span');
+          empty.className='run-treasure-haul__empty';
+          empty.textContent='No treasures earned this run';
+          treasureHaul.appendChild(empty);
+        }else{
+          this.runTreasureClaims.forEach(id=>{
+            const info=window.GemdropMeta&&window.GemdropMeta.getTreasureInfo
+              ? window.GemdropMeta.getTreasureInfo(id)
+              : null;
+
+            const chip=document.createElement('div');
+            chip.className='run-treasure-chip';
+
+            if(info&&info.art){
+              const image=document.createElement('img');
+              image.src=info.art;
+              image.alt='';
+              image.setAttribute('aria-hidden','true');
+              chip.appendChild(image);
+            }
+
+            const copy=document.createElement('div');
+            const name=info&&info.name
+              ? info.name
+              : String(id||'Treasure').replace(/-/g,' ').replace(/\b\w/g,m=>m.toUpperCase());
+            copy.innerHTML='<strong>'+name+'</strong>';
+            chip.appendChild(copy);
+            treasureHaul.appendChild(chip);
+          });
+        }
       }
     }
 
     endGame() {
       if(!this.running) return;
 
+      const finalRunTime=this.runElapsedMs();
       this.running=false;
       this.ready=false;
       this.metaPaused=false;
@@ -2690,16 +2714,20 @@
       const finest=tiers[this.bestTierReached];
       bestMergeEl.textContent=finest.name;
 
-      const recordInfo=window.GemdropMeta&&window.GemdropMeta.recordRun
-        ? window.GemdropMeta.recordRun({
-            score:this.score,
-            merges:this.runMerges,
-            bestChain:this.runBestChain,
-            bestTier:this.bestTierReached
-          })
-        : null;
+      if(window.GemdropMeta&&window.GemdropMeta.recordRun){
+        window.GemdropMeta.recordRun({
+          score:this.score,
+          merges:this.runMerges,
+          bestChain:this.runBestChain,
+          bestTier:this.bestTierReached
+        });
+      }
 
-      this.renderRunSummary(recordInfo);
+      // Freeze the run clock at the exact active-play duration.
+      this.runStartedAt=performance.now()-finalRunTime;
+      this.runPausedTotal=0;
+      this.runPauseStartedAt=performance.now();
+      this.renderRunSummary();
       this.updateHomeProgress();
 
       gameOverOverlay.classList.add('visible');
@@ -2757,7 +2785,7 @@
         !this.paused&&
         !this.metaPaused&&
         this.ready&&
-        time-this.lastDropAt>=DROP_DELAY
+        time-this.lastDropAt>=AUTO_FIRE_DELAY
       ){
         this.dropCurrent();
       }
@@ -2840,9 +2868,11 @@
     drawDropper(time) {
       this.dropper.clear();
 
-      if(!this.running||this.paused||!this.ready||!this.preview) return;
+      if(!this.running||this.paused) return;
 
-      const x=this.preview.x;
+      const x=this.preview&&this.preview.active
+        ? this.preview.x
+        : clamp(this.targetX,WALL+28,W-WALL-28);
       const pulse=.82+.10*Math.sin(time*.006);
 
       this.dropper.fillStyle(0xffc64e,pulse);
@@ -2877,6 +2907,12 @@
     parent:'game',
     width:W*RENDER_SCALE,
     height:H*RENDER_SCALE,
+    scale:{
+      mode:Phaser.Scale.FIT,
+      autoCenter:Phaser.Scale.CENTER_BOTH,
+      width:W*RENDER_SCALE,
+      height:H*RENDER_SCALE
+    },
     transparent:true,
     antialias:true,
     roundPixels:false,
