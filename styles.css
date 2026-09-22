@@ -5046,3 +5046,40 @@ body{
   opacity:1!important;
   filter:none!important;
 }
+
+
+/* === EXACT EMPTY/FILLED INLAY FRAME 2026-09-22 === */
+.treasure-socket{
+  transform:
+    translate(-50%,-50%)
+    rotate(var(--socket-rotation,0deg))!important;
+}
+.treasure-socket:not(:disabled):active{
+  transform:
+    translate(-50%,-50%)
+    rotate(var(--socket-rotation,0deg))
+    scale(.94)!important;
+}
+
+/* Empty and filled states deliberately share one geometry box. */
+.treasure-socket>.socket-gem,
+.treasure-socket>.socket-no-inlay{
+  position:absolute!important;
+  inset:0!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  transform:none!important;
+  transform-origin:center!important;
+  object-position:center!important;
+}
+
+/* no-inlay.png is intentionally stretched to the authored width/height,
+   exactly like the reactive gem canvas. */
+.treasure-socket>.socket-no-inlay{
+  object-fit:fill!important;
+}
