@@ -5802,3 +5802,179 @@ body,
   90%{transform:translate3d(6px,-2px,0) rotate(.34deg)}
   96%{transform:translate3d(-3px,1px,0) rotate(-.16deg)}
 }
+
+
+/* === RUN SUMMARY + BOARD FIT 2026-09-22 === */
+
+/* Let Phaser's FIT scale manager own canvas sizing. The full 640:936 world
+   always remains visible instead of the bottom being clipped by a short shell. */
+#game{
+  display:block!important;
+}
+
+#game canvas{
+  position:absolute!important;
+  inset:0!important;
+  margin:auto!important;
+  width:auto!important;
+  height:auto!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+}
+
+/* Reclaim a little vertical room after adding Auto Fire. */
+.aim-strip{
+  flex-basis:58px!important;
+  min-height:58px!important;
+  max-height:58px!important;
+}
+
+.power-dock{
+  flex-basis:60px!important;
+  min-height:60px!important;
+}
+
+.auto-fire-row{
+  flex:0 0 calc(38px + env(safe-area-inset-bottom))!important;
+  min-height:calc(38px + env(safe-area-inset-bottom))!important;
+  padding:2px 2px max(4px,env(safe-area-inset-bottom))!important;
+}
+
+/* The run summary scrolls as one screen if a very large haul needs more room.
+   Individual values and earned items are never ellipsized or hidden. */
+#gameOverOverlay{
+  align-items:flex-start!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+  padding:
+    max(10px,env(safe-area-inset-top))
+    12px
+    max(10px,env(safe-area-inset-bottom))!important;
+}
+
+.result-card{
+  width:min(500px,100%)!important;
+  max-height:none!important;
+  overflow:visible!important;
+  margin:auto!important;
+  padding:16px!important;
+}
+
+.result-card__header{
+  margin-bottom:11px!important;
+}
+
+.run-stat-grid strong{
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+}
+
+.run-haul,
+.run-treasures{
+  margin:12px 0 0!important;
+  padding:0!important;
+  border:0!important;
+  background:none!important;
+}
+
+.run-gem-haul{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+
+.run-gem-chip{
+  min-height:52px!important;
+}
+
+.run-gem-chip strong,
+.run-treasure-chip strong{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+
+.run-treasure-haul{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  border-top:1px solid rgba(255,255,255,.07);
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+
+.run-treasure-chip{
+  min-width:0;
+  min-height:58px;
+  padding:6px 8px 6px 2px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.run-treasure-chip:nth-child(odd){
+  border-right:1px solid rgba(255,255,255,.07);
+}
+
+.run-treasure-chip:nth-child(n+3){
+  border-top:1px solid rgba(255,255,255,.07);
+}
+
+.run-treasure-chip img{
+  width:48px;
+  height:48px;
+  flex:0 0 48px;
+  object-fit:contain;
+}
+
+.run-treasure-chip>div{
+  min-width:0;
+}
+
+.run-treasure-chip strong{
+  color:#f1e7f1;
+  font-size:14px;
+  line-height:1.2;
+}
+
+.run-treasure-haul__empty{
+  grid-column:1/-1;
+  padding:10px 4px;
+  color:#9f8ca5;
+  font-size:14px;
+  text-align:center;
+}
+
+.result-actions--single{
+  display:block!important;
+  margin-top:14px!important;
+}
+
+.result-actions--single .primary-button{
+  width:100%!important;
+}
+
+.result-progression,
+.result-highlights,
+.run-crown-progress{
+  display:none!important;
+}
+
+@media(max-width:390px){
+  .result-card{
+    padding:13px!important;
+  }
+
+  .run-gem-haul,
+  .run-treasure-haul{
+    grid-template-columns:1fr!important;
+  }
+
+  .run-gem-chip:nth-child(odd),
+  .run-treasure-chip:nth-child(odd){
+    border-right:0!important;
+  }
+
+  .run-gem-chip:nth-child(n+2),
+  .run-treasure-chip:nth-child(n+2){
+    border-top:1px solid rgba(255,255,255,.07)!important;
+  }
+}
