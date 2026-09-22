@@ -5011,3 +5011,38 @@ body{
 .treasure-socket .socket-plus{
   z-index:3!important;
 }
+
+
+/* === TRANSPARENT TREASURE INLAY LAYERS 2026-09-22 === */
+.treasure-detail-art{
+  z-index:3!important;
+  pointer-events:none!important;
+}
+.treasure-sockets{
+  z-index:2!important;
+  pointer-events:none!important;
+}
+.treasure-socket{
+  pointer-events:auto!important;
+}
+.treasure-socket .socket-gem,
+.treasure-socket .socket-no-inlay{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  display:block!important;
+  object-fit:fill!important;
+  pointer-events:none!important;
+}
+.treasure-socket .socket-gem{
+  filter:
+    drop-shadow(0 3px 4px rgba(0,0,0,.52))
+    drop-shadow(0 0 4px rgba(255,255,255,.06))!important;
+}
+.treasure-socket .socket-no-inlay{
+  z-index:1!important;
+  opacity:1!important;
+  filter:none!important;
+}
