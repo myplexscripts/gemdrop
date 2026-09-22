@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#16091d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260922-viewport-final1" />
+  <link rel="stylesheet" href="styles.css?v=20260922-powerinput1" />
 </head>
 <body>
   <main class="game-app" id="gameApp">
@@ -74,13 +74,19 @@
       </button>
       <button id="powerCascade" class="power-button" type="button" disabled>
         <i data-lucide="sparkles" aria-hidden="true"></i>
-        <span>CASCADE</span>
+        <span>MERGE</span>
       </button>
       <button id="powerPrism" class="power-button" type="button" disabled>
         <i data-lucide="gem" aria-hidden="true"></i>
-        <span>PRISM</span>
+        <span>UPGRADE</span>
       </button>
     </section>
+
+    <label class="auto-fire-row" for="autoFireToggle">
+      <span class="auto-fire-label">AUTO FIRE</span>
+      <input id="autoFireToggle" class="auto-fire-input" type="checkbox" role="switch" aria-label="Auto fire">
+      <span class="auto-fire-switch" aria-hidden="true"><span></span></span>
+    </label>
   </main>
 
   <section id="startOverlay" class="overlay visible start-overlay" aria-modal="true" role="dialog" aria-labelledby="startTitle">
@@ -124,7 +130,7 @@
 
       </div>
 
-      <div class="start-version" aria-label="Game version">v0.8.1</div>
+      <div class="start-version" aria-label="Game version">v0.8.2</div>
     </div>
   </section>
 
@@ -325,6 +331,6 @@
   <script src="reactive-gem-system.js?v=20260922-aspect2"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
   <script src="meta.js?v=20260922-descriptions1"></script>
-  <script src="game.js?v=20260922-aimassist1"></script>
+  <script src="game.js?v=20260922-powerinput1"></script>
 </body>
 </html>
