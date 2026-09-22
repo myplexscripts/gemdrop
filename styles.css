@@ -4979,3 +4979,35 @@ body{
     margin-top:10px!important;
   }
 }
+
+
+/* === TREASURE SOCKET BEZEL OVERLAY 2026-09-22 === */
+.treasure-socket .socket-gem,
+.treasure-socket .socket-overlay{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:contain;
+  pointer-events:none;
+}
+.treasure-socket .socket-gem{
+  z-index:1!important;
+  filter:
+    drop-shadow(0 4px 5px rgba(0,0,0,.62))
+    drop-shadow(0 0 4px rgba(255,255,255,.07))!important;
+}
+.treasure-socket:not(.filled) .socket-gem{
+  opacity:.96!important;
+  filter:
+    drop-shadow(0 4px 5px rgba(0,0,0,.72))
+    drop-shadow(0 0 1px rgba(255,224,177,.28))!important;
+}
+.treasure-socket .socket-overlay{
+  z-index:2!important;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.26));
+}
+.treasure-socket .socket-plus{
+  z-index:3!important;
+}
