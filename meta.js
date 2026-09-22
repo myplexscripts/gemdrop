@@ -29,46 +29,66 @@
 
   const TREASURES=[
     {id:'silver-ring',name:'Silver Ring',type:'ring',rarity:'Common',base:90,weight:28,minTier:0,minMerges:0,sockets:[
-      {x:160,y:61,cut:'circular_starcut',size:81}
+      {x:160,y:61,cut:'circular_starcut',width:51,height:53.5}
     ]},
     {id:'sun-brooch',name:'Sunburst Brooch',type:'brooch',rarity:'Common',base:125,weight:24,minTier:1,minMerges:8,sockets:[
-      {x:125,y:128,cut:'heart',size:43},{x:195,y:128,cut:'circular_starcut',size:43}
+      {x:126,y:128,cut:'heart',width:48.5,height:48.5},
+      {x:193.5,y:125.5,cut:'circular_starcut',width:43,height:43}
     ]},
     {id:'heart-pendant',name:'Heart Pendant',type:'pendant',rarity:'Common',base:145,weight:20,minTier:2,minMerges:14,sockets:[
-      {x:160,y:112,cut:'rectangular_brilliant',size:45},{x:160,y:162,cut:'heart',size:45}
+      {x:161.5,y:113,cut:'rectangular_brilliant',width:44.5,height:44.5},
+      {x:161.5,y:171.5,cut:'heart',width:50.5,height:50.5}
     ]},
     {id:'signet-ring',name:'Royal Signet',type:'signet',rarity:'Uncommon',base:210,weight:15,minTier:4,minMerges:24,sockets:[
-      {x:123,y:94,cut:'tanzanite',size:39},{x:160,y:76,cut:'rectangular',size:43},{x:197,y:94,cut:'tanzanite',size:39}
+      {x:120.5,y:85,cut:'tanzanite',width:25.5,height:39},
+      {x:159,y:62,cut:'rectangular',width:41.5,height:41.5},
+      {x:198.5,y:85,cut:'tanzanite',width:25.5,height:39}
     ]},
     {id:'moon-necklace',name:'Moon Necklace',type:'necklace',rarity:'Uncommon',base:285,weight:13,minTier:5,minMerges:36,sockets:[
-      {x:105,y:119,cut:'circular_starcut',size:38},{x:142,y:142,cut:'heart',size:38},
-      {x:178,y:142,cut:'heart',size:38},{x:215,y:119,cut:'circular_starcut',size:38}
+      {x:85.5,y:114.5,cut:'circular_starcut',width:38,height:38},
+      {x:137.5,y:144,cut:'heart',width:38,height:38},
+      {x:184.5,y:144.5,cut:'heart',width:38,height:38},
+      {x:233.5,y:114.5,cut:'circular_starcut',width:38,height:38}
     ]},
     {id:'ceremonial-goblet',name:'Ceremonial Goblet',type:'goblet',rarity:'Uncommon',base:340,weight:11,minTier:6,minMerges:50,sockets:[
-      {x:125,y:90,cut:'emerald_stepcut',size:40},{x:160,y:112,cut:'rectangular_brilliant',size:42},{x:195,y:90,cut:'emerald_stepcut',size:40}
+      {x:119,y:77.5,cut:'emerald_stepcut',width:40,height:40},
+      {x:160.5,y:104.5,cut:'rectangular_brilliant',width:32.5,height:32.5},
+      {x:203,y:77,cut:'emerald_stepcut',width:40,height:40}
     ]},
     {id:'ornate-chalice',name:'Ornate Chalice',type:'chalice',rarity:'Rare',base:475,weight:7,minTier:8,minMerges:70,sockets:[
-      {x:112,y:92,cut:'tanzanite',size:38},{x:144,y:115,cut:'circular_starcut',size:38},
-      {x:176,y:115,cut:'circular_starcut',size:38},{x:208,y:92,cut:'tanzanite',size:38}
+      {x:101.5,y:74.5,cut:'tanzanite',width:29.5,height:38},
+      {x:136.5,y:107.5,cut:'circular_starcut',width:38,height:38},
+      {x:181.5,y:108,cut:'circular_starcut',width:38,height:38},
+      {x:218.5,y:74.5,cut:'tanzanite',width:29.5,height:38}
     ]},
     {id:'moon-tiara',name:'Moon Tiara',type:'tiara',rarity:'Rare',base:610,weight:5,minTier:10,minMerges:95,sockets:[
-      {x:94,y:126,cut:'heart',size:35},{x:127,y:102,cut:'rectangular_brilliant',size:36},
-      {x:160,y:82,cut:'circular_starcut',size:39},{x:193,y:102,cut:'rectangular_brilliant',size:36},
-      {x:226,y:126,cut:'heart',size:35}
+      {x:65.5,y:138.5,cut:'heart',width:36.5,height:36.5},
+      {x:117.5,y:113,cut:'rectangular_brilliant',width:36,height:36},
+      {x:160,y:82,cut:'circular_starcut',width:39,height:39},
+      {x:204.5,y:111.5,cut:'rectangular_brilliant',width:36,height:36},
+      {x:254.5,y:138,cut:'heart',width:35.5,height:35.5}
     ]},
     {id:'crown-reliquary',name:'Crown Reliquary',type:'reliquary',rarity:'Rare',base:760,weight:4,minTier:12,minMerges:125,sockets:[
-      {x:112,y:102,cut:'emerald_stepcut',size:37},{x:160,y:82,cut:'rectangular',size:40},
-      {x:208,y:102,cut:'emerald_stepcut',size:37},{x:132,y:150,cut:'heart',size:36},{x:188,y:150,cut:'heart',size:36}
+      {x:102.5,y:103,cut:'emerald_stepcut',width:37,height:37},
+      {x:160,y:78.5,cut:'rectangular',width:40,height:40},
+      {x:217.5,y:103.5,cut:'emerald_stepcut',width:37,height:37},
+      {x:127.5,y:154.5,cut:'heart',width:40.5,height:40.5},
+      {x:192,y:155,cut:'heart',width:38,height:38}
     ]},
     {id:'sovereign-crown',name:'Sovereign Crown',type:'crown',rarity:'Exceptional',base:1100,weight:2,minTier:14,minMerges:170,sockets:[
-      {x:84,y:130,cut:'tanzanite',size:34},{x:116,y:98,cut:'heart',size:34},
-      {x:160,y:72,cut:'rectangular',size:39},{x:204,y:98,cut:'heart',size:34},
-      {x:236,y:130,cut:'tanzanite',size:34},{x:160,y:146,cut:'circular_starcut',size:38}
+      {x:58,y:143.5,cut:'tanzanite',width:38,height:38},
+      {x:108,y:100,cut:'heart',width:36.5,height:36.5},
+      {x:159.5,y:70,cut:'rectangular',width:39,height:39},
+      {x:212,y:100,cut:'heart',width:37,height:37},
+      {x:262.5,y:143.5,cut:'tanzanite',width:38,height:38},
+      {x:159.5,y:156.5,cut:'circular_starcut',width:50.5,height:50.5}
     ]},
     {id:'star-sceptre',name:'Star Sceptre',type:'sceptre',rarity:'Exceptional',base:1280,weight:1.5,minTier:16,minMerges:220,sockets:[
-      {x:160,y:60,cut:'circular_starcut',size:40},{x:126,y:91,cut:'tanzanite',size:34},
-      {x:194,y:91,cut:'tanzanite',size:34},{x:160,y:126,cut:'rectangular_brilliant',size:37},
-      {x:160,y:172,cut:'emerald_stepcut',size:37}
+      {x:160,y:61,cut:'circular_starcut',width:40,height:40},
+      {x:124.5,y:96,cut:'tanzanite',width:21.5,height:21.5},
+      {x:195,y:96,cut:'tanzanite',width:21.5,height:21.5},
+      {x:160.5,y:140.5,cut:'rectangular',width:23.5,height:23.5},
+      {x:160,y:189,cut:'emerald_stepcut',width:25,height:25}
     ]}
   ];
 
@@ -806,68 +826,62 @@
     ctx.restore();
   }
 
-  function renderSocketArt(container,socket,tier=null,treasure=null){
+  function renderSocketArt(container,socket,tier=null){
     container.innerHTML='';
-    const size=112;
 
-    const gemCanvas=document.createElement('canvas');
-    gemCanvas.width=size;
-    gemCanvas.height=size;
-    gemCanvas.className='socket-gem';
-    gemCanvas.setAttribute('aria-hidden','true');
+    if(!Number.isInteger(tier)){
+      const empty=document.createElement('img');
+      empty.className='socket-no-inlay';
+      empty.src='assets/treasures/no-inlay.png?v=20260922-noinlay1';
+      empty.alt='';
+      empty.setAttribute('aria-hidden','true');
+      container.appendChild(empty);
+      return;
+    }
 
-    const overlayCanvas=document.createElement('canvas');
-    overlayCanvas.width=size;
-    overlayCanvas.height=size;
-    overlayCanvas.className='socket-overlay';
-    overlayCanvas.setAttribute('aria-hidden','true');
+    const gem=GEMS[tier];
+    const logicalW=Math.max(12,Number(socket.width)||Number(socket.size)||40);
+    const logicalH=Math.max(12,Number(socket.height)||Number(socket.size)||40);
+    const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+    const renderW=Math.round(Math.max(192,Math.min(768,logicalW*5*dpr)));
+    const renderH=Math.round(Math.max(192,Math.min(768,logicalH*5*dpr)));
 
-    const ctx=gemCanvas.getContext('2d');
-    const reference=GEMS.find(g=>g.cut===socket.cut)||GEMS[0];
+    const canvas=document.createElement('canvas');
+    canvas.className='socket-gem';
+    canvas.setAttribute('aria-hidden','true');
 
     try{
-      const source=window.ReactiveGemSystem.renderPreviewCanvas(
-        socket.cut,
-        Number.isInteger(tier)?GEMS[tier].color:reference.color,
-        0,
-        192,
-        Number.isInteger(tier)?GEMS[tier]:reference
-      );
-      const scale=Math.min(size*.72/source.width,size*.72/source.height);
-      const w=source.width*scale;
-      const h=source.height*scale;
-      const x=(size-w)/2;
-      const y=(size-h)/2;
+      const source=window.ReactiveGemSystem.renderPreviewCanvasSized
+        ? window.ReactiveGemSystem.renderPreviewCanvasSized(
+            socket.cut,
+            gem.color,
+            renderW,
+            renderH,
+            gem
+          )
+        : window.ReactiveGemSystem.renderPreviewCanvas(
+            socket.cut,
+            gem.color,
+            0,
+            Math.max(renderW,renderH),
+            gem
+          );
 
-      ctx.save();
-      ctx.translate(size/2,size/2);
-      ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
-      ctx.translate(-size/2,-size/2);
-      ctx.drawImage(source,x,y,w,h);
-
-      if(!Number.isInteger(tier)){
-        ctx.globalCompositeOperation='source-in';
-        ctx.fillStyle='rgba(20,10,26,.96)';
-        ctx.fillRect(0,0,size,size);
-        ctx.globalCompositeOperation='source-over';
-      }
-      ctx.restore();
+      canvas.width=source.width;
+      canvas.height=source.height;
+      const ctx=canvas.getContext('2d',{alpha:true});
+      ctx.drawImage(source,0,0);
     }catch{
-      ctx.fillStyle=Number.isInteger(tier)?GEMS[tier].color:'#1a0d20';
+      canvas.width=renderW;
+      canvas.height=renderH;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle=gem.color;
       ctx.beginPath();
-      ctx.arc(size/2,size/2,size*.26,0,Math.PI*2);
+      ctx.ellipse(renderW/2,renderH/2,renderW*.38,renderH*.38,0,0,Math.PI*2);
       ctx.fill();
     }
 
-    container.append(gemCanvas,overlayCanvas);
-    drawSocketBezel(overlayCanvas,socket,treasure||treasureById(currentTreasureId));
-
-    if(!Number.isInteger(tier)){
-      const plus=document.createElement('span');
-      plus.className='socket-plus';
-      plus.textContent='+';
-      container.appendChild(plus);
-    }
+    container.appendChild(canvas);
   }
 
   function updateTreasureRecord(treasure,copy){
@@ -915,13 +929,15 @@
       button.className='treasure-socket'+(Number.isInteger(tier)?' filled':'');
       button.style.left=(socket.x/3.2)+'%';
       button.style.top=(socket.y/2.6)+'%';
-      button.style.width=(socket.size/3.2)+'%';
-      button.style.height=(socket.size/2.6)+'%';
+      const socketWidth=Number(socket.width)||Number(socket.size)||40;
+      const socketHeight=Number(socket.height)||Number(socket.size)||40;
+      button.style.width=(socketWidth/3.2)+'%';
+      button.style.height=(socketHeight/2.6)+'%';
       button.dataset.cut=socket.cut;
       button.setAttribute('aria-label',Number.isInteger(tier)
         ? 'Change '+GEMS[tier].name+' '+CUT_LABELS[socket.cut]+' inlay'
         : 'Choose a '+CUT_LABELS[socket.cut]+' gem');
-      renderSocketArt(button,socket,tier,treasure);
+      renderSocketArt(button,socket,tier);
       button.addEventListener('click',()=>openGemPicker(index));
       socketRoot.appendChild(button);
     });
