@@ -894,6 +894,7 @@
 
       $('resultCollectionButton').addEventListener('click',()=>{
         gameOverOverlay.classList.remove('visible');
+        startOverlay.classList.add('visible');
         if(window.GemdropMeta) window.GemdropMeta.showCollection('gems');
         collectionOverlay.classList.add('visible');
         this.startCollectionLighting();
@@ -2469,7 +2470,26 @@
       this.updatePowerButtons();
       this.matter.world.pause();
 
-      finalScoreEl.textContent='
+      finalScoreEl.textContent='$'+fmt(this.score);
+
+      const finest=tiers[this.bestTierReached];
+      bestMergeEl.textContent=finest.name;
+
+      const recordInfo=window.GemdropMeta&&window.GemdropMeta.recordRun
+        ? window.GemdropMeta.recordRun({
+            score:this.score,
+            merges:this.runMerges,
+            bestChain:this.runBestChain,
+            bestTier:this.bestTierReached
+          })
+        : null;
+
+      this.renderRunSummary(recordInfo);
+      this.updateHomeProgress();
+
+      gameOverOverlay.classList.add('visible');
+      if(window.lucide) window.lucide.createIcons({attrs:{'stroke-width':1.9}});
+      haptic([36,26,36]);
     }
 
     updateNextPreview() {
