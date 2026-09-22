@@ -5083,3 +5083,38 @@ body{
 .treasure-socket>.socket-no-inlay{
   object-fit:fill!important;
 }
+
+
+/* === IN-GAME ITEM DESCRIPTIONS 2026-09-22 === */
+.gem-card__meta{
+  grid-template-areas:
+    "name value"
+    "description description"!important;
+  grid-template-rows:auto auto!important;
+}
+.gem-card__description{
+  grid-area:description;
+  margin:2px 0 0;
+  min-width:0;
+  color:#ad9ab3;
+  font-size:14px;
+  line-height:1.3;
+  font-weight:700;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+.gem-card:not(.locked) .gem-card__meta{
+  min-height:76px!important;
+}
+.treasure-detail-description{
+  width:min(100%,430px);
+  margin:0 auto 11px;
+  padding:0 5px;
+  color:#bba8c0;
+  font-size:14px;
+  line-height:1.45;
+  font-weight:700;
+  text-align:center;
+}
