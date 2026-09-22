@@ -279,6 +279,7 @@
   }
 
   const TREASURE_ART_FILES={
+    'silver-ring':'assets/treasures/silver-ring.png',
     'sun-brooch':'assets/treasures/sun-brooch.png',
     'heart-pendant':'assets/treasures/heart-pendant.png',
     'signet-ring':'assets/treasures/signet-ring.png',
@@ -292,19 +293,11 @@
   };
 
   function treasureSVG(treasure,silhouette=false){
-    if(!silhouette){
-      if(treasure.id==='silver-ring'){
-        return '<svg viewBox="0 0 320 260" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
-          '<image href="assets/treasures/silver-ring.png?v=20260921-pngart1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
-        '</svg>';
-      }
-
-      const artFile=TREASURE_ART_FILES[treasure.id];
-      if(artFile){
-        return '<svg viewBox="0 0 320 260" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
-          '<image href="'+artFile+'?v=20260921-pngart1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
-        '</svg>';
-      }
+    const artFile=TREASURE_ART_FILES[treasure.id];
+    if(artFile){
+      return '<svg viewBox="0 0 320 260" class="treasure-art'+(silhouette?' is-silhouette':'')+'" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
+        '<image href="'+artFile+'?v=20260921-silhouette1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+      '</svg>';
     }
 
     const colours=metalColours(treasure.rarity);
