@@ -750,12 +750,21 @@
       const button=document.createElement('button');
       button.type='button';
       button.className='treasure-socket'+(Number.isInteger(tier)?' filled':'');
-      button.style.left=(socket.x/3.2)+'%';
-      button.style.top=(socket.y/2.6)+'%';
       const socketWidth=Number(socket.width)||Number(socket.size)||40;
       const socketHeight=Number(socket.height)||Number(socket.size)||40;
+      const socketRotation=Number(socket.rotation)||0;
+
+      // Filled gems and no-inlay.png use this exact same authored frame.
+      // There is no separate empty-state sizing or positioning.
+      button.style.left=(socket.x/3.2)+'%';
+      button.style.top=(socket.y/2.6)+'%';
       button.style.width=(socketWidth/3.2)+'%';
       button.style.height=(socketHeight/2.6)+'%';
+      button.style.setProperty('--socket-rotation',socketRotation+'deg');
+      button.dataset.socketX=String(socket.x);
+      button.dataset.socketY=String(socket.y);
+      button.dataset.socketWidth=String(socketWidth);
+      button.dataset.socketHeight=String(socketHeight);
       button.dataset.cut=socket.cut;
       button.setAttribute('aria-label',Number.isInteger(tier)
         ? 'Change '+GEMS[tier].name+' '+CUT_LABELS[socket.cut]+' inlay'
