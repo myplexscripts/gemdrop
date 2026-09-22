@@ -81,8 +81,12 @@
       box-shadow:0 0 0 2px rgba(0,0,0,.55),0 0 18px rgba(255,212,107,.22)
     }
     .socket canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-    .socket .gem-preview{z-index:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.62))}
-    .socket .bezel-preview{z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.26))}
+    .socket .gem-preview{
+      z-index:1;
+      filter:
+        drop-shadow(0 3px 4px rgba(0,0,0,.62))
+        drop-shadow(0 0 3px rgba(255,255,255,.07));
+    }
     .socket .index{
       position:absolute;left:50%;top:-22px;transform:translateX(-50%);
       min-width:22px;height:22px;padding:0 5px;display:grid;place-items:center;
@@ -161,7 +165,7 @@
             </div>
             <div class="stage-caption">
               <span>Game render: 320 × 260</span>
-              <span>Drag socket · gold handle resizes · purple handle rotates</span>
+              <span>Drag gem · gold handle resizes · facets redraw live · purple handle rotates</span>
             </div>
           </div>
         </div>
@@ -169,16 +173,16 @@
 
       <aside class="sidebar">
         <section class="section wide">
-          <h2>Sockets</h2>
+          <h2>Gem placements</h2>
           <div id="socketTabs" class="socket-tabs"></div>
           <div class="actions">
-            <button id="addSocket" type="button">Add socket</button>
+            <button id="addSocket" type="button">Add gem</button>
             <button id="deleteSocket" class="danger" type="button">Delete selected</button>
           </div>
         </section>
 
         <section class="section">
-          <h2>Selected socket</h2>
+          <h2>Selected gem</h2>
           <div class="field">
             <label for="cutSelect">Cut</label>
             <select id="cutSelect"></select>
@@ -192,8 +196,8 @@
             <div class="field"><label for="yInput">Y</label><input id="yInput" type="number" min="0" max="260" step="0.5"></div>
           </div>
           <div class="range-row">
-            <div class="field"><label for="sizeRange">Size</label><input id="sizeRange" type="range" min="12" max="120" step="0.5"></div>
-            <input id="sizeInput" type="number" min="12" max="120" step="0.5" aria-label="Socket size">
+            <div class="field"><label for="sizeRange">Gem size</label><input id="sizeRange" type="range" min="12" max="120" step="0.5"></div>
+            <input id="sizeInput" type="number" min="12" max="120" step="0.5" aria-label="Gem size">
           </div>
           <div class="range-row">
             <div class="field"><label for="rotationRange">Rotation</label><input id="rotationRange" type="range" min="-180" max="180" step="1"></div>
@@ -297,7 +301,7 @@
     const cloneSockets=list=>list.map(s=>({...s,rotation:Number(s.rotation)||0}));
     const currentTreasure=()=>TREASURES[current];
     const selectedSocket=()=>sockets[selected]||null;
-    const draftKey=()=> 'gemdrop-aligner-'+currentTreasure().id;
+    const draftKey=()=> 'gemdrop-aligner-v2-'+currentTreasure().id;
     const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
     const roundHalf=n=>Math.round(n*2)/2;
 
@@ -401,61 +405,53 @@
       stageArtCanvas=c;
     }
 
+    function gemRenderPixels(socket){
+      const dpr=clamp(Number(window.devicePixelRatio)||1,1,3);
+      const logical=Math.max(12,Number(socket.size)||40);
+
+      // The gem is rebuilt from its facet model at a resolution that follows
+      // the size being authored. CSS never stretches a low-res gem preview.
+      return Math.round(clamp(logical*4*dpr,192,768));
+    }
+
     function drawGem(canvas,socket){
-      const ctx=canvas.getContext('2d');
-      ctx.clearRect(0,0,112,112);
       if(!reactiveReady) return;
+
       const gem=gemForSocket(socket);
+      const renderPx=gemRenderPixels(socket);
+      canvas.width=renderPx;
+      canvas.height=renderPx;
+
+      const ctx=canvas.getContext('2d',{alpha:true});
+      ctx.clearRect(0,0,renderPx,renderPx);
+
       try{
-        const source=window.ReactiveGemSystem.renderPreviewCanvas(socket.cut,gem.color,0,192,gem);
-        const scale=Math.min(112*.72/source.width,112*.72/source.height);
-        const w=source.width*scale,h=source.height*scale;
-        ctx.drawImage(source,(112-w)/2,(112-h)/2,w,h);
+        // renderPreviewCanvas re-runs the original facet geometry and lighting
+        // at this resolution, so enlarging a gem creates new detail instead of
+        // enlarging pixels from the previous preview.
+        const source=window.ReactiveGemSystem.renderPreviewCanvas(
+          socket.cut,
+          gem.color,
+          0,
+          renderPx,
+          gem
+        );
+
+        const maxSize=renderPx*.94;
+        const scale=Math.min(maxSize/source.width,maxSize/source.height);
+        const w=source.width*scale;
+        const h=source.height*scale;
+
+        ctx.drawImage(
+          source,
+          (renderPx-w)/2,
+          (renderPx-h)/2,
+          w,
+          h
+        );
       }catch(err){
         console.error(err);
       }
-    }
-
-    function drawBezel(canvas,socket){
-      const ctx=canvas.getContext('2d');
-      const size=112;
-      ctx.clearRect(0,0,size,size);
-      if(!stageArtCanvas)return;
-
-      const sourceSize=Math.max(12,Number(socket.size)||40);
-      ctx.drawImage(
-        stageArtCanvas,
-        (Number(socket.x)||160)-sourceSize/2,
-        (Number(socket.y)||130)-sourceSize/2,
-        sourceSize,sourceSize,
-        0,0,size,size
-      );
-
-      ctx.globalCompositeOperation='destination-in';
-      ctx.save();
-      ctx.translate(size/2,size/2);
-      ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
-      ctx.translate(-size/2,-size/2);
-      ctx.beginPath();
-      appendSocketShape(ctx,socket.cut,size/2,size/2,size*.49);
-      appendSocketShape(ctx,socket.cut,size/2,size/2,size*.35);
-      ctx.fillStyle='#fff';
-      ctx.fill('evenodd');
-      ctx.restore();
-      ctx.globalCompositeOperation='source-over';
-
-      ctx.save();
-      ctx.translate(size/2,size/2);
-      ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
-      ctx.translate(-size/2,-size/2);
-      ctx.beginPath();
-      appendSocketShape(ctx,socket.cut,size/2,size/2,size*.35);
-      ctx.lineWidth=5;
-      ctx.strokeStyle='rgba(0,0,0,.36)';
-      ctx.shadowColor='rgba(0,0,0,.42)';
-      ctx.shadowBlur=5;
-      ctx.stroke();
-      ctx.restore();
     }
 
     function styleSocket(node,socket){
@@ -475,21 +471,14 @@
         styleSocket(node,socket);
 
         const canvas=document.createElement('canvas');
-        canvas.width=112;canvas.height=112;
         canvas.className='gem-preview';
         canvas.setAttribute('aria-hidden','true');
         drawGem(canvas,socket);
 
-        const bezel=document.createElement('canvas');
-        bezel.width=112;bezel.height=112;
-        bezel.className='bezel-preview';
-        bezel.setAttribute('aria-hidden','true');
-        drawBezel(bezel,socket);
-
         const badge=document.createElement('span');
         badge.className='index';badge.textContent=String(index+1);
 
-        node.append(canvas,bezel,badge);
+        node.append(canvas,badge);
         if(index===selected){
           const resize=document.createElement('span');resize.className='handle resize';resize.dataset.handle='resize';
           const rotate=document.createElement('span');rotate.className='handle rotate';rotate.dataset.handle='rotate';
@@ -644,7 +633,7 @@
       }
       window.ReactiveGemSystem.prepare(sources);
       reactiveReady=true;
-      els.status.textContent='Ready · drafts save automatically';
+      els.status.textContent='Ready · gems redraw from facet geometry as you resize';
       renderSockets();
     }
 
@@ -727,6 +716,15 @@
       else return;
       event.preventDefault();
       updateSelected({x:s.x+dx,y:s.y+dy});
+    });
+
+    let resizeRAF=0;
+    window.addEventListener('resize',()=>{
+      if(resizeRAF) cancelAnimationFrame(resizeRAF);
+      resizeRAF=requestAnimationFrame(()=>{
+        resizeRAF=0;
+        renderSockets();
+      });
     });
 
     prepareReactive().catch(err=>{
