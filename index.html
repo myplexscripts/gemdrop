@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260922-treasurecards1" />
+  <link rel="stylesheet" href="styles.css?v=20260922-runprogress1" />
 </head>
 <body>
   <main class="game-app" id="gameApp">
@@ -111,6 +111,16 @@
         <div class="home-best">
           <span>BEST VALUE</span>
           <strong id="homeBest">$0</strong>
+        </div>
+
+        <div class="home-crown-goal" aria-label="Crownstone progression">
+          <div class="home-crown-goal__top">
+            <span>CROWNSTONE ASCENT</span>
+            <strong id="homeCrownProgressText">Quartz · 1 / 20</strong>
+          </div>
+          <div class="home-crown-goal__track" aria-hidden="true">
+            <span id="homeCrownProgressFill"></span>
+          </div>
         </div>
 
         <div class="start-actions">
@@ -260,14 +270,57 @@
 
   <section id="gameOverOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="gameOverTitle">
     <div class="sheet-card result-card">
-      <div class="sheet-icon"><i data-lucide="gem" aria-hidden="true"></i></div>
-      <p class="eyebrow">THE VAULT IS FULL</p>
-      <h2 id="gameOverTitle">Run complete</h2>
-      <div class="final-score"><span>VALUE</span><strong id="finalScore">$0</strong></div>
-      <div class="result-row"><span>Finest jewel</span><strong id="bestMerge">Quartz Rose</strong></div>
-      <button id="restartButton" class="primary-button" type="button">
-        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>PLAY AGAIN</span>
-      </button>
+      <div class="result-card__header">
+        <div class="sheet-icon"><i data-lucide="gem" aria-hidden="true"></i></div>
+        <div>
+          <p class="eyebrow">THE VAULT IS FULL</p>
+          <h2 id="gameOverTitle">Run complete</h2>
+        </div>
+      </div>
+
+      <div class="final-score"><span>RUN VALUE</span><strong id="finalScore">$0</strong></div>
+
+      <div class="run-stat-grid" aria-label="Run statistics">
+        <div><span>MERGES</span><strong id="runMerges">0</strong></div>
+        <div><span>BEST CHAIN</span><strong id="runBestChain">1×</strong></div>
+        <div><span>CHEST EARNED</span><strong id="runChestGain">+0%</strong></div>
+      </div>
+
+      <div class="result-row result-row--finest"><span>Finest jewel</span><strong id="bestMerge">Quartz</strong></div>
+
+      <section class="run-haul" aria-labelledby="runHaulTitle">
+        <div class="run-section-heading">
+          <span id="runHaulTitle">BANKED THIS RUN</span>
+          <strong id="runGemTotal">0 GEMS</strong>
+        </div>
+        <div id="runGemHaul" class="run-gem-haul"></div>
+      </section>
+
+      <div id="runDiscovery" class="run-discovery" hidden>
+        <span>NEW DISCOVERY</span>
+        <strong id="runDiscoveryText"></strong>
+      </div>
+
+      <div class="run-crown-progress">
+        <div class="run-section-heading">
+          <span>CROWNSTONE ASCENT</span>
+          <strong id="runCrownProgressText">1 / 20</strong>
+        </div>
+        <div class="run-crown-progress__track" aria-hidden="true">
+          <span id="runCrownProgressFill"></span>
+        </div>
+      </div>
+
+      <div id="runRecord" class="run-record" hidden></div>
+
+      <div class="result-actions">
+        <button id="restartButton" class="primary-button" type="button">
+          <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>PLAY AGAIN</span>
+        </button>
+        <button id="resultCollectionButton" class="secondary-button" type="button">
+          <i data-lucide="gem" aria-hidden="true"></i><span>VIEW COLLECTION</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -275,7 +328,7 @@
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="reactive-gem-system.js?v=20260921-collectionlight1"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
-  <script src="meta.js?v=20260922-treasurecards1"></script>
-  <script src="game.js?v=20260921-reactivefix1"></script>
+  <script src="meta.js?v=20260922-runprogress1"></script>
+  <script src="game.js?v=20260922-runprogress1"></script>
 </body>
 </html>
