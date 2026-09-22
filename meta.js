@@ -628,14 +628,201 @@
     container.appendChild(dot);
   }
 
-  function renderSocketArt(container,socket,tier=null){
+  const treasureBezelCache=new Map();
+
+  function appendRoundedRect(ctx,x,y,w,h,r){
+    const rr=Math.min(r,w*.5,h*.5);
+    ctx.moveTo(x+rr,y);
+    ctx.lineTo(x+w-rr,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
+    ctx.lineTo(x+w,y+h-rr);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+    ctx.lineTo(x+rr,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
+    ctx.lineTo(x,y+rr);
+    ctx.quadraticCurveTo(x,y,x+rr,y);
+    ctx.closePath();
+  }
+
+  function appendHeart(ctx,cx,cy,w,h){
+    const x=cx-w/2;
+    const y=cy-h/2;
+    ctx.moveTo(cx,y+h*.94);
+    ctx.bezierCurveTo(x+w*.06,y+h*.58,x+w*.02,y+h*.22,x+w*.26,y+h*.16);
+    ctx.bezierCurveTo(x+w*.40,y+h*.12,x+w*.48,y+h*.24,cx,y+h*.34);
+    ctx.bezierCurveTo(x+w*.52,y+h*.24,x+w*.60,y+h*.12,x+w*.74,y+h*.16);
+    ctx.bezierCurveTo(x+w*.98,y+h*.22,x+w*.94,y+h*.58,cx,y+h*.94);
+    ctx.closePath();
+  }
+
+  function appendOctagon(ctx,cx,cy,rx,ry=rx){
+    const sx=rx*.42;
+    const sy=ry*.42;
+    ctx.moveTo(cx-sx,cy-ry);
+    ctx.lineTo(cx+sx,cy-ry);
+    ctx.lineTo(cx+rx,cy-sy);
+    ctx.lineTo(cx+rx,cy+sy);
+    ctx.lineTo(cx+sx,cy+ry);
+    ctx.lineTo(cx-sx,cy+ry);
+    ctx.lineTo(cx-rx,cy+sy);
+    ctx.lineTo(cx-rx,cy-sy);
+    ctx.closePath();
+  }
+
+  function appendSocketShape(ctx,cut,cx,cy,r){
+    switch(cut){
+      case 'circular_starcut':
+        ctx.moveTo(cx+r*.84,cy);
+        ctx.arc(cx,cy,r*.84,0,Math.PI*2);
+        ctx.closePath();
+        break;
+      case 'rectangular':
+        appendRoundedRect(ctx,cx-r*.58,cy-r*.74,r*1.16,r*1.48,r*.16);
+        break;
+      case 'emerald_stepcut':
+        appendOctagon(ctx,cx,cy,r*.64,r*.80);
+        break;
+      case 'rectangular_brilliant':
+        appendRoundedRect(ctx,cx-r*.61,cy-r*.76,r*1.22,r*1.52,r*.18);
+        break;
+      case 'heart':
+        appendHeart(ctx,cx,cy,r*1.42,r*1.36);
+        break;
+      case 'tanzanite':
+        appendOctagon(ctx,cx,cy,r*.82,r*.86);
+        break;
+      default:
+        ctx.moveTo(cx+r*.82,cy);
+        ctx.arc(cx,cy,r*.82,0,Math.PI*2);
+        ctx.closePath();
+    }
+  }
+
+  function treasureArtCanvas(treasure){
+    if(!treasure) return Promise.resolve(null);
+    if(treasureBezelCache.has(treasure.id)) return treasureBezelCache.get(treasure.id);
+
+    const artFile=TREASURE_ART_FILES[treasure.id];
+    if(!artFile) return Promise.resolve(null);
+
+    const promise=new Promise(resolve=>{
+      const image=new Image();
+      image.onload=()=>{
+        const canvas=document.createElement('canvas');
+        canvas.width=320;
+        canvas.height=260;
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(image,0,0,320,260);
+        resolve(canvas);
+      };
+      image.onerror=()=>resolve(null);
+      image.src=artFile+'?v=20260922-bezel1';
+    });
+
+    treasureBezelCache.set(treasure.id,promise);
+    return promise;
+  }
+
+  function drawFallbackBezel(canvas,socket){
+    const ctx=canvas.getContext('2d');
+    const size=canvas.width;
+    const cx=size/2;
+    const cy=size/2;
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
+    ctx.translate(-cx,-cy);
+
+    ctx.beginPath();
+    appendSocketShape(ctx,socket.cut,cx,cy,size*.48);
+    appendSocketShape(ctx,socket.cut,cx,cy,size*.35);
+    ctx.fillStyle='rgba(224,219,232,.72)';
+    ctx.fill('evenodd');
+
+    ctx.beginPath();
+    appendSocketShape(ctx,socket.cut,cx,cy,size*.35);
+    ctx.lineWidth=4;
+    ctx.strokeStyle='rgba(0,0,0,.46)';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  async function drawSocketBezel(canvas,socket,treasure){
+    const ctx=canvas.getContext('2d');
+    const size=canvas.width;
+    ctx.clearRect(0,0,size,size);
+
+    const art=await treasureArtCanvas(treasure);
+    if(!art){
+      drawFallbackBezel(canvas,socket);
+      return;
+    }
+
+    const sourceSize=Math.max(12,Number(socket.size)||40);
+    ctx.drawImage(
+      art,
+      (Number(socket.x)||160)-sourceSize/2,
+      (Number(socket.y)||130)-sourceSize/2,
+      sourceSize,
+      sourceSize,
+      0,
+      0,
+      size,
+      size
+    );
+
+    ctx.globalCompositeOperation='destination-in';
+    ctx.save();
+    ctx.translate(size/2,size/2);
+    ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
+    ctx.translate(-size/2,-size/2);
+    ctx.beginPath();
+    appendSocketShape(ctx,socket.cut,size/2,size/2,size*.49);
+    appendSocketShape(ctx,socket.cut,size/2,size/2,size*.35);
+    ctx.fillStyle='#fff';
+    ctx.fill('evenodd');
+    ctx.restore();
+    ctx.globalCompositeOperation='source-over';
+
+    ctx.save();
+    ctx.translate(size/2,size/2);
+    ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
+    ctx.translate(-size/2,-size/2);
+
+    ctx.beginPath();
+    appendSocketShape(ctx,socket.cut,size/2,size/2,size*.35);
+    ctx.lineWidth=5;
+    ctx.strokeStyle='rgba(0,0,0,.36)';
+    ctx.shadowColor='rgba(0,0,0,.42)';
+    ctx.shadowBlur=5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    appendSocketShape(ctx,socket.cut,size/2,size/2,size*.47);
+    ctx.lineWidth=1.5;
+    ctx.strokeStyle='rgba(255,255,255,.20)';
+    ctx.shadowBlur=0;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function renderSocketArt(container,socket,tier=null,treasure=null){
     container.innerHTML='';
     const size=112;
-    const canvas=document.createElement('canvas');
-    canvas.width=size;
-    canvas.height=size;
-    canvas.setAttribute('aria-hidden','true');
-    const ctx=canvas.getContext('2d');
+
+    const gemCanvas=document.createElement('canvas');
+    gemCanvas.width=size;
+    gemCanvas.height=size;
+    gemCanvas.className='socket-gem';
+    gemCanvas.setAttribute('aria-hidden','true');
+
+    const overlayCanvas=document.createElement('canvas');
+    overlayCanvas.width=size;
+    overlayCanvas.height=size;
+    overlayCanvas.className='socket-overlay';
+    overlayCanvas.setAttribute('aria-hidden','true');
+
+    const ctx=gemCanvas.getContext('2d');
     const reference=GEMS.find(g=>g.cut===socket.cut)||GEMS[0];
 
     try{
@@ -646,29 +833,35 @@
         192,
         Number.isInteger(tier)?GEMS[tier]:reference
       );
-      const scale=Math.min(size*.88/source.width,size*.88/source.height);
+      const scale=Math.min(size*.72/source.width,size*.72/source.height);
       const w=source.width*scale;
       const h=source.height*scale;
       const x=(size-w)/2;
       const y=(size-h)/2;
 
-      if(Number.isInteger(tier)){
-        ctx.drawImage(source,x,y,w,h);
-      }else{
-        ctx.drawImage(source,x,y,w,h);
+      ctx.save();
+      ctx.translate(size/2,size/2);
+      ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
+      ctx.translate(-size/2,-size/2);
+      ctx.drawImage(source,x,y,w,h);
+
+      if(!Number.isInteger(tier)){
         ctx.globalCompositeOperation='source-in';
         ctx.fillStyle='rgba(20,10,26,.96)';
         ctx.fillRect(0,0,size,size);
         ctx.globalCompositeOperation='source-over';
       }
+      ctx.restore();
     }catch{
       ctx.fillStyle=Number.isInteger(tier)?GEMS[tier].color:'#1a0d20';
       ctx.beginPath();
-      ctx.arc(size/2,size/2,size*.31,0,Math.PI*2);
+      ctx.arc(size/2,size/2,size*.26,0,Math.PI*2);
       ctx.fill();
     }
 
-    container.appendChild(canvas);
+    container.append(gemCanvas,overlayCanvas);
+    drawSocketBezel(overlayCanvas,socket,treasure||treasureById(currentTreasureId));
+
     if(!Number.isInteger(tier)){
       const plus=document.createElement('span');
       plus.className='socket-plus';
@@ -728,7 +921,7 @@
       button.setAttribute('aria-label',Number.isInteger(tier)
         ? 'Change '+GEMS[tier].name+' '+CUT_LABELS[socket.cut]+' inlay'
         : 'Choose a '+CUT_LABELS[socket.cut]+' gem');
-      renderSocketArt(button,socket,tier);
+      renderSocketArt(button,socket,tier,treasure);
       button.addEventListener('click',()=>openGemPicker(index));
       socketRoot.appendChild(button);
     });
