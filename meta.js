@@ -111,6 +111,10 @@
       treasureRecords:{},
       gold:0,
       lifetimeTreasureSales:0,
+      runsCompleted:0,
+      bestChain:0,
+      bestRunMerges:0,
+      crownstonesCreated:0,
       ownedThemes:['velvet'],
       activeTheme:'velvet'
     };
@@ -128,6 +132,10 @@
     if(!Array.isArray(base.treasures)) base.treasures=[];
     if(!Array.isArray(base.comboDiscoveries)) base.comboDiscoveries=[];
     if(!base.treasureRecords||typeof base.treasureRecords!=='object') base.treasureRecords={};
+    base.runsCompleted=Math.max(0,Math.floor(Number(base.runsCompleted)||0));
+    base.bestChain=Math.max(0,Math.floor(Number(base.bestChain)||0));
+    base.bestRunMerges=Math.max(0,Math.floor(Number(base.bestRunMerges)||0));
+    base.crownstonesCreated=Math.max(0,Math.floor(Number(base.crownstonesCreated)||0));
     if(!Array.isArray(base.ownedThemes)) base.ownedThemes=['velvet'];
     if(!base.ownedThemes.includes('velvet')) base.ownedThemes.unshift('velvet');
     try{
@@ -352,13 +360,53 @@
     }
     if(Number.isInteger(resultTier)&&resultTier>=0&&resultTier<GEMS.length){
       state.highestTier=Math.max(state.highestTier,resultTier);
+      if(resultTier===GEMS.length-1&&!options.master) state.crownstonesCreated++;
     }
     const level=Number.isInteger(resultTier)?resultTier:0;
     const gain=2.15+Math.min(level,12)*.30+Math.min(Math.max(0,chain-1),4)*.65+(options.master?5:0);
+    const chestBefore=state.chest;
     state.chest=clamp(state.chest+gain,0,CHEST_TARGET);
+    const chestGain=Math.max(0,state.chest-chestBefore);
     save();
     updateMeter();
     updateGemBadges();
+    return {chestGain,resultTier};
+  }
+
+  function getProgressSnapshot(){
+    return {
+      gemCounts:[...state.gemCounts],
+      chest:state.chest,
+      chestTarget:CHEST_TARGET,
+      totalMerges:state.totalMerges,
+      highestTier:state.highestTier,
+      discoveredTreasures:[...state.discoveredTreasures],
+      runsCompleted:state.runsCompleted,
+      bestChain:state.bestChain,
+      bestRunMerges:state.bestRunMerges,
+      crownstonesCreated:state.crownstonesCreated
+    };
+  }
+
+  function recordRun(summary={}){
+    const chain=Math.max(0,Math.floor(Number(summary.bestChain)||0));
+    const merges=Math.max(0,Math.floor(Number(summary.merges)||0));
+    const oldBestChain=state.bestChain;
+    const oldBestRunMerges=state.bestRunMerges;
+
+    state.runsCompleted++;
+    state.bestChain=Math.max(state.bestChain,chain);
+    state.bestRunMerges=Math.max(state.bestRunMerges,merges);
+    save();
+
+    return {
+      runsCompleted:state.runsCompleted,
+      newBestChain:chain>oldBestChain,
+      newBestMerges:merges>oldBestRunMerges,
+      bestChain:state.bestChain,
+      bestRunMerges:state.bestRunMerges,
+      crownstonesCreated:state.crownstonesCreated
+    };
   }
 
   function eligibleTreasures(){
@@ -406,6 +454,10 @@
     const copy=addTreasure(treasure);
     state.chest=0;
     rewardCopyUid=copy.uid;
+    const scene=window.GemdropGameScene;
+    if(scene&&scene.running&&typeof scene.noteTreasureClaim==='function'){
+      scene.noteTreasureClaim(treasure.id);
+    }
     save();
     updateMeter();
     renderTreasureCollection();
@@ -889,6 +941,9 @@
   window.GemdropMeta={
     init,
     onMerge,
+    recordRun,
+    getProgressSnapshot,
+    getChestTarget:()=>CHEST_TARGET,
     getGemCount:tier=>state.gemCounts[tier]||0,
     updateGemBadges,
     showCollection,
