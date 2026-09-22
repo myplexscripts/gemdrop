@@ -511,11 +511,109 @@
     return canvas;
   }
 
+  function renderPreviewCanvasSized(name,color,width=256,height=256,palette=null,lightAngleOverride=null){
+    const model=models.get(name);
+    if(!model) throw new Error('Gem model not prepared: '+name);
+
+    width=Math.max(1,Math.round(Number(width)||256));
+    height=Math.max(1,Math.round(Number(height)||256));
+
+    const metrics=model.metrics;
+    const margin=.055;
+    const padX=width*margin;
+    const padY=height*margin;
+    const usableW=Math.max(1,width-padX*2);
+    const usableH=Math.max(1,height-padY*2);
+    const sx=usableW/Math.max(1,metrics.width);
+    const sy=usableH/Math.max(1,metrics.height);
+
+    // Relative anisotropic stretch. Facet normals are transformed with the
+    // inverse transpose so highlights change with the new gem proportions
+    // instead of simply stretching a finished bitmap.
+    const uniform=Math.sqrt(Math.max(.0001,sx*sy));
+    const relX=sx/uniform;
+    const relY=sy/uniform;
+
+    const canvas=document.createElement('canvas');
+    canvas.width=width;
+    canvas.height=height;
+    const ctx=canvas.getContext('2d',{alpha:true});
+
+    const gemColor=parseHex((palette&&palette.color)||color)||parseHex(color);
+    const deepColor=parseHex((palette&&palette.dark)||color)||gemColor;
+    const accentColor=parseHex((palette&&palette.accent)||color)||gemColor;
+
+    const lightAngle=Number.isFinite(lightAngleOverride)?lightAngleOverride:-Math.PI*.32;
+    const light=norm3(Math.cos(lightAngle)*.67,Math.sin(lightAngle)*.67,.74);
+    const tintLight=norm3(-Math.cos(lightAngle)*.16,-Math.sin(lightAngle)*.16,.97);
+    const view=[0,0,1];
+
+    ctx.clearRect(0,0,width,height);
+    ctx.save();
+    ctx.translate(padX,padY);
+    ctx.scale(sx,sy);
+    ctx.translate(-metrics.minX,-metrics.minY);
+
+    fillOuter(ctx,model.outer,1,rgbCss(deepColor));
+
+    for(const facet of model.facets){
+      // A non-uniformly scaled surface needs its normal transformed by the
+      // inverse scale before re-normalising. This keeps the facet response
+      // believable as a round gem becomes oval or a rectangle gets taller.
+      const normal=norm3(
+        facet.nx/Math.max(.001,relX),
+        facet.ny/Math.max(.001,relY),
+        facet.nz
+      );
+      const diffuse=Math.max(0,dot3(normal,light));
+      const facing=clamp(normal[2],0,1);
+      const transmission=Math.max(0,dot3(normal,tintLight));
+      const rim=Math.pow(1-facing,1.15);
+      const style=facet.style;
+
+      const energy=.22+(style-.52)*.78+diffuse*.34+transmission*.28+rim*.16+facing*.12;
+      const low=smoothstep(.18,.56,energy);
+      const high=smoothstep(.55,.88,energy);
+
+      let material=mixRgb(deepColor,gemColor,low);
+      material=mixRgb(material,accentColor,high*.72);
+
+      const incoming=[-light[0],-light[1],-light[2]];
+      const ndot=dot3(incoming,normal);
+      const reflected=[
+        incoming[0]-2*ndot*normal[0],
+        incoming[1]-2*ndot*normal[1],
+        incoming[2]-2*ndot*normal[2]
+      ];
+
+      const spec=Math.pow(Math.max(dot3(reflected,view),0),model.stepCut?16:18);
+      const caustic=Math.pow(transmission,model.stepCut?2.8:3.0)*.18;
+      const flash=clamp(spec*1.15+caustic+diffuse*.03,0,model.stepCut?.28:.34);
+
+      let final=mixRgb(material,accentColor,flash*.72);
+      final={
+        r:(final.r+accentColor.r*flash*.34)*(.92+style*.16),
+        g:(final.g+accentColor.g*flash*.34)*(.92+style*.16),
+        b:(final.b+accentColor.b*flash*.34)*(.92+style*.16)
+      };
+
+      polygonPath(ctx,facet.points,1);
+      ctx.globalAlpha=facet.opacity;
+      ctx.fillStyle=rgbCss(final);
+      ctx.fill();
+    }
+
+    ctx.restore();
+    ctx.globalAlpha=1;
+    return canvas;
+  }
+
   window.ReactiveGemSystem={
     cuts:CUTS,
     prepare,
     createDataCanvas,
     renderPreviewCanvas,
+    renderPreviewCanvasSized,
     aspectRatio:name=>{
       const model=models.get(name);
       return model&&model.metrics&&model.metrics.height
