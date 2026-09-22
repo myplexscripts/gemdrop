@@ -5118,3 +5118,42 @@ body{
   font-weight:700;
   text-align:center;
 }
+
+
+/* === IOS SAFE-AREA BACKGROUND BLEED 2026-09-22 ===
+   iOS can expose the top/bottom safe areas outside 100dvh. Bleed the app
+   beneath those areas while existing HUD/dock safe-area padding keeps
+   interactive controls in the same usable positions. */
+@media (max-width:560px){
+  html,
+  body{
+    background:
+      linear-gradient(
+        180deg,
+        #250b3d 0%,
+        #1d092f 42%,
+        #170724 72%,
+        #110619 100%
+      )!important;
+  }
+
+  .game-app{
+    top:calc(0px - env(safe-area-inset-top))!important;
+    bottom:calc(0px - env(safe-area-inset-bottom))!important;
+    height:auto!important;
+    min-height:calc(
+      100dvh +
+      env(safe-area-inset-top) +
+      env(safe-area-inset-bottom)
+    )!important;
+  }
+
+  .overlay,
+  .collection-overlay,
+  .treasure-modal,
+  .treasure-detail-overlay,
+  .gem-picker-overlay{
+    top:0!important;
+    bottom:0!important;
+  }
+}
