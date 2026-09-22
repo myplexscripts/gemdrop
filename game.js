@@ -708,6 +708,11 @@
       this.gemVisualBounds=[];
       this.gemPipeline=null;
       this.activeGemGlints=0;
+      this.collectionLightAngle=GEM_WORLD_LIGHT_ANGLE;
+      this.collectionPointerLightAngle=null;
+      this.collectionPointerLightUntil=0;
+      this.collectionLightRAF=0;
+      this.collectionLightLastFrame=0;
       this.tumbleState=null;
       this.baseGravityY=1.32;
     }
@@ -827,10 +832,25 @@
         this.renderCollection();
         collectionOverlay.classList.add('visible');
         if(window.GemdropMeta) window.GemdropMeta.selectCollectionTab('gems');
+        this.startCollectionLighting();
       });
 
       $('collectionBack').addEventListener('click',()=>{
         collectionOverlay.classList.remove('visible');
+      });
+
+      collectionOverlay.addEventListener('pointermove',event=>{
+        if(gemCollection.hidden) return;
+        const rect=gemCollection.getBoundingClientRect();
+        const cx=rect.left+rect.width/2;
+        const cy=Math.max(rect.top,0)+Math.min(rect.height,window.innerHeight)/2;
+        this.collectionPointerLightAngle=Math.atan2(event.clientY-cy,event.clientX-cx);
+        this.collectionPointerLightUntil=performance.now()+900;
+        this.startCollectionLighting();
+      },{passive:true});
+
+      collectionOverlay.addEventListener('pointerleave',()=>{
+        this.collectionPointerLightUntil=0;
       });
 
       $('homeButton').addEventListener('click',()=>this.returnToMenu());
@@ -955,7 +975,7 @@
       return true;
     }
 
-    drawCollectionGem(canvas,tier,locked) {
+    drawCollectionGem(canvas,tier,locked,lightAngle=GEM_WORLD_LIGHT_ANGLE) {
       const ctx=canvas.getContext('2d');
       const t=tiers[tier];
       const w=canvas.width;
@@ -1028,7 +1048,9 @@
           t.reactiveCut,
           t.color,
           0,
-          256
+          256,
+          t,
+          lightAngle
         );
         const max=cavityRadius*1.78;
         const scale=Math.min(max/source.width,max/source.height);
@@ -1046,6 +1068,60 @@
         ctx.drawImage(source,cx-gw/2,cy-gh/2,gw,gh);
         ctx.restore();
       }
+    }
+
+    redrawCollectionLighting(lightAngle){
+      if(!gemCollection||gemCollection.hidden) return;
+
+      const canvases=gemCollection.querySelectorAll('.gem-card:not(.locked) canvas');
+      for(const canvas of canvases){
+        const card=canvas.closest('.gem-card');
+        if(!card) continue;
+
+        const rect=card.getBoundingClientRect();
+        if(rect.bottom<0||rect.top>window.innerHeight) continue;
+
+        const tier=Number(card.dataset.gemTier);
+        if(!Number.isInteger(tier)||tier<0||tier>=tiers.length) continue;
+
+        this.drawCollectionGem(canvas,tier,false,lightAngle);
+      }
+    }
+
+    startCollectionLighting(){
+      if(this.collectionLightRAF) return;
+
+      const shortestAngleDelta=(from,to)=>{
+        let delta=(to-from)%(Math.PI*2);
+        if(delta>Math.PI) delta-=Math.PI*2;
+        if(delta<-Math.PI) delta+=Math.PI*2;
+        return delta;
+      };
+
+      const tick=time=>{
+        if(!collectionOverlay.classList.contains('visible')){
+          this.collectionLightRAF=0;
+          return;
+        }
+
+        if(!gemCollection.hidden&&time-this.collectionLightLastFrame>=42){
+          const pointerActive=
+            Number.isFinite(this.collectionPointerLightAngle)&&
+            performance.now()<this.collectionPointerLightUntil;
+
+          const target=pointerActive
+            ? this.collectionPointerLightAngle
+            : GEM_WORLD_LIGHT_ANGLE+Math.sin(time*.00072)*.62;
+
+          this.collectionLightAngle+=shortestAngleDelta(this.collectionLightAngle,target)*(pointerActive?.24:.08);
+          this.redrawCollectionLighting(this.collectionLightAngle);
+          this.collectionLightLastFrame=time;
+        }
+
+        this.collectionLightRAF=requestAnimationFrame(tick);
+      };
+
+      this.collectionLightRAF=requestAnimationFrame(tick);
     }
 
     renderCollection() {
