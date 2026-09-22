@@ -5,77 +5,77 @@
   const CHEST_TARGET=120;
 
   const GEMS=[
-    {name:'Quartz',score:1,color:'#D7EBF2',accent:'#EDF6F9',dark:'#859296',cut:'rectangular'},
-    {name:'Citrine',score:3,color:'#E9B11E',accent:'#F5DC9A',dark:'#906E13',cut:'circular_starcut'},
-    {name:'Sunstone',score:6,color:'#E67A45',accent:'#F4C3AB',dark:'#8F4C2B',cut:'emerald_stepcut'},
-    {name:'Amethyst',score:10,color:'#A968E5',accent:'#D8BBF3',dark:'#69408E',cut:'rectangular_brilliant'},
-    {name:'Peridot',score:15,color:'#99D64D',accent:'#D1EDAF',dark:'#5F8530',cut:'heart'},
-    {name:'Garnet',score:22,color:'#B33149',accent:'#DDA2AD',dark:'#6F1E2D',cut:'tanzanite'},
-    {name:'Topaz',score:30,color:'#D7902F',accent:'#EDCDA1',dark:'#85591D',cut:'rectangular'},
-    {name:'Moonstone',score:40,color:'#B9C9F2',accent:'#E0E7F9',dark:'#737D96',cut:'circular_starcut'},
-    {name:'Zircon',score:52,color:'#42C7E8',accent:'#AAE6F5',dark:'#297B90',cut:'emerald_stepcut'},
-    {name:'Morganite',score:66,color:'#F5B3C8',accent:'#FADDE6',dark:'#986F7C',cut:'rectangular_brilliant'},
-    {name:'Aquamarine',score:82,color:'#63E3C4',accent:'#B9F2E4',dark:'#3D8D7A',cut:'heart'},
-    {name:'Tourmaline',score:100,color:'#C447B6',accent:'#E4ACDE',dark:'#7A2C71',cut:'tanzanite'},
-    {name:'Tanzanite',score:122,color:'#4F54D9',accent:'#B0B2EE',dark:'#313487',cut:'rectangular'},
-    {name:'Spinel',score:148,color:'#FF4F87',accent:'#FFB0C9',dark:'#9E3154',cut:'circular_starcut'},
-    {name:'Sapphire',score:178,color:'#2D63D6',accent:'#A0B9ED',dark:'#1C3D85',cut:'emerald_stepcut'},
-    {name:'Emerald',score:212,color:'#18B56A',accent:'#97DEBC',dark:'#0F7042',cut:'rectangular_brilliant'},
-    {name:'Ruby',score:250,color:'#E12F4F',accent:'#F2A1B0',dark:'#8C1D31',cut:'heart'},
-    {name:'Alexandrite',score:292,color:'#47B38E',accent:'#ACDDCC',dark:'#2C6F58',cut:'tanzanite'},
-    {name:'Starstone',score:340,color:'#9B6BFF',accent:'#D2BCFF',dark:'#60429E',cut:'rectangular'},
-    {name:'Crownstone',score:400,color:'#FFD24A',accent:'#FFEBAE',dark:'#9E822E',cut:'circular_starcut'}
+    {name:'Quartz',description:'A pale crystal that catches even the faintest light.',score:1,color:'#D7EBF2',accent:'#EDF6F9',dark:'#859296',cut:'rectangular'},
+    {name:'Citrine',description:'A warm golden gem with the glow of bottled sunlight.',score:3,color:'#E9B11E',accent:'#F5DC9A',dark:'#906E13',cut:'circular_starcut'},
+    {name:'Sunstone',description:'A fiery stone that seems to hold a spark of dawn.',score:6,color:'#E67A45',accent:'#F4C3AB',dark:'#8F4C2B',cut:'emerald_stepcut'},
+    {name:'Amethyst',description:'Deep violet crystal with a calm, royal glow.',score:10,color:'#A968E5',accent:'#D8BBF3',dark:'#69408E',cut:'rectangular_brilliant'},
+    {name:'Peridot',description:'Fresh green brilliance made for bold beginnings.',score:15,color:'#99D64D',accent:'#D1EDAF',dark:'#5F8530',cut:'heart'},
+    {name:'Garnet',description:'A dark red jewel with the warmth of banked embers.',score:22,color:'#B33149',accent:'#DDA2AD',dark:'#6F1E2D',cut:'tanzanite'},
+    {name:'Topaz',description:'Honey-gold facets that flash with quiet richness.',score:30,color:'#D7902F',accent:'#EDCDA1',dark:'#85591D',cut:'rectangular'},
+    {name:'Moonstone',description:'Milky light drifts across it like a moonlit tide.',score:40,color:'#B9C9F2',accent:'#E0E7F9',dark:'#737D96',cut:'circular_starcut'},
+    {name:'Zircon',description:'Clear blue fire with a sharp, electric sparkle.',score:52,color:'#42C7E8',accent:'#AAE6F5',dark:'#297B90',cut:'emerald_stepcut'},
+    {name:'Morganite',description:'A blush-pink jewel with a soft romantic glow.',score:66,color:'#F5B3C8',accent:'#FADDE6',dark:'#986F7C',cut:'rectangular_brilliant'},
+    {name:'Aquamarine',description:'Sea-green clarity that feels cool even in the hand.',score:82,color:'#63E3C4',accent:'#B9F2E4',dark:'#3D8D7A',cut:'heart'},
+    {name:'Tourmaline',description:'Vivid violet colour with a restless inner shimmer.',score:100,color:'#C447B6',accent:'#E4ACDE',dark:'#7A2C71',cut:'tanzanite'},
+    {name:'Tanzanite',description:'Rare blue-violet fire drawn from the edge of night.',score:122,color:'#4F54D9',accent:'#B0B2EE',dark:'#313487',cut:'rectangular'},
+    {name:'Spinel',description:'A brilliant pink-red jewel with a lively inner spark.',score:148,color:'#FF4F87',accent:'#FFB0C9',dark:'#9E3154',cut:'circular_starcut'},
+    {name:'Sapphire',description:'Royal blue depth with a crisp, unwavering shine.',score:178,color:'#2D63D6',accent:'#A0B9ED',dark:'#1C3D85',cut:'emerald_stepcut'},
+    {name:'Emerald',description:'Lush green brilliance worthy of the finest vault.',score:212,color:'#18B56A',accent:'#97DEBC',dark:'#0F7042',cut:'rectangular_brilliant'},
+    {name:'Ruby',description:'A fierce red jewel that burns like captured flame.',score:250,color:'#E12F4F',accent:'#F2A1B0',dark:'#8C1D31',cut:'heart'},
+    {name:'Alexandrite',description:'A mysterious gem whose colour never seems quite still.',score:292,color:'#47B38E',accent:'#ACDDCC',dark:'#2C6F58',cut:'tanzanite'},
+    {name:'Starstone',description:'An uncanny violet jewel lit by a star-like glow.',score:340,color:'#9B6BFF',accent:'#D2BCFF',dark:'#60429E',cut:'rectangular'},
+    {name:'Crownstone',description:'The vault’s legendary prize, blazing with golden light.',score:400,color:'#FFD24A',accent:'#FFEBAE',dark:'#9E822E',cut:'circular_starcut'}
   ];
 
   const TREASURES=[
-    {id:'silver-ring',name:'Silver Ring',type:'ring',rarity:'Common',base:90,weight:28,minTier:0,minMerges:0,sockets:[
+    {id:'silver-ring',name:'Silver Ring',description:'An engraved silver ring waiting for its first jewel.',type:'ring',rarity:'Common',base:90,weight:28,minTier:0,minMerges:0,sockets:[
       {x:160,y:61,cut:'circular_starcut',width:51,height:53.5}
     ]},
-    {id:'sun-brooch',name:'Sunburst Brooch',type:'brooch',rarity:'Common',base:125,weight:24,minTier:1,minMerges:8,sockets:[
+    {id:'sun-brooch',name:'Sunburst Brooch',description:'A radiant brooch made to wear its gems like rays of light.',type:'brooch',rarity:'Common',base:125,weight:24,minTier:1,minMerges:8,sockets:[
       {x:126,y:128,cut:'heart',width:48.5,height:48.5},
       {x:193.5,y:125.5,cut:'circular_starcut',width:43,height:43}
     ]},
-    {id:'heart-pendant',name:'Heart Pendant',type:'pendant',rarity:'Common',base:145,weight:20,minTier:2,minMerges:14,sockets:[
+    {id:'heart-pendant',name:'Heart Pendant',description:'An ornate keepsake made for a pair of treasured stones.',type:'pendant',rarity:'Common',base:145,weight:20,minTier:2,minMerges:14,sockets:[
       {x:161.5,y:113,cut:'rectangular_brilliant',width:44.5,height:44.5},
       {x:161.5,y:171.5,cut:'heart',width:50.5,height:50.5}
     ]},
-    {id:'signet-ring',name:'Royal Signet',type:'signet',rarity:'Uncommon',base:210,weight:15,minTier:4,minMerges:24,sockets:[
+    {id:'signet-ring',name:'Royal Signet',description:'A noble signet built to carry a small constellation of gems.',type:'signet',rarity:'Uncommon',base:210,weight:15,minTier:4,minMerges:24,sockets:[
       {x:120.5,y:85,cut:'tanzanite',width:25.5,height:39},
       {x:159,y:62,cut:'rectangular',width:41.5,height:41.5},
       {x:198.5,y:85,cut:'tanzanite',width:25.5,height:39}
     ]},
-    {id:'moon-necklace',name:'Moon Necklace',type:'necklace',rarity:'Uncommon',base:285,weight:13,minTier:5,minMerges:36,sockets:[
+    {id:'moon-necklace',name:'Moon Necklace',description:'A celestial necklace of moonlit silver and balanced stones.',type:'necklace',rarity:'Uncommon',base:285,weight:13,minTier:5,minMerges:36,sockets:[
       {x:85.5,y:114.5,cut:'circular_starcut',width:38,height:38},
       {x:137.5,y:144,cut:'heart',width:38,height:38},
       {x:184.5,y:144.5,cut:'heart',width:38,height:38},
       {x:233.5,y:114.5,cut:'circular_starcut',width:38,height:38}
     ]},
-    {id:'ceremonial-goblet',name:'Ceremonial Goblet',type:'goblet',rarity:'Uncommon',base:340,weight:11,minTier:6,minMerges:50,sockets:[
+    {id:'ceremonial-goblet',name:'Ceremonial Goblet',description:'A stately cup reserved for jewels worthy of a royal toast.',type:'goblet',rarity:'Uncommon',base:340,weight:11,minTier:6,minMerges:50,sockets:[
       {x:119,y:77.5,cut:'emerald_stepcut',width:40,height:40},
       {x:160.5,y:104.5,cut:'rectangular_brilliant',width:32.5,height:32.5},
       {x:203,y:77,cut:'emerald_stepcut',width:40,height:40}
     ]},
-    {id:'ornate-chalice',name:'Ornate Chalice',type:'chalice',rarity:'Rare',base:475,weight:7,minTier:8,minMerges:70,sockets:[
+    {id:'ornate-chalice',name:'Ornate Chalice',description:'A lavish chalice that turns every gem into ceremony.',type:'chalice',rarity:'Rare',base:475,weight:7,minTier:8,minMerges:70,sockets:[
       {x:101.5,y:74.5,cut:'tanzanite',width:29.5,height:38},
       {x:136.5,y:107.5,cut:'circular_starcut',width:38,height:38},
       {x:181.5,y:108,cut:'circular_starcut',width:38,height:38},
       {x:218.5,y:74.5,cut:'tanzanite',width:29.5,height:38}
     ]},
-    {id:'moon-tiara',name:'Moon Tiara',type:'tiara',rarity:'Rare',base:610,weight:5,minTier:10,minMerges:95,sockets:[
+    {id:'moon-tiara',name:'Moon Tiara',description:'A delicate silver tiara made to shimmer like the night sky.',type:'tiara',rarity:'Rare',base:610,weight:5,minTier:10,minMerges:95,sockets:[
       {x:65.5,y:138.5,cut:'heart',width:36.5,height:36.5},
       {x:117.5,y:113,cut:'rectangular_brilliant',width:36,height:36},
       {x:160,y:82,cut:'circular_starcut',width:39,height:39},
       {x:204.5,y:111.5,cut:'rectangular_brilliant',width:36,height:36},
       {x:254.5,y:138,cut:'heart',width:35.5,height:35.5}
     ]},
-    {id:'crown-reliquary',name:'Crown Reliquary',type:'reliquary',rarity:'Rare',base:760,weight:4,minTier:12,minMerges:125,sockets:[
+    {id:'crown-reliquary',name:'Crown Reliquary',description:'A sacred royal ornament built to guard a precious arrangement.',type:'reliquary',rarity:'Rare',base:760,weight:4,minTier:12,minMerges:125,sockets:[
       {x:102.5,y:103,cut:'emerald_stepcut',width:37,height:37},
       {x:160,y:78.5,cut:'rectangular',width:40,height:40},
       {x:217.5,y:103.5,cut:'emerald_stepcut',width:37,height:37},
       {x:127.5,y:154.5,cut:'heart',width:40.5,height:40.5},
       {x:192,y:155,cut:'heart',width:38,height:38}
     ]},
-    {id:'sovereign-crown',name:'Sovereign Crown',type:'crown',rarity:'Exceptional',base:1100,weight:2,minTier:14,minMerges:170,sockets:[
+    {id:'sovereign-crown',name:'Sovereign Crown',description:'A commanding crown with room for the vault’s finest jewels.',type:'crown',rarity:'Exceptional',base:1100,weight:2,minTier:14,minMerges:170,sockets:[
       {x:58,y:143.5,cut:'tanzanite',width:38,height:38},
       {x:108,y:100,cut:'heart',width:36.5,height:36.5},
       {x:159.5,y:70,cut:'rectangular',width:39,height:39},
@@ -83,7 +83,7 @@
       {x:262.5,y:143.5,cut:'tanzanite',width:38,height:38},
       {x:159.5,y:156.5,cut:'circular_starcut',width:50.5,height:50.5}
     ]},
-    {id:'star-sceptre',name:'Star Sceptre',type:'sceptre',rarity:'Exceptional',base:1280,weight:1.5,minTier:16,minMerges:220,sockets:[
+    {id:'star-sceptre',name:'Star Sceptre',description:'A ceremonial sceptre designed to blaze with a trail of gems.',type:'sceptre',rarity:'Exceptional',base:1280,weight:1.5,minTier:16,minMerges:220,sockets:[
       {x:160,y:61,cut:'circular_starcut',width:40,height:40},
       {x:124.5,y:96,cut:'tanzanite',width:21.5,height:21.5},
       {x:195,y:96,cut:'tanzanite',width:21.5,height:21.5},
@@ -486,7 +486,7 @@
     const art=$('treasureRewardArt');
     $('treasureRewardRarity').textContent=treasure.rarity.toUpperCase()+' TREASURE';
     $('treasureRewardTitle').textContent=treasure.name;
-    $('treasureRewardCopy').textContent='Added to your Treasure Vault with '+treasure.sockets.length+' inlay '+(treasure.sockets.length===1?'socket.':'sockets.');
+    $('treasureRewardCopy').textContent=treasure.description;
     art.innerHTML=treasureSVG(treasure,false);
 
     clearRewardTimers();
@@ -727,6 +727,7 @@
     const calc=calculateValue(treasure,copy);
     $('treasureDetailRarity').textContent=treasure.rarity.toUpperCase();
     $('treasureDetailTitle').textContent=treasure.name;
+    $('treasureDetailDescription').textContent=treasure.description;
     $('treasureCopyCount').textContent=(currentCopyIndex+1)+' / '+copies.length;
     $('treasureDetailArt').innerHTML=treasureSVG(treasure,false);
     $('treasureBaseValue').textContent=money(treasure.base);
@@ -948,13 +949,7 @@
     $('collectionTabTreasures').addEventListener('click',()=>selectCollectionTab('treasures'));
 
     $('treasureRewardClose').addEventListener('click',()=>closeReward(true));
-    $('treasureRewardView').addEventListener('click',()=>{
-      const copy=state.treasures.find(t=>t.uid===rewardCopyUid);
-      closeReward(false);
-      if(!copy) return;
-      showCollection('treasures');
-      openTreasureDetail(copy.typeId,copy.uid);
-    });
+    $('treasureRewardView').addEventListener('click',()=>closeReward(true));
 
     $('treasureDetailBack').addEventListener('click',closeTreasureDetail);
     $('treasurePrevCopy').addEventListener('click',()=>cycleCopy(-1));
