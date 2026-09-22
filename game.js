@@ -1070,6 +1070,9 @@
           if(event.cancelable) event.preventDefault();
         },{passive:false});
       });
+      document.addEventListener('touchstart',event=>{
+        if(event.touches&&event.touches.length>1&&event.cancelable) event.preventDefault();
+      },{passive:false});
       document.addEventListener('touchmove',event=>{
         if(event.touches&&event.touches.length>1&&event.cancelable) event.preventDefault();
       },{passive:false});
@@ -1125,7 +1128,7 @@
       });
 
       this.aimStrip.addEventListener('pointermove',e=>{
-        if(!this.pointerHeld||!this.running||this.paused||!this.ready) return;
+        if(!this.pointerHeld||!this.running||this.paused||this.metaPaused) return;
         e.preventDefault();
         aimFromEvent(e);
       });
