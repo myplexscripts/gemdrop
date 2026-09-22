@@ -214,6 +214,80 @@
     gameMuted=localStorage.getItem('gemdrop-muted')==='1';
   }catch{}
 
+  const MUSIC_VOLUME={
+    menu:.34,
+    game:.30
+  };
+  const musicTracks={
+    menu:new Audio('assets/audio/menu.ogg'),
+    game:new Audio('assets/audio/main-loop.ogg')
+  };
+  let musicMode='menu';
+  let musicUnlocked=false;
+  let musicFadeToken=0;
+
+  Object.values(musicTracks).forEach(track=>{
+    track.loop=true;
+    track.preload='auto';
+    track.volume=0;
+  });
+
+  function musicTargetVolume(mode){
+    return gameMuted?0:(MUSIC_VOLUME[mode]||0);
+  }
+
+  function fadeMusicTrack(track,to,duration=320,token=musicFadeToken){
+    if(!track) return;
+    const from=Number(track.volume)||0;
+    const target=clamp(to,0,1);
+
+    if(duration<=0||Math.abs(from-target)<.002){
+      track.volume=target;
+      if(target<=0&&track!==musicTracks[musicMode]) track.pause();
+      return;
+    }
+
+    const started=performance.now();
+    const tick=now=>{
+      if(token!==musicFadeToken) return;
+      const t=clamp((now-started)/duration,0,1);
+      const eased=t*t*(3-2*t);
+      track.volume=from+(target-from)*eased;
+      if(t<1){
+        requestAnimationFrame(tick);
+      }else if(target<=0&&track!==musicTracks[musicMode]){
+        track.pause();
+      }
+    };
+    requestAnimationFrame(tick);
+  }
+
+  function syncMusic(mode=musicMode,{instant=false}={}){
+    musicMode=mode==='game'?'game':'menu';
+    const token=++musicFadeToken;
+
+    for(const [key,track] of Object.entries(musicTracks)){
+      const active=key===musicMode;
+      if(active&&musicUnlocked&&!document.hidden&&!gameMuted){
+        const playPromise=track.play();
+        if(playPromise&&typeof playPromise.catch==='function') playPromise.catch(()=>{});
+      }
+
+      fadeMusicTrack(
+        track,
+        active&&musicUnlocked&&!document.hidden?musicTargetVolume(key):0,
+        instant?0:320,
+        token
+      );
+    }
+  }
+
+  function unlockMusic(){
+    if(musicUnlocked) return;
+    musicUnlocked=true;
+    syncMusic(musicMode,{instant:true});
+  }
+
   function syncMuteButton() {
     const button=$('muteButton');
     if(!button) return;
@@ -239,6 +313,7 @@
       );
     }
 
+    syncMusic(musicMode,{instant:false});
     syncMuteButton();
   }
 
@@ -413,6 +488,8 @@
       if(audioCtx.state==='suspended') audioCtx.resume();
       setupGemAudioBus();
     }
+
+    unlockMusic();
   }
 
   function getCrystalNoiseBuffer() {
@@ -849,7 +926,14 @@
         this.startRun();
       });
 
+      document.addEventListener('pointerdown',()=>{
+        unlockAudio();
+        if(!this.running) syncMusic('menu');
+      },{once:true,passive:true});
+
       $('collectionButton').addEventListener('click',()=>{
+        unlockAudio();
+        syncMusic('menu');
         this.renderCollection();
         collectionOverlay.classList.add('visible');
         if(window.GemdropMeta) window.GemdropMeta.selectCollectionTab('gems');
@@ -858,6 +942,7 @@
 
       $('collectionBack').addEventListener('click',()=>{
         collectionOverlay.classList.remove('visible');
+        syncMusic('menu');
       });
 
       collectionOverlay.addEventListener('pointermove',event=>{
@@ -895,6 +980,7 @@
       $('resultCollectionButton').addEventListener('click',()=>{
         gameOverOverlay.classList.remove('visible');
         startOverlay.classList.add('visible');
+        syncMusic('menu');
         if(window.GemdropMeta) window.GemdropMeta.showCollection('gems');
         collectionOverlay.classList.add('visible');
         this.startCollectionLighting();
@@ -905,7 +991,12 @@
       $('powerPrism').addEventListener('click',()=>this.usePrism());
 
       document.addEventListener('visibilitychange',()=>{
-        if(document.hidden&&this.running&&!this.paused) this.setPaused(true);
+        if(document.hidden){
+          syncMusic(musicMode,{instant:true});
+          if(this.running&&!this.paused) this.setPaused(true);
+        }else{
+          syncMusic(musicMode,{instant:false});
+        }
       });
 
       window.addEventListener('keydown',e=>{
@@ -1492,6 +1583,8 @@
     }
 
     startRun() {
+      unlockAudio();
+      syncMusic('game');
       this.clearRun();
 
       this.runStartUnlocked=new Set(this.unlockedTiers);
@@ -2302,6 +2395,7 @@
       gameOverOverlay.classList.remove('visible');
       collectionOverlay.classList.remove('visible');
       startOverlay.classList.add('visible');
+      syncMusic('menu');
       this.updatePowerButtons();
     }
 
@@ -2489,6 +2583,7 @@
       this.updateHomeProgress();
 
       gameOverOverlay.classList.add('visible');
+      syncMusic('menu');
       if(window.lucide) window.lucide.createIcons({attrs:{'stroke-width':1.9}});
       haptic([36,26,36]);
     }
