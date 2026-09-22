@@ -1148,7 +1148,7 @@ body{
   grid-area:cut;
   margin:0;
   min-width:0;
-  font-size:13px;
+  font-size:14px;
   line-height:1.2;
   color:#bcaac1;
   white-space:normal;
@@ -1376,7 +1376,7 @@ body{
   grid-area:cut;
   min-width:0;
   margin:0!important;
-  font-size:13px!important;
+  font-size:14px!important;
   line-height:1.25!important;
   color:#bcaac1;
   white-space:nowrap!important;
@@ -1423,7 +1423,7 @@ body{
     font-size:16px!important;
   }
   .gem-card__meta small{
-    font-size:12px!important;
+    font-size:14px!important;
   }
 }
 @media(min-width:760px){
@@ -1737,7 +1737,7 @@ body{
 .gem-card__unknown{
   grid-column:1/-1;
   color:rgba(214,199,216,.34);
-  font-size:11px;
+  font-size:14px;
   line-height:1;
   font-weight:800;
   letter-spacing:.12em;
@@ -1972,7 +1972,7 @@ body{
   place-items:center;
   border-radius:9px;
   color:#fff5df;
-  font-size:11px;
+  font-size:14px;
   line-height:1;
   font-weight:900;
   letter-spacing:.08em;
@@ -2090,7 +2090,7 @@ body{
 .gem-card__unknown{
   grid-column:1/-1!important;
   color:rgba(238,222,241,.44)!important;
-  font-size:11px!important;
+  font-size:14px!important;
   line-height:1!important;
   font-weight:900!important;
   letter-spacing:.13em!important;
@@ -2168,7 +2168,7 @@ body{
     min-width:29px;
     height:22px;
     padding:0 6px;
-    font-size:10px;
+    font-size:14px;
     border-radius:8px;
   }
   .gem-card__art,
@@ -2192,7 +2192,7 @@ body{
   }
   .gem-card__meta .gem-card__value{
     padding:5px 7px 4px!important;
-    font-size:13px!important;
+    font-size:14px!important;
   }
 }
 @media(max-width:360px){
@@ -2589,7 +2589,7 @@ body{
   place-items:center;
   border-radius:10px;
   color:#fff4d8;
-  font-size:12px;
+  font-size:14px;
   line-height:1;
   font-weight:900;
   background:rgba(18,8,23,.78);
@@ -2622,7 +2622,7 @@ body{
 .vault-bank span,
 .vault-theme-title{
   color:#ad98b2;
-  font-size:11px;
+  font-size:14px;
   font-weight:900;
   letter-spacing:.10em;
   text-transform:uppercase;
@@ -2656,13 +2656,13 @@ body{
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-  font-size:12px;
+  font-size:14px;
   font-weight:800;
 }
 .vault-theme strong{
   margin-top:2px;
   color:#ac96b3;
-  font-size:10px;
+  font-size:14px;
   letter-spacing:.06em;
 }
 .vault-theme.active{
@@ -2740,7 +2740,7 @@ body{
 .treasure-card__rarity{
   grid-area:rarity;
   color:#a992ae;
-  font-size:10px;
+  font-size:14px;
   font-weight:900;
   letter-spacing:.08em;
   text-transform:uppercase;
@@ -2748,13 +2748,13 @@ body{
 .treasure-card__count{
   grid-area:count;
   color:#ffd36e;
-  font-size:13px;
+  font-size:14px;
   font-weight:900;
 }
 .treasure-card__complete{
   grid-area:complete;
   color:#8edeb7;
-  font-size:9px;
+  font-size:14px;
   font-weight:900;
   text-transform:uppercase;
 }
@@ -2962,7 +2962,7 @@ body{
   color:#d5c1d9;background:rgba(255,255,255,.035);
 }
 .treasure-copy-nav button:disabled{opacity:.22}
-.treasure-copy-nav span{text-align:center;color:#b8a2bd;font-size:12px;font-weight:800}
+.treasure-copy-nav span{text-align:center;color:#b8a2bd;font-size:14px;font-weight:800}
 .treasure-value-panel{
   width:min(100%,430px);
   margin:0 auto 12px;
@@ -2980,7 +2980,7 @@ body{
   border-bottom:1px solid rgba(255,255,255,.045);
 }
 .treasure-value-panel>div:last-child{border-bottom:0}
-.treasure-value-panel span{color:#a992ae;font-size:12px;font-weight:800}
+.treasure-value-panel span{color:#a992ae;font-size:14px;font-weight:800}
 .treasure-value-panel strong{color:#eee2ef;font-size:14px}
 .treasure-value-panel .treasure-value-total span{color:#e6cee8}
 .treasure-value-panel .treasure-value-total strong{color:#ffd36e;font-size:23px}
@@ -3056,10 +3056,10 @@ body{
 .gem-picker-item__art canvas{width:60px;height:60px}
 .gem-picker-item__copy{min-width:0;display:flex;flex-direction:column}
 .gem-picker-item__copy strong{
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px
 }
-.gem-picker-item__copy small{margin-top:3px;color:#a991ad;font-size:10px}
-.gem-picker-item__count{color:#ffd26c;font-size:13px;font-weight:900}
+.gem-picker-item__copy small{margin-top:3px;color:#a991ad;font-size:14px}
+.gem-picker-item__count{color:#ffd26c;font-size:14px;font-weight:900}
 .remove-inlay{margin-top:2px!important;width:100%!important}
 
 /* Persistent vault themes unlocked with treasure sale proceeds. */
@@ -3192,7 +3192,7 @@ body[data-vault-theme="goldsmith"] .game-app{
   place-items:center;
   text-align:center;
   color:#aa95af;
-  font-size:13px;
+  font-size:14px;
   font-weight:750;
   line-height:1.45;
   border-radius:18px;
@@ -3251,7 +3251,7 @@ body[data-vault-theme="goldsmith"] .game-app{
   z-index:8;
   opacity:0;
   color:#f6d37e;
-  font-size:12px;
+  font-size:14px;
   line-height:1;
   font-weight:950;
   letter-spacing:.18em;
@@ -3458,7 +3458,7 @@ body[data-vault-theme="goldsmith"] .game-app{
   margin:5px 0 3px;
   color:#f4cd74;
   letter-spacing:.13em;
-  font-size:11px;
+  font-size:14px;
 }
 .treasure-reward-card h2{
   margin:0 0 7px!important;
@@ -3470,7 +3470,7 @@ body[data-vault-theme="goldsmith"] .game-app{
   margin:0 auto 17px!important;
   max-width:310px!important;
   color:#d1bfd6!important;
-  font-size:13px!important;
+  font-size:14px!important;
 }
 .treasure-reward-view{
   width:min(330px,100%);
@@ -3670,7 +3670,7 @@ body[data-vault-theme="goldsmith"] .game-app{
 
   .treasure-reward-copy{
     margin-bottom:9px!important;
-    font-size:12px!important;
+    font-size:14px!important;
   }
 
   .treasure-reward-view{
@@ -3693,7 +3693,7 @@ body[data-vault-theme="goldsmith"] .game-app{
   }
 
   .treasure-reward-result .eyebrow{
-    font-size:10px!important;
+    font-size:14px!important;
   }
 
   .treasure-reward-card h2{
@@ -3703,7 +3703,7 @@ body[data-vault-theme="goldsmith"] .game-app{
   .treasure-reward-copy{
     max-width:280px!important;
     margin-bottom:7px!important;
-    font-size:11px!important;
+    font-size:14px!important;
   }
 
   .treasure-reward-view{
@@ -3717,5 +3717,437 @@ body[data-vault-theme="goldsmith"] .game-app{
     opacity:.28!important;
     transform:scale(1.18)!important;
     rotate:0deg!important;
+  }
+}
+
+
+/* === GAME START SCREEN 2026-09-21 === */
+html{
+  font-size:16px;
+}
+svg.lucide{
+  min-width:14px!important;
+  min-height:14px!important;
+}
+
+.start-overlay{
+  overflow:hidden;
+  place-items:stretch!important;
+  padding:0!important;
+  background:
+    radial-gradient(circle at 50% 38%,rgba(123,44,164,.20),transparent 34%),
+    linear-gradient(180deg,#11051a 0%,#1a0826 42%,#08030d 100%)!important;
+  backdrop-filter:none!important;
+}
+
+.start-world{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none;
+  isolation:isolate;
+}
+
+.start-world::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 50% 47%,transparent 0 24%,rgba(7,2,10,.08) 48%,rgba(5,2,8,.74) 100%),
+    linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.34));
+  z-index:7;
+}
+
+.start-aurora{
+  position:absolute;
+  width:78vmax;
+  height:78vmax;
+  border-radius:50%;
+  filter:blur(68px);
+  opacity:.30;
+  mix-blend-mode:screen;
+  animation:startAurora 13s ease-in-out infinite alternate;
+}
+.start-aurora--one{
+  left:-28vmax;
+  top:-34vmax;
+  background:radial-gradient(circle,#a23ae0 0%,rgba(110,31,153,.58) 32%,transparent 67%);
+}
+.start-aurora--two{
+  right:-34vmax;
+  bottom:-38vmax;
+  background:radial-gradient(circle,#ea6aa9 0%,rgba(82,58,189,.48) 34%,transparent 68%);
+  animation-delay:-6s;
+}
+
+.start-stars{
+  position:absolute;
+  inset:-12%;
+  opacity:.58;
+  background-image:
+    radial-gradient(circle,rgba(255,237,194,.92) 0 1.2px,transparent 1.7px),
+    radial-gradient(circle,rgba(222,170,255,.70) 0 1px,transparent 1.5px),
+    radial-gradient(circle,rgba(255,255,255,.44) 0 1px,transparent 1.4px);
+  background-size:83px 83px,127px 127px,49px 49px;
+  background-position:0 0,31px 19px,17px 8px;
+  animation:startStars 24s linear infinite;
+}
+
+.start-vault-ring{
+  position:absolute;
+  left:50%;
+  top:42%;
+  width:min(88vw,680px);
+  aspect-ratio:1;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  border:1px solid rgba(255,212,116,.14);
+  box-shadow:
+    inset 0 0 80px rgba(192,88,230,.045),
+    0 0 70px rgba(172,69,215,.04);
+}
+.start-vault-ring::before,
+.start-vault-ring::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  border:1px solid rgba(220,163,255,.09);
+}
+.start-vault-ring::before{inset:8%}
+.start-vault-ring::after{inset:18%}
+.start-vault-ring--one{
+  animation:startRing 32s linear infinite;
+}
+.start-vault-ring--two{
+  width:min(112vw,880px);
+  opacity:.44;
+  border-style:dashed;
+  animation:startRingReverse 45s linear infinite;
+}
+
+.start-gem-field{
+  position:absolute;
+  inset:0;
+  z-index:5;
+}
+.start-gem-field span{
+  --size:34px;
+  --x:50%;
+  --y:50%;
+  --dur:8s;
+  --delay:0s;
+  --rot:0deg;
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:var(--size);
+  height:calc(var(--size) * 1.15);
+  transform:translate(-50%,-50%) rotate(var(--rot));
+  clip-path:polygon(50% 0,88% 24%,100% 62%,72% 100%,28% 100%,0 62%,12% 24%);
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.74),transparent 19%),
+    linear-gradient(145deg,#f1b9ff 0%,#9b4fde 34%,#48217d 69%,#f06fba 100%);
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:
+    inset 7px 5px 13px rgba(255,255,255,.13),
+    inset -8px -7px 14px rgba(16,5,30,.38),
+    0 0 24px rgba(190,82,239,.18);
+  opacity:.32;
+  animation:startGemFloat var(--dur) ease-in-out var(--delay) infinite alternate;
+}
+.start-gem-field span::after{
+  content:"";
+  position:absolute;
+  left:17%;
+  top:13%;
+  width:28%;
+  height:18%;
+  border-radius:50%;
+  background:rgba(255,255,255,.78);
+  filter:blur(1px);
+  transform:rotate(-24deg);
+  opacity:.65;
+}
+.start-gem-field span:nth-child(1){--x:8%;--y:18%;--size:42px;--dur:9.5s;--rot:-18deg}
+.start-gem-field span:nth-child(2){--x:89%;--y:17%;--size:29px;--dur:7.8s;--delay:-3s;--rot:24deg}
+.start-gem-field span:nth-child(3){--x:14%;--y:72%;--size:31px;--dur:8.6s;--delay:-5s;--rot:12deg}
+.start-gem-field span:nth-child(4){--x:87%;--y:72%;--size:46px;--dur:10.2s;--delay:-2s;--rot:-31deg}
+.start-gem-field span:nth-child(5){--x:26%;--y:34%;--size:20px;--dur:7.2s;--delay:-6s;--rot:18deg}
+.start-gem-field span:nth-child(6){--x:75%;--y:39%;--size:24px;--dur:8.8s;--delay:-4s;--rot:-10deg}
+.start-gem-field span:nth-child(7){--x:4%;--y:48%;--size:22px;--dur:6.9s;--delay:-1s;--rot:35deg}
+.start-gem-field span:nth-child(8){--x:96%;--y:49%;--size:25px;--dur:7.6s;--delay:-5s;--rot:-26deg}
+.start-gem-field span:nth-child(9){--x:34%;--y:10%;--size:17px;--dur:8.4s;--delay:-2s;--rot:16deg}
+.start-gem-field span:nth-child(10){--x:67%;--y:12%;--size:19px;--dur:9.1s;--delay:-7s;--rot:-18deg}
+.start-gem-field span:nth-child(11){--x:29%;--y:87%;--size:20px;--dur:7.9s;--delay:-4s;--rot:-8deg}
+.start-gem-field span:nth-child(12){--x:72%;--y:88%;--size:27px;--dur:10.4s;--delay:-6s;--rot:29deg}
+
+.start-overlay .start-card{
+  position:relative;
+  z-index:10;
+  width:min(100%,760px)!important;
+  min-height:100dvh;
+  margin:0 auto;
+  padding:
+    max(38px,calc(22px + env(safe-area-inset-top)))
+    24px
+    max(30px,calc(20px + env(safe-area-inset-bottom)))!important;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  align-items:center;
+  text-align:center;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  box-shadow:none!important;
+}
+
+.start-brand{
+  width:100%;
+  margin:auto 0 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.start-overlay .hero-crown{
+  width:112px;
+  height:96px;
+  margin:0 auto 18px;
+}
+.start-overlay .hero-crown svg{
+  width:42px;
+  height:42px;
+  stroke-width:1.7;
+  filter:drop-shadow(0 0 13px rgba(255,194,76,.54));
+}
+.start-overlay .hero-crown span{
+  left:12px;
+  right:12px;
+  height:64px;
+  background:
+    linear-gradient(145deg,#fff5ff 0%,#e69cff 19%,#9c48e0 48%,#55228e 72%,#ff73b6 100%);
+  box-shadow:
+    inset 9px 7px 12px rgba(255,255,255,.16),
+    0 12px 28px rgba(38,8,52,.46);
+  animation:startHeroGem 4.8s ease-in-out infinite;
+}
+
+.start-overlay .eyebrow{
+  font-size:14px!important;
+  letter-spacing:.20em;
+  color:#f7d58a;
+  text-shadow:0 2px 12px rgba(0,0,0,.46);
+}
+
+.start-card h1{
+  margin:12px 0 0!important;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  font-family:"Cinzel Decorative",Georgia,serif!important;
+  font-size:clamp(54px,15vw,92px)!important;
+  line-height:.78!important;
+  font-weight:900!important;
+  letter-spacing:-.055em!important;
+  color:#fff0bd!important;
+  text-shadow:
+    0 3px 0 #7a274f,
+    0 8px 26px rgba(0,0,0,.50),
+    0 0 32px rgba(223,129,255,.18)!important;
+}
+.start-card h1 span:last-child{
+  color:#efc5ff;
+  font-size:.78em;
+  letter-spacing:.02em;
+  margin-top:11px;
+  text-shadow:
+    0 3px 0 #572778,
+    0 8px 26px rgba(0,0,0,.50),
+    0 0 28px rgba(189,89,237,.28);
+}
+
+.start-overlay .tagline{
+  width:min(500px,92%);
+  margin:22px auto 0!important;
+  color:#eaddef!important;
+  font-size:18px!important;
+  font-weight:700;
+  line-height:1.45;
+  text-wrap:balance;
+}
+
+.start-menu{
+  width:min(420px,100%);
+  margin:42px 0 auto;
+}
+
+.start-overlay .home-best{
+  width:max-content!important;
+  min-width:178px;
+  min-height:auto!important;
+  margin:0 auto 18px!important;
+  padding:9px 16px 10px;
+  border-radius:999px!important;
+  grid-template-columns:auto auto;
+  gap:10px;
+  background:rgba(17,7,24,.48)!important;
+  border:1px solid rgba(255,219,136,.19)!important;
+  backdrop-filter:blur(12px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+.start-overlay .home-best span{
+  font-size:14px!important;
+  letter-spacing:.08em;
+}
+.start-overlay .home-best strong{
+  margin:0!important;
+  font-size:20px!important;
+}
+
+.start-actions{
+  display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+  gap:10px;
+}
+.start-actions .primary-button,
+.start-actions .secondary-button{
+  margin:0!important;
+  min-height:60px;
+  border-radius:18px;
+  font-size:15px!important;
+}
+.start-actions .primary-button{
+  color:#35121d;
+  background:linear-gradient(180deg,#ffe07f,#f1a337);
+  box-shadow:
+    0 13px 30px rgba(223,127,31,.22),
+    inset 0 1px 0 rgba(255,255,255,.55);
+}
+.start-actions .secondary-button{
+  color:#f0deef;
+  background:rgba(42,15,53,.68);
+  backdrop-filter:blur(14px);
+}
+.start-actions svg{
+  width:22px!important;
+  height:22px!important;
+}
+
+.start-overlay .start-copy{
+  margin:16px auto 0!important;
+  max-width:360px!important;
+  color:rgba(222,207,225,.68)!important;
+  font-size:14px!important;
+  line-height:1.45!important;
+}
+
+@keyframes startAurora{
+  from{transform:translate3d(-3%,1%,0) scale(.96)}
+  to{transform:translate3d(8%,-5%,0) scale(1.08)}
+}
+@keyframes startStars{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-83px,83px,0)}
+}
+@keyframes startRing{
+  from{transform:translate(-50%,-50%) rotate(0)}
+  to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+@keyframes startRingReverse{
+  from{transform:translate(-50%,-50%) rotate(360deg)}
+  to{transform:translate(-50%,-50%) rotate(0)}
+}
+@keyframes startGemFloat{
+  from{transform:translate(-50%,-50%) rotate(var(--rot)) translateY(-9px) scale(.94)}
+  to{transform:translate(-50%,-50%) rotate(calc(var(--rot) + 16deg)) translateY(13px) scale(1.06)}
+}
+@keyframes startHeroGem{
+  0%,100%{transform:translateY(0) rotate(-1deg);filter:drop-shadow(0 8px 14px rgba(0,0,0,.32))}
+  50%{transform:translateY(-7px) rotate(1deg);filter:drop-shadow(0 14px 24px rgba(119,35,154,.38))}
+}
+
+@media(max-width:430px){
+  .start-overlay .start-card{
+    padding-left:18px!important;
+    padding-right:18px!important;
+  }
+  .start-overlay .hero-crown{
+    width:96px;
+    height:82px;
+    margin-bottom:14px;
+  }
+  .start-overlay .hero-crown span{
+    height:56px;
+  }
+  .start-card h1{
+    font-size:clamp(50px,18vw,72px)!important;
+  }
+  .start-overlay .tagline{
+    margin-top:18px!important;
+    font-size:16px!important;
+  }
+  .start-menu{
+    margin-top:32px;
+  }
+  .start-actions{
+    grid-template-columns:1fr;
+  }
+  .start-actions .primary-button,
+  .start-actions .secondary-button{
+    min-height:56px;
+  }
+  .start-overlay .start-copy{
+    margin-top:13px!important;
+  }
+}
+
+@media(max-height:720px){
+  .start-overlay .start-card{
+    padding-top:max(22px,env(safe-area-inset-top))!important;
+    padding-bottom:max(20px,env(safe-area-inset-bottom))!important;
+  }
+  .start-overlay .hero-crown{
+    width:78px;
+    height:66px;
+    margin-bottom:8px;
+  }
+  .start-overlay .hero-crown svg{
+    width:32px;
+    height:32px;
+  }
+  .start-overlay .hero-crown span{
+    height:45px;
+  }
+  .start-card h1{
+    margin-top:7px!important;
+    font-size:clamp(44px,12vh,68px)!important;
+  }
+  .start-overlay .tagline{
+    margin-top:13px!important;
+    font-size:15px!important;
+  }
+  .start-menu{
+    margin-top:24px;
+  }
+  .start-overlay .home-best{
+    margin-bottom:12px!important;
+  }
+  .start-actions .primary-button,
+  .start-actions .secondary-button{
+    min-height:52px;
+  }
+  .start-overlay .start-copy{
+    margin-top:10px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .start-aurora,
+  .start-stars,
+  .start-vault-ring,
+  .start-gem-field span,
+  .start-overlay .hero-crown span{
+    animation:none!important;
   }
 }
