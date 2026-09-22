@@ -4,8 +4,9 @@
   if (!window.Phaser) return;
 
   function syncGameViewport(){
-    const standalone=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches
-      || window.navigator.standalone===true;
+    const standalone=(
+      window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches
+    )||window.navigator.standalone===true;
 
     document.body.classList.toggle('gemdrop-standalone',!!standalone);
 
@@ -15,14 +16,18 @@
     }
 
     const viewport=window.visualViewport;
-    const height=Math.max(
+    const visibleHeight=Math.max(
       1,
-      Math.round(viewport&&viewport.height?viewport.height:window.innerHeight)
+      Math.round(
+        viewport&&Number.isFinite(viewport.height)
+          ? viewport.height
+          : window.innerHeight
+      )
     );
 
     document.documentElement.style.setProperty(
       '--gemdrop-viewport-height',
-      height+'px'
+      visibleHeight+'px'
     );
   }
 
