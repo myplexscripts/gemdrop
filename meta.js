@@ -487,7 +487,7 @@
         '<strong>'+(discovered?treasure.name:'Undiscovered')+'</strong>'+
         '<span class="treasure-card__rarity">'+(discovered?treasure.rarity:'???')+'</span>'+
         '<span class="treasure-card__count">'+(discovered?'×'+copies.length:'')+'</span>'+
-        (completed?'<span class="treasure-card__complete">'+completed+' finished'+(state.treasureRecords[treasure.id]?' · best '+money(state.treasureRecords[treasure.id]):'')+'</span>':'')+
+        (completed?'<span class="treasure-card__complete"><span>'+completed+' finished</span>'+(state.treasureRecords[treasure.id]?'<span>Best '+money(state.treasureRecords[treasure.id])+'</span>':'')+'</span>':'')+
       '</div>';
     if(copies.length) button.addEventListener('click',()=>openTreasureDetail(treasure.id));
     return button;
