@@ -94,7 +94,9 @@
       color:var(--gold);font-size:14px;font-weight:900;pointer-events:none
     }
     .handle{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid #271322;z-index:6}
-    .handle.resize{right:-10px;bottom:-10px;cursor:nwse-resize}
+    .handle.resize-x{right:-10px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+    .handle.resize-y{left:50%;bottom:-10px;transform:translateX(-50%);cursor:ns-resize}
+    .handle.resize-xy{right:-10px;bottom:-10px;cursor:nwse-resize}
     .handle.rotate{right:-10px;top:-10px;cursor:crosshair;background:var(--purple)}
     .stage-caption{display:flex;justify-content:space-between;gap:12px;margin-top:9px;color:var(--muted);font-size:14px}
     .sidebar{padding:14px;display:grid;gap:14px}
@@ -165,7 +167,7 @@
             </div>
             <div class="stage-caption">
               <span>Game render: 320 × 260</span>
-              <span>Drag gem · gold handle resizes · facets redraw live · purple handle rotates</span>
+              <span>Drag gem · side handles reshape · corner changes ratio · facets redraw live</span>
             </div>
           </div>
         </div>
@@ -196,8 +198,12 @@
             <div class="field"><label for="yInput">Y</label><input id="yInput" type="number" min="0" max="260" step="0.5"></div>
           </div>
           <div class="range-row">
-            <div class="field"><label for="sizeRange">Gem size</label><input id="sizeRange" type="range" min="12" max="120" step="0.5"></div>
-            <input id="sizeInput" type="number" min="12" max="120" step="0.5" aria-label="Gem size">
+            <div class="field"><label for="widthRange">Gem width</label><input id="widthRange" type="range" min="12" max="180" step="0.5"></div>
+            <input id="widthInput" type="number" min="12" max="180" step="0.5" aria-label="Gem width">
+          </div>
+          <div class="range-row">
+            <div class="field"><label for="heightRange">Gem height</label><input id="heightRange" type="range" min="12" max="180" step="0.5"></div>
+            <input id="heightInput" type="number" min="12" max="180" step="0.5" aria-label="Gem height">
           </div>
           <div class="range-row">
             <div class="field"><label for="rotationRange">Rotation</label><input id="rotationRange" type="range" min="-180" max="180" step="1"></div>
@@ -223,7 +229,7 @@
             <button id="copyOutput" class="primary" type="button">Copy sockets</button>
             <button id="resetSockets" type="button">Reset treasure</button>
           </div>
-          <p class="fine">Draft positions save automatically in this browser. Rotation is included only when non-zero, so the output stays compatible with the existing config unless you choose to use rotation later.</p>
+          <p class="fine">Draft positions save automatically in this browser. Width and height export separately, so the gem's exact authored proportion is preserved.</p>
         </section>
       </aside>
     </div>
@@ -286,7 +292,8 @@
       gridToggle:$('gridToggle'),stage:$('stage'),treasureArt:$('treasureArt'),socketLayer:$('socketLayer'),
       socketTabs:$('socketTabs'),addSocket:$('addSocket'),deleteSocket:$('deleteSocket'),
       cutSelect:$('cutSelect'),gemSelect:$('gemSelect'),xInput:$('xInput'),yInput:$('yInput'),
-      sizeRange:$('sizeRange'),sizeInput:$('sizeInput'),rotationRange:$('rotationRange'),rotationInput:$('rotationInput'),
+      widthRange:$('widthRange'),widthInput:$('widthInput'),heightRange:$('heightRange'),heightInput:$('heightInput'),
+      rotationRange:$('rotationRange'),rotationInput:$('rotationInput'),
       output:$('output'),copyOutput:$('copyOutput'),resetSockets:$('resetSockets')
     };
 
@@ -298,10 +305,18 @@
     let gesture=null;
     let stageArtCanvas=null;
 
-    const cloneSockets=list=>list.map(s=>({...s,rotation:Number(s.rotation)||0}));
+    const cloneSockets=list=>list.map(s=>{
+      const legacySize=Number(s.size)||40;
+      return {
+        ...s,
+        width:Number(s.width)||legacySize,
+        height:Number(s.height)||legacySize,
+        rotation:Number(s.rotation)||0
+      };
+    });
     const currentTreasure=()=>TREASURES[current];
     const selectedSocket=()=>sockets[selected]||null;
-    const draftKey=()=> 'gemdrop-aligner-v2-'+currentTreasure().id;
+    const draftKey=()=> 'gemdrop-aligner-v3-'+currentTreasure().id;
     const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
     const roundHalf=n=>Math.round(n*2)/2;
 
@@ -405,50 +420,39 @@
       stageArtCanvas=c;
     }
 
-    function gemRenderPixels(socket){
+    function gemRenderDimensions(socket){
       const dpr=clamp(Number(window.devicePixelRatio)||1,1,3);
-      const logical=Math.max(12,Number(socket.size)||40);
-
-      // The gem is rebuilt from its facet model at a resolution that follows
-      // the size being authored. CSS never stretches a low-res gem preview.
-      return Math.round(clamp(logical*4*dpr,192,768));
+      const logicalW=Math.max(12,Number(socket.width)||40);
+      const logicalH=Math.max(12,Number(socket.height)||40);
+      return {
+        width:Math.round(clamp(logicalW*4*dpr,192,1024)),
+        height:Math.round(clamp(logicalH*4*dpr,192,1024))
+      };
     }
 
     function drawGem(canvas,socket){
       if(!reactiveReady) return;
 
       const gem=gemForSocket(socket);
-      const renderPx=gemRenderPixels(socket);
-      canvas.width=renderPx;
-      canvas.height=renderPx;
-
-      const ctx=canvas.getContext('2d',{alpha:true});
-      ctx.clearRect(0,0,renderPx,renderPx);
+      const dims=gemRenderDimensions(socket);
 
       try{
-        // renderPreviewCanvas re-runs the original facet geometry and lighting
-        // at this resolution, so enlarging a gem creates new detail instead of
-        // enlarging pixels from the previous preview.
-        const source=window.ReactiveGemSystem.renderPreviewCanvas(
+        // This is not a raster stretch. The reactive renderer transforms the
+        // original facet polygons to the requested width/height and recalculates
+        // their normals before lighting them.
+        const source=window.ReactiveGemSystem.renderPreviewCanvasSized(
           socket.cut,
           gem.color,
-          0,
-          renderPx,
+          dims.width,
+          dims.height,
           gem
         );
 
-        const maxSize=renderPx*.94;
-        const scale=Math.min(maxSize/source.width,maxSize/source.height);
-        const w=source.width*scale;
-        const h=source.height*scale;
-
-        ctx.drawImage(
-          source,
-          (renderPx-w)/2,
-          (renderPx-h)/2,
-          w,
-          h
-        );
+        canvas.width=source.width;
+        canvas.height=source.height;
+        const ctx=canvas.getContext('2d',{alpha:true});
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(source,0,0);
       }catch(err){
         console.error(err);
       }
@@ -457,8 +461,8 @@
     function styleSocket(node,socket){
       node.style.left=(socket.x/320*100)+'%';
       node.style.top=(socket.y/260*100)+'%';
-      node.style.width=(socket.size/320*100)+'%';
-      node.style.height=(socket.size/260*100)+'%';
+      node.style.width=(socket.width/320*100)+'%';
+      node.style.height=(socket.height/260*100)+'%';
       node.style.transform='translate(-50%,-50%) rotate('+(Number(socket.rotation)||0)+'deg)';
     }
 
@@ -480,9 +484,11 @@
 
         node.append(canvas,badge);
         if(index===selected){
-          const resize=document.createElement('span');resize.className='handle resize';resize.dataset.handle='resize';
+          const resizeX=document.createElement('span');resizeX.className='handle resize-x';resizeX.dataset.handle='resize-x';
+          const resizeY=document.createElement('span');resizeY.className='handle resize-y';resizeY.dataset.handle='resize-y';
+          const resizeXY=document.createElement('span');resizeXY.className='handle resize-xy';resizeXY.dataset.handle='resize-xy';
           const rotate=document.createElement('span');rotate.className='handle rotate';rotate.dataset.handle='rotate';
-          node.append(resize,rotate);
+          node.append(resizeX,resizeY,resizeXY,rotate);
         }
         els.socketLayer.appendChild(node);
       });
@@ -511,14 +517,16 @@
     function syncInspector(){
       const s=selectedSocket();
       const disabled=!s;
-      [els.cutSelect,els.gemSelect,els.xInput,els.yInput,els.sizeRange,els.sizeInput,els.rotationRange,els.rotationInput,els.deleteSocket]
+      [els.cutSelect,els.gemSelect,els.xInput,els.yInput,els.widthRange,els.widthInput,els.heightRange,els.heightInput,els.rotationRange,els.rotationInput,els.deleteSocket]
         .forEach(el=>el.disabled=disabled);
       if(!s){updateOutput();return}
       els.cutSelect.value=s.cut;
       els.xInput.value=String(s.x);
       els.yInput.value=String(s.y);
-      els.sizeRange.value=String(s.size);
-      els.sizeInput.value=String(s.size);
+      els.widthRange.value=String(s.width);
+      els.widthInput.value=String(s.width);
+      els.heightRange.value=String(s.height);
+      els.heightInput.value=String(s.height);
       els.rotationRange.value=String(s.rotation||0);
       els.rotationInput.value=String(s.rotation||0);
       updateOutput();
@@ -529,7 +537,8 @@
       Object.assign(s,patch);
       s.x=roundHalf(clamp(Number(s.x)||0,0,320));
       s.y=roundHalf(clamp(Number(s.y)||0,0,260));
-      s.size=roundHalf(clamp(Number(s.size)||40,12,120));
+      s.width=roundHalf(clamp(Number(s.width)||40,12,180));
+      s.height=roundHalf(clamp(Number(s.height)||40,12,180));
       s.rotation=Math.round(clamp(Number(s.rotation)||0,-180,180));
       saveDraft();
       syncInspector();
@@ -538,7 +547,7 @@
 
     function updateOutput(){
       const lines=sockets.map(s=>{
-        let line='{x:'+formatNum(s.x)+',y:'+formatNum(s.y)+",cut:'"+s.cut+"',size:"+formatNum(s.size);
+        let line='{x:'+formatNum(s.x)+',y:'+formatNum(s.y)+",cut:'"+s.cut+"',width:"+formatNum(s.width)+',height:'+formatNum(s.height);
         if(Number(s.rotation)) line+=',rotation:'+Math.round(s.rotation);
         return line+'}';
       });
@@ -592,10 +601,13 @@
       if(gesture.type==='move'){
         s.x=roundHalf(clamp(gesture.original.x+(p.x-gesture.start.x),0,320));
         s.y=roundHalf(clamp(gesture.original.y+(p.y-gesture.start.y),0,260));
-      }else if(gesture.type==='resize'){
-        const dx=p.x-gesture.original.x,dy=p.y-gesture.original.y;
-        const dist=Math.sqrt(dx*dx+dy*dy);
-        s.size=roundHalf(clamp(dist*2,12,120));
+      }else if(gesture.type==='resize-x'){
+        s.width=roundHalf(clamp(Math.abs(p.x-gesture.original.x)*2,12,180));
+      }else if(gesture.type==='resize-y'){
+        s.height=roundHalf(clamp(Math.abs(p.y-gesture.original.y)*2,12,180));
+      }else if(gesture.type==='resize-xy'){
+        s.width=roundHalf(clamp(Math.abs(p.x-gesture.original.x)*2,12,180));
+        s.height=roundHalf(clamp(Math.abs(p.y-gesture.original.y)*2,12,180));
       }else if(gesture.type==='rotate'){
         const angle=Math.atan2(p.y-gesture.original.y,p.x-gesture.original.x)*180/Math.PI;
         s.rotation=Math.round(angle+45);
@@ -633,7 +645,7 @@
       }
       window.ReactiveGemSystem.prepare(sources);
       reactiveReady=true;
-      els.status.textContent='Ready · gems redraw from facet geometry as you resize';
+      els.status.textContent='Ready · facet geometry and lighting redraw as width/height change';
       renderSockets();
     }
 
@@ -659,7 +671,7 @@
     });
 
     els.addSocket.addEventListener('click',()=>{
-      sockets.push({x:160,y:130,cut:'circular_starcut',size:40,rotation:0});
+      sockets.push({x:160,y:130,cut:'circular_starcut',width:40,height:40,rotation:0});
       selected=sockets.length-1;
       saveDraft();populateGemSelect();syncInspector();renderSockets();
     });
@@ -684,8 +696,10 @@
     els.gemSelect.addEventListener('change',renderSockets);
     els.xInput.addEventListener('input',()=>updateSelected({x:els.xInput.value}));
     els.yInput.addEventListener('input',()=>updateSelected({y:els.yInput.value}));
-    els.sizeRange.addEventListener('input',()=>updateSelected({size:els.sizeRange.value}));
-    els.sizeInput.addEventListener('input',()=>updateSelected({size:els.sizeInput.value}));
+    els.widthRange.addEventListener('input',()=>updateSelected({width:els.widthRange.value}));
+    els.widthInput.addEventListener('input',()=>updateSelected({width:els.widthInput.value}));
+    els.heightRange.addEventListener('input',()=>updateSelected({height:els.heightRange.value}));
+    els.heightInput.addEventListener('input',()=>updateSelected({height:els.heightInput.value}));
     els.rotationRange.addEventListener('input',()=>updateSelected({rotation:els.rotationRange.value}));
     els.rotationInput.addEventListener('input',()=>updateSelected({rotation:els.rotationInput.value}));
 
