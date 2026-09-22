@@ -1113,7 +1113,7 @@
             ? this.collectionPointerLightAngle
             : GEM_WORLD_LIGHT_ANGLE+Math.sin(time*.00072)*.62;
 
-          this.collectionLightAngle+=shortestAngleDelta(this.collectionLightAngle,target)*(pointerActive?.24:.08);
+          this.collectionLightAngle+=shortestAngleDelta(this.collectionLightAngle,target)*(pointerActive ? .24 : .08);
           this.redrawCollectionLighting(this.collectionLightAngle);
           this.collectionLightLastFrame=time;
         }
