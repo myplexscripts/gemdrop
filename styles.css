@@ -4617,3 +4617,365 @@ body{
     padding:9px 10px;
   }
 }
+
+
+/* === RESULTS SCREEN CLEANUP 2026-09-22 === */
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+
+#gameOverOverlay{
+  align-items:center!important;
+  padding:
+    max(12px,env(safe-area-inset-top))
+    14px
+    max(12px,env(safe-area-inset-bottom))!important;
+}
+
+.result-card{
+  width:min(500px,100%)!important;
+  max-height:calc(100dvh - max(24px,env(safe-area-inset-top)) - max(24px,env(safe-area-inset-bottom)))!important;
+  padding:18px!important;
+  border-radius:28px!important;
+  overflow-y:auto!important;
+  text-align:left!important;
+  background:
+    radial-gradient(circle at 88% -8%,rgba(191,74,219,.16),transparent 32%),
+    linear-gradient(180deg,rgba(48,18,57,.98),rgba(20,8,27,.99))!important;
+}
+
+.result-card__header{
+  display:grid!important;
+  grid-template-columns:52px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:13px!important;
+  margin:0 0 14px!important;
+}
+.result-card__header .sheet-icon{
+  width:52px!important;
+  height:52px!important;
+  margin:0!important;
+  border-radius:17px!important;
+}
+.result-card__headline{
+  min-width:0;
+}
+.result-card__headline .eyebrow{
+  margin:0 0 3px!important;
+  font-size:14px!important;
+  letter-spacing:.10em!important;
+}
+.result-hero-value{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  min-width:0;
+}
+.result-hero-value strong{
+  min-width:0;
+  color:#ffd15f;
+  font-size:clamp(38px,10vw,52px);
+  line-height:.95;
+  font-weight:900;
+  letter-spacing:-.045em;
+  font-variant-numeric:tabular-nums;
+}
+.result-hero-value span{
+  color:#b8a6bd;
+  font-size:14px;
+  line-height:1.2;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+
+.result-card .final-score,
+.result-row--finest{
+  display:none!important;
+}
+
+.run-stat-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:0!important;
+  margin:0!important;
+  border-top:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.run-stat-grid>div{
+  min-width:0!important;
+  padding:11px 10px!important;
+  display:flex!important;
+  align-items:baseline!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  text-align:left!important;
+}
+.run-stat-grid>div:nth-child(odd){
+  border-right:1px solid rgba(255,255,255,.08)!important;
+}
+.run-stat-grid>div:nth-child(-n+2){
+  border-bottom:1px solid rgba(255,255,255,.08)!important;
+}
+.run-stat-grid span{
+  color:#9f8da5!important;
+  font-size:14px!important;
+  line-height:1.15!important;
+  font-weight:800!important;
+  letter-spacing:.04em;
+}
+.run-stat-grid strong{
+  min-width:0;
+  margin:0!important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#f5eaf5!important;
+  font-size:16px!important;
+  line-height:1.1!important;
+  font-weight:900!important;
+  text-align:right;
+}
+
+.run-haul{
+  margin:14px 0 0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+}
+.run-section-heading{
+  padding:0 1px 8px;
+}
+.run-section-heading span{
+  color:#c5b2ca!important;
+}
+.run-section-heading strong{
+  color:#ffd26a!important;
+}
+
+.run-gem-haul{
+  margin:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:0!important;
+  border-top:1px solid rgba(255,255,255,.07);
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.run-gem-chip{
+  min-width:0!important;
+  min-height:56px!important;
+  padding:6px 8px 6px 0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+}
+.run-gem-chip:nth-child(odd){
+  border-right:1px solid rgba(255,255,255,.07)!important;
+}
+.run-gem-chip:nth-child(n+3){
+  border-top:1px solid rgba(255,255,255,.07)!important;
+}
+.run-gem-chip canvas{
+  flex:0 0 48px!important;
+  width:48px!important;
+  height:48px!important;
+}
+.run-gem-chip>div{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:2px!important;
+}
+.run-gem-chip strong{
+  color:#f1e7f1!important;
+  font-size:14px!important;
+  line-height:1.15!important;
+}
+.run-gem-chip span{
+  color:#ffd062!important;
+  font-size:14px!important;
+  line-height:1!important;
+}
+.run-gem-haul__empty,
+.run-gem-haul__more{
+  grid-column:1/-1!important;
+  padding:10px 4px!important;
+  color:#9f8ca5!important;
+  font-size:14px!important;
+  text-align:center!important;
+}
+
+.result-progression{
+  margin-top:14px;
+  padding-top:13px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.run-crown-progress{
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+}
+.run-crown-progress__track{
+  height:7px!important;
+  margin-top:7px!important;
+}
+.result-highlights{
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.run-discovery,
+.run-record{
+  min-width:0;
+  margin:0!important;
+  padding:7px 9px!important;
+  border-radius:999px!important;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  line-height:1.15!important;
+  font-size:14px!important;
+  font-weight:900!important;
+}
+.run-discovery[hidden],
+.run-record[hidden]{
+  display:none!important;
+}
+.run-discovery{
+  color:#f7df9d!important;
+  background:rgba(255,207,96,.08)!important;
+  border:1px solid rgba(255,211,108,.18)!important;
+}
+.run-discovery svg{
+  width:16px!important;
+  height:16px!important;
+  flex:0 0 16px;
+}
+.run-discovery>span{
+  min-width:0;
+  display:flex!important;
+  align-items:center;
+  gap:6px;
+}
+.run-discovery b{
+  color:#ffd56f!important;
+  font-size:14px!important;
+  line-height:1!important;
+  white-space:nowrap;
+}
+.run-discovery strong{
+  margin:0!important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#f5e9cf!important;
+  font-size:14px!important;
+  line-height:1!important;
+}
+.run-record{
+  color:#2e1727!important;
+  background:linear-gradient(180deg,#ffe58a,#eeba47)!important;
+  border:1px solid rgba(255,245,201,.36)!important;
+  text-align:left!important;
+}
+
+.result-actions{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)!important;
+  gap:8px!important;
+  margin-top:14px!important;
+}
+.result-actions .primary-button,
+.result-actions .secondary-button{
+  min-height:52px!important;
+  margin:0!important;
+  border-radius:16px!important;
+  font-size:14px!important;
+}
+.result-actions .secondary-button{
+  background:rgba(38,13,49,.76)!important;
+}
+
+@media(max-width:390px){
+  .result-card{
+    padding:14px!important;
+    border-radius:24px!important;
+  }
+  .result-card__header{
+    grid-template-columns:46px minmax(0,1fr)!important;
+    gap:10px!important;
+    margin-bottom:11px!important;
+  }
+  .result-card__header .sheet-icon{
+    width:46px!important;
+    height:46px!important;
+  }
+  .result-hero-value strong{
+    font-size:38px!important;
+  }
+  .result-hero-value span{
+    display:none;
+  }
+  .run-stat-grid>div{
+    padding:9px 7px!important;
+  }
+  .run-stat-grid strong{
+    font-size:15px!important;
+  }
+  .run-gem-chip{
+    min-height:52px!important;
+    padding-right:5px!important;
+  }
+  .run-gem-chip canvas{
+    flex-basis:44px!important;
+    width:44px!important;
+    height:44px!important;
+  }
+  .result-actions{
+    grid-template-columns:1fr 1fr!important;
+  }
+}
+
+@media(max-height:720px){
+  #gameOverOverlay{
+    align-items:stretch!important;
+    padding-top:max(8px,env(safe-area-inset-top))!important;
+    padding-bottom:max(8px,env(safe-area-inset-bottom))!important;
+  }
+  .result-card{
+    max-height:100%!important;
+    padding:12px!important;
+  }
+  .result-card__header{
+    margin-bottom:9px!important;
+  }
+  .run-haul{
+    margin-top:10px!important;
+  }
+  .result-progression{
+    margin-top:10px;
+    padding-top:10px;
+  }
+  .result-actions{
+    margin-top:10px!important;
+  }
+}
