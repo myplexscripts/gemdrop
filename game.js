@@ -648,23 +648,34 @@
       super({game,fragShader:GEM_FACET_FRAG_SHADER});
     }
 
-    onBind(gameObject) {
-      this.flush();
-      super.onBind(gameObject);
-
+    setGemUniforms(gameObject) {
       const d=gameObject&&gameObject.pipelineData?gameObject.pipelineData:null;
       if(!d) return;
 
       this.set3f('uGemColor',d.gemColor[0],d.gemColor[1],d.gemColor[2]);
       this.set3f('uDeepColor',d.deepColor[0],d.deepColor[1],d.deepColor[2]);
       this.set3f('uAccentColor',d.accentColor[0],d.accentColor[1],d.accentColor[2]);
+
+      // Keep the light fixed in world space. As the Matter body rotates,
+      // the light direction moves across the gem's local facet normals.
       this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE-(gameObject.rotation||0));
       this.set1f('uTime',this.game.loop.time*.001);
       this.set1f('uStepCut',d.stepCut?1:0);
     }
 
+    onBind(gameObject) {
+      this.flush();
+      super.onBind(gameObject);
+      this.setGemUniforms(gameObject);
+    }
+
     onBatch(gameObject) {
-      if(gameObject) this.flush();
+      if(!gameObject) return;
+      // Phaser can keep this custom pipeline bound across many sprites.
+      // Refresh the uniforms for every batched gem so rotation is reactive
+      // per-object and per-frame instead of being frozen at the first bind.
+      this.flush();
+      this.setGemUniforms(gameObject);
     }
   }
   class GameScene extends Phaser.Scene {
