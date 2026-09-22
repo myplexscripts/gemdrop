@@ -80,7 +80,9 @@
       border:2px solid var(--gold);
       box-shadow:0 0 0 2px rgba(0,0,0,.55),0 0 18px rgba(255,212,107,.22)
     }
-    .socket canvas{width:100%;height:100%;display:block;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.62))}
+    .socket canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+    .socket .gem-preview{z-index:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.62))}
+    .socket .bezel-preview{z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.26))}
     .socket .index{
       position:absolute;left:50%;top:-22px;transform:translateX(-50%);
       min-width:22px;height:22px;padding:0 5px;display:grid;place-items:center;
@@ -290,6 +292,7 @@
     let customArtUrl=null;
     let reactiveReady=false;
     let gesture=null;
+    let stageArtCanvas=null;
 
     const cloneSockets=list=>list.map(s=>({...s,rotation:Number(s.rotation)||0}));
     const currentTreasure=()=>TREASURES[current];
@@ -313,6 +316,7 @@
     function setRepoArt(){
       if(customArtUrl){URL.revokeObjectURL(customArtUrl);customArtUrl=null}
       els.artUpload.value='';
+      stageArtCanvas=null;
       els.treasureArt.src='../assets/treasures/'+currentTreasure().id+'.png';
       els.treasureArt.alt=currentTreasure().name+' artwork';
     }
@@ -353,6 +357,50 @@
       return GEMS.find(g=>g.cut===socket.cut)||GEMS[0];
     }
 
+    function appendRoundedRect(ctx,x,y,w,h,r){
+      const rr=Math.min(r,w*.5,h*.5);
+      ctx.moveTo(x+rr,y);ctx.lineTo(x+w-rr,y);ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
+      ctx.lineTo(x+w,y+h-rr);ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+      ctx.lineTo(x+rr,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
+      ctx.lineTo(x,y+rr);ctx.quadraticCurveTo(x,y,x+rr,y);ctx.closePath();
+    }
+
+    function appendHeart(ctx,cx,cy,w,h){
+      const x=cx-w/2,y=cy-h/2;
+      ctx.moveTo(cx,y+h*.94);
+      ctx.bezierCurveTo(x+w*.06,y+h*.58,x+w*.02,y+h*.22,x+w*.26,y+h*.16);
+      ctx.bezierCurveTo(x+w*.40,y+h*.12,x+w*.48,y+h*.24,cx,y+h*.34);
+      ctx.bezierCurveTo(x+w*.52,y+h*.24,x+w*.60,y+h*.12,x+w*.74,y+h*.16);
+      ctx.bezierCurveTo(x+w*.98,y+h*.22,x+w*.94,y+h*.58,cx,y+h*.94);
+      ctx.closePath();
+    }
+
+    function appendOctagon(ctx,cx,cy,rx,ry=rx){
+      const sx=rx*.42,sy=ry*.42;
+      ctx.moveTo(cx-sx,cy-ry);ctx.lineTo(cx+sx,cy-ry);ctx.lineTo(cx+rx,cy-sy);ctx.lineTo(cx+rx,cy+sy);
+      ctx.lineTo(cx+sx,cy+ry);ctx.lineTo(cx-sx,cy+ry);ctx.lineTo(cx-rx,cy+sy);ctx.lineTo(cx-rx,cy-sy);ctx.closePath();
+    }
+
+    function appendSocketShape(ctx,cut,cx,cy,r){
+      switch(cut){
+        case 'circular_starcut':ctx.moveTo(cx+r*.84,cy);ctx.arc(cx,cy,r*.84,0,Math.PI*2);ctx.closePath();break;
+        case 'rectangular':appendRoundedRect(ctx,cx-r*.58,cy-r*.74,r*1.16,r*1.48,r*.16);break;
+        case 'emerald_stepcut':appendOctagon(ctx,cx,cy,r*.64,r*.80);break;
+        case 'rectangular_brilliant':appendRoundedRect(ctx,cx-r*.61,cy-r*.76,r*1.22,r*1.52,r*.18);break;
+        case 'heart':appendHeart(ctx,cx,cy,r*1.42,r*1.36);break;
+        case 'tanzanite':appendOctagon(ctx,cx,cy,r*.82,r*.86);break;
+        default:ctx.moveTo(cx+r*.82,cy);ctx.arc(cx,cy,r*.82,0,Math.PI*2);ctx.closePath();
+      }
+    }
+
+    function refreshStageArtCanvas(){
+      if(!els.treasureArt.complete||!els.treasureArt.naturalWidth) return;
+      const c=document.createElement('canvas');
+      c.width=320;c.height=260;
+      c.getContext('2d').drawImage(els.treasureArt,0,0,320,260);
+      stageArtCanvas=c;
+    }
+
     function drawGem(canvas,socket){
       const ctx=canvas.getContext('2d');
       ctx.clearRect(0,0,112,112);
@@ -360,12 +408,54 @@
       const gem=gemForSocket(socket);
       try{
         const source=window.ReactiveGemSystem.renderPreviewCanvas(socket.cut,gem.color,0,192,gem);
-        const scale=Math.min(112*.88/source.width,112*.88/source.height);
+        const scale=Math.min(112*.72/source.width,112*.72/source.height);
         const w=source.width*scale,h=source.height*scale;
         ctx.drawImage(source,(112-w)/2,(112-h)/2,w,h);
       }catch(err){
         console.error(err);
       }
+    }
+
+    function drawBezel(canvas,socket){
+      const ctx=canvas.getContext('2d');
+      const size=112;
+      ctx.clearRect(0,0,size,size);
+      if(!stageArtCanvas)return;
+
+      const sourceSize=Math.max(12,Number(socket.size)||40);
+      ctx.drawImage(
+        stageArtCanvas,
+        (Number(socket.x)||160)-sourceSize/2,
+        (Number(socket.y)||130)-sourceSize/2,
+        sourceSize,sourceSize,
+        0,0,size,size
+      );
+
+      ctx.globalCompositeOperation='destination-in';
+      ctx.save();
+      ctx.translate(size/2,size/2);
+      ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
+      ctx.translate(-size/2,-size/2);
+      ctx.beginPath();
+      appendSocketShape(ctx,socket.cut,size/2,size/2,size*.49);
+      appendSocketShape(ctx,socket.cut,size/2,size/2,size*.35);
+      ctx.fillStyle='#fff';
+      ctx.fill('evenodd');
+      ctx.restore();
+      ctx.globalCompositeOperation='source-over';
+
+      ctx.save();
+      ctx.translate(size/2,size/2);
+      ctx.rotate((Number(socket.rotation)||0)*Math.PI/180);
+      ctx.translate(-size/2,-size/2);
+      ctx.beginPath();
+      appendSocketShape(ctx,socket.cut,size/2,size/2,size*.35);
+      ctx.lineWidth=5;
+      ctx.strokeStyle='rgba(0,0,0,.36)';
+      ctx.shadowColor='rgba(0,0,0,.42)';
+      ctx.shadowBlur=5;
+      ctx.stroke();
+      ctx.restore();
     }
 
     function styleSocket(node,socket){
@@ -386,13 +476,20 @@
 
         const canvas=document.createElement('canvas');
         canvas.width=112;canvas.height=112;
+        canvas.className='gem-preview';
         canvas.setAttribute('aria-hidden','true');
         drawGem(canvas,socket);
+
+        const bezel=document.createElement('canvas');
+        bezel.width=112;bezel.height=112;
+        bezel.className='bezel-preview';
+        bezel.setAttribute('aria-hidden','true');
+        drawBezel(bezel,socket);
 
         const badge=document.createElement('span');
         badge.className='index';badge.textContent=String(index+1);
 
-        node.append(canvas,badge);
+        node.append(canvas,bezel,badge);
         if(index===selected){
           const resize=document.createElement('span');resize.className='handle resize';resize.dataset.handle='resize';
           const rotate=document.createElement('span');rotate.className='handle rotate';rotate.dataset.handle='rotate';
@@ -555,6 +652,10 @@
     populateCutSelect();
     switchTreasure(0);
 
+    els.treasureArt.addEventListener('load',()=>{
+      refreshStageArtCanvas();
+      renderSockets();
+    });
     els.treasureSelect.addEventListener('change',()=>switchTreasure(Number(els.treasureSelect.value)));
     els.gridToggle.addEventListener('change',()=>els.stage.classList.toggle('grid',els.gridToggle.checked));
     els.resetArt.addEventListener('click',setRepoArt);
@@ -563,6 +664,7 @@
       if(!file)return;
       if(customArtUrl)URL.revokeObjectURL(customArtUrl);
       customArtUrl=URL.createObjectURL(file);
+      stageArtCanvas=null;
       els.treasureArt.src=customArtUrl;
       els.treasureArt.alt='Uploaded treasure artwork';
     });
