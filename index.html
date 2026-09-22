@@ -13,8 +13,8 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260921-revealfit1" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=20260921-homescreen1" />
 </head>
 <body>
   <main class="game-app" id="gameApp">
@@ -83,28 +83,49 @@
     </section>
   </main>
 
-  <section id="startOverlay" class="overlay visible" aria-modal="true" role="dialog" aria-labelledby="startTitle">
+  <section id="startOverlay" class="overlay visible start-overlay" aria-modal="true" role="dialog" aria-labelledby="startTitle">
+    <div class="start-world" aria-hidden="true">
+      <div class="start-aurora start-aurora--one"></div>
+      <div class="start-aurora start-aurora--two"></div>
+      <div class="start-stars"></div>
+      <div class="start-vault-ring start-vault-ring--one"></div>
+      <div class="start-vault-ring start-vault-ring--two"></div>
+      <div class="start-gem-field">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
     <div class="start-card">
-      <div class="hero-crown" aria-hidden="true">
-        <i data-lucide="crown"></i>
-        <span></span>
+      <div class="start-brand">
+        <div class="hero-crown" aria-hidden="true">
+          <i data-lucide="crown"></i>
+          <span></span>
+        </div>
+        <p class="eyebrow">THE CROWN VAULT</p>
+        <h1 id="startTitle"><span>GEM</span><span>DROP</span></h1>
+        <p class="tagline">Merge your way to the legendary Crownstone.</p>
       </div>
-      <p class="eyebrow">THE CROWN VAULT</p>
-      <h1 id="startTitle">GEM DROP</h1>
-      <p class="tagline">Merge the vault’s jewels into the legendary Crownstone.</p>
-      <div class="home-best">
-        <span>BEST VALUE</span>
-        <strong id="homeBest">$0</strong>
+
+      <div class="start-menu">
+        <div class="home-best">
+          <span>BEST VALUE</span>
+          <strong id="homeBest">$0</strong>
+        </div>
+
+        <div class="start-actions">
+          <button id="startButton" class="primary-button" type="button">
+            <i data-lucide="play" aria-hidden="true"></i>
+            <span>PLAY</span>
+          </button>
+          <button id="collectionButton" class="secondary-button" type="button">
+            <i data-lucide="gem" aria-hidden="true"></i>
+            <span>COLLECTION</span>
+          </button>
+        </div>
+
+        <p class="start-copy">Match equal gems. Merge upward. Keep the vault from overflowing.</p>
       </div>
-      <p class="start-copy">Drop matching gems into the enchanted basin. Each pair transforms into a rarer cut. Build higher and brighter, but keep the pile below the glowing seal.</p>
-      <button id="startButton" class="primary-button" type="button">
-        <i data-lucide="play" aria-hidden="true"></i>
-        <span>ENTER THE VAULT</span>
-      </button>
-      <button id="collectionButton" class="secondary-button" type="button">
-        <i data-lucide="gem" aria-hidden="true"></i>
-        <span>COLLECTION</span>
-      </button>
     </div>
   </section>
 
