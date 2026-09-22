@@ -3,6 +3,37 @@
 
   if (!window.Phaser) return;
 
+  function syncGameViewport(){
+    const standalone=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone===true;
+
+    document.body.classList.toggle('gemdrop-standalone',!!standalone);
+
+    if(standalone){
+      document.documentElement.style.removeProperty('--gemdrop-viewport-height');
+      return;
+    }
+
+    const viewport=window.visualViewport;
+    const height=Math.max(
+      1,
+      Math.round(viewport&&viewport.height?viewport.height:window.innerHeight)
+    );
+
+    document.documentElement.style.setProperty(
+      '--gemdrop-viewport-height',
+      height+'px'
+    );
+  }
+
+  syncGameViewport();
+  window.addEventListener('resize',syncGameViewport,{passive:true});
+  window.addEventListener('orientationchange',syncGameViewport,{passive:true});
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',syncGameViewport,{passive:true});
+    window.visualViewport.addEventListener('scroll',syncGameViewport,{passive:true});
+  }
+
   const W = 640;
   const H = 936;
   const FRAME_WALL = 24;
