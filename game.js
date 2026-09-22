@@ -2378,14 +2378,15 @@
       if(chestEl) chestEl.textContent='+'+chestPct+'%';
 
       const totalGems=this.runGemGains.reduce((sum,count)=>sum+count,0);
-      if(totalEl) totalEl.textContent=totalGems+' '+(totalGems===1?'GEM':'GEMS');
+      const earned=this.runGemGains
+        .map((count,tier)=>({count,tier}))
+        .filter(item=>item.count>0)
+        .sort((a,b)=>b.tier-a.tier);
+      const typeCount=earned.length;
+      if(totalEl) totalEl.textContent=typeCount+' '+(typeCount===1?'TYPE':'TYPES');
 
       if(haul){
         haul.innerHTML='';
-        const earned=this.runGemGains
-          .map((count,tier)=>({count,tier}))
-          .filter(item=>item.count>0)
-          .sort((a,b)=>b.tier-a.tier);
 
         if(!earned.length){
           const empty=document.createElement('span');
@@ -2453,7 +2454,7 @@
         if(recordInfo&&recordInfo.newBestMerges) records.push('MOST MERGES');
         if(this.runTreasureClaims.length) records.push(this.runTreasureClaims.length+' TREASURE'+(this.runTreasureClaims.length===1?'':'S')+' FOUND');
         record.hidden=!records.length;
-        record.textContent=records.length?'NEW · '+records.join(' · '):'';
+        record.textContent=records.join(' · ');
       }
     }
 
