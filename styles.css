@@ -5339,3 +5339,88 @@ body.gemdrop-standalone .game-app{
     padding-top:0!important;
   }
 }
+
+
+/* === CLEAN MAIN MENU 2026-09-22 === */
+.start-overlay .start-card{
+  justify-content:center!important;
+  gap:34px!important;
+  padding-bottom:max(56px,calc(34px + env(safe-area-inset-bottom)))!important;
+}
+
+.start-brand{
+  margin:0!important;
+}
+
+.start-overlay .hero-crown{
+  margin-bottom:14px!important;
+}
+
+.start-card h1{
+  margin:0!important;
+}
+
+.start-menu{
+  width:min(430px,100%)!important;
+  margin:0!important;
+}
+
+.start-overlay .home-best{
+  margin:0 auto 18px!important;
+}
+
+.start-actions{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+
+.start-actions .primary-button,
+.start-actions .secondary-button{
+  min-width:0!important;
+  width:100%!important;
+  min-height:60px!important;
+}
+
+.start-version{
+  position:absolute;
+  left:50%;
+  bottom:max(14px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  z-index:12;
+  color:rgba(231,216,235,.48);
+  font-size:14px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:.08em;
+  white-space:nowrap;
+}
+
+@media(max-width:430px){
+  .start-overlay .start-card{
+    gap:28px!important;
+  }
+
+  .start-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+
+  .start-actions .primary-button,
+  .start-actions .secondary-button{
+    min-height:56px!important;
+  }
+}
+
+@media(max-height:720px){
+  .start-overlay .start-card{
+    gap:20px!important;
+  }
+
+  .start-overlay .hero-crown{
+    margin-bottom:6px!important;
+  }
+
+  .start-overlay .home-best{
+    margin-bottom:12px!important;
+  }
+}
