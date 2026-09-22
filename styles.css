@@ -4151,3 +4151,40 @@ svg.lucide{
     animation:none!important;
   }
 }
+
+
+/* === IOS VIEWPORT EDGE FIX 2026-09-21 === */
+html,
+body{
+  width:100%!important;
+  height:100%!important;
+  min-height:100%!important;
+  min-height:-webkit-fill-available!important;
+  margin:0!important;
+  padding:0!important;
+  background:#0d0611!important;
+}
+body{
+  position:fixed!important;
+  inset:0!important;
+  overflow:hidden!important;
+}
+.game-app{
+  position:fixed!important;
+  top:0!important;
+  right:auto!important;
+  bottom:-2px!important;
+  left:50%!important;
+  height:auto!important;
+  min-height:calc(100dvh + 2px)!important;
+}
+.overlay,
+.collection-overlay,
+.treasure-modal,
+.treasure-detail-overlay,
+.gem-picker-overlay{
+  bottom:-2px!important;
+}
+.start-overlay{
+  min-height:calc(100dvh + 2px)!important;
+}
