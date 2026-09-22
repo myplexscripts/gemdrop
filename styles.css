@@ -3564,3 +3564,158 @@ body[data-vault-theme="goldsmith"] .game-app{
 .gem-card.locked .gem-card__art canvas{
   opacity:.96!important;
 }
+
+/* === TREASURE REVEAL FIT + ROTATING RAYS 2026-09-21 === */
+.treasure-reward-card{
+  width:min(520px,100%)!important;
+  height:100dvh!important;
+  min-height:0!important;
+  max-height:100dvh!important;
+  padding:
+    max(10px,env(safe-area-inset-top))
+    16px
+    max(12px,env(safe-area-inset-bottom))!important;
+  overflow:hidden!important;
+  justify-content:center!important;
+}
+
+.treasure-chest-reveal{
+  width:min(320px,72vw,38dvh)!important;
+  max-width:320px!important;
+  flex:0 0 auto!important;
+  margin:-8px auto -54px!important;
+}
+
+.treasure-chest-closed{
+  transform:scale(.78) translateY(8px)!important;
+}
+
+.treasure-chest-open{
+  transform:scale(.68) translateY(12px)!important;
+}
+
+.treasure-modal.revealed .treasure-chest-open{
+  transform:scale(.78) translateY(8px)!important;
+}
+
+.treasure-chest-rays{
+  width:118%!important;
+  rotate:0deg;
+  will-change:transform,rotate,opacity;
+}
+
+.treasure-modal.burst .treasure-chest-rays{
+  animation:
+    rewardRays .9s cubic-bezier(.1,.72,.2,1) both,
+    rewardRaysSpin 12s linear infinite!important;
+}
+
+@keyframes rewardRays{
+  0%{opacity:0;transform:scale(.42)}
+  28%{opacity:.9}
+  100%{opacity:.28;transform:scale(1.18)}
+}
+
+@keyframes rewardRaysSpin{
+  to{rotate:360deg}
+}
+
+.treasure-reward-result{
+  width:min(420px,100%)!important;
+  flex:0 0 auto!important;
+}
+
+.treasure-reward-art{
+  width:min(230px,54vw,29dvh)!important;
+  height:auto!important;
+  aspect-ratio:320/260!important;
+  margin:0 auto -1px!important;
+}
+
+.treasure-reward-result .eyebrow{
+  margin:3px 0 2px!important;
+}
+
+.treasure-reward-card h2{
+  margin:0 0 5px!important;
+}
+
+.treasure-reward-copy{
+  margin:0 auto 13px!important;
+  line-height:1.35!important;
+}
+
+.treasure-reward-view{
+  min-height:50px!important;
+}
+
+@media(max-height:680px){
+  .treasure-reward-card{
+    padding-top:max(8px,env(safe-area-inset-top))!important;
+    padding-bottom:max(8px,env(safe-area-inset-bottom))!important;
+  }
+
+  .treasure-chest-reveal{
+    width:min(250px,64vw,34dvh)!important;
+    margin:-6px auto -46px!important;
+  }
+
+  .treasure-reward-art{
+    width:min(200px,50vw,27dvh)!important;
+  }
+
+  .treasure-reward-card h2{
+    font-size:clamp(27px,7vw,34px)!important;
+  }
+
+  .treasure-reward-copy{
+    margin-bottom:9px!important;
+    font-size:12px!important;
+  }
+
+  .treasure-reward-view{
+    min-height:46px!important;
+  }
+}
+
+@media(max-height:560px){
+  .treasure-reward-kicker{
+    top:max(20px,calc(8px + env(safe-area-inset-top)))!important;
+  }
+
+  .treasure-chest-reveal{
+    width:min(210px,58vw,31dvh)!important;
+    margin:-2px auto -40px!important;
+  }
+
+  .treasure-reward-art{
+    width:min(176px,46vw,25dvh)!important;
+  }
+
+  .treasure-reward-result .eyebrow{
+    font-size:10px!important;
+  }
+
+  .treasure-reward-card h2{
+    font-size:26px!important;
+  }
+
+  .treasure-reward-copy{
+    max-width:280px!important;
+    margin-bottom:7px!important;
+    font-size:11px!important;
+  }
+
+  .treasure-reward-view{
+    min-height:44px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .treasure-modal.burst .treasure-chest-rays{
+    animation:none!important;
+    opacity:.28!important;
+    transform:scale(1.18)!important;
+    rotate:0deg!important;
+  }
+}
