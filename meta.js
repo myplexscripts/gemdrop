@@ -29,7 +29,7 @@
 
   const TREASURES=[
     {id:'silver-ring',name:'Silver Ring',type:'ring',rarity:'Common',base:90,weight:28,minTier:0,minMerges:0,sockets:[
-      {x:160,y:92,cut:'circular_starcut',size:48}
+      {x:160,y:61,cut:'circular_starcut',size:81}
     ]},
     {id:'sun-brooch',name:'Sunburst Brooch',type:'brooch',rarity:'Common',base:125,weight:24,minTier:1,minMerges:8,sockets:[
       {x:125,y:128,cut:'heart',size:43},{x:195,y:128,cut:'circular_starcut',size:43}
