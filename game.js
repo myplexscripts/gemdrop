@@ -49,6 +49,7 @@
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
   const DROP_DELAY = 300;
+  const AIM_CONTROL_GAIN = 1.25;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
   const RENDER_SCALE = 2;
@@ -1067,8 +1068,16 @@
       });
 
       const aimFromEvent=e=>{
-        const rect=this.aimStrip.getBoundingClientRect();
-        const u=clamp((e.clientX-rect.left)/rect.width,0,1);
+        const track=this.aimStrip.querySelector('.aim-track');
+        const rect=(track||this.aimStrip).getBoundingClientRect();
+
+        // The control is intentionally more sensitive than the visible slider.
+        // About 80% of the slider travel covers 100% of the drop rail, so the
+        // player can comfortably reach both walls without dragging to the
+        // extreme edge of the screen.
+        const raw=clamp((e.clientX-rect.left)/Math.max(1,rect.width),0,1);
+        const u=clamp(.5+(raw-.5)*AIM_CONTROL_GAIN,0,1);
+
         const t=tiers[this.currentTier];
         const min=WALL+t.r*COLLIDER_SCALE;
         const max=W-WALL-t.r*COLLIDER_SCALE;
