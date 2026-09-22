@@ -1023,8 +1023,6 @@
       shapePath();
       ctx.stroke();
 
-      if(locked) return;
-
       if(window.ReactiveGemSystem){
         const source=window.ReactiveGemSystem.renderPreviewCanvas(
           t.reactiveCut,
@@ -1038,9 +1036,13 @@
         const gh=source.height*scale;
 
         ctx.save();
-        ctx.shadowColor='rgba(0,0,0,.48)';
-        ctx.shadowBlur=7;
+        ctx.shadowColor=locked?'rgba(0,0,0,.72)':'rgba(0,0,0,.48)';
+        ctx.shadowBlur=locked?10:7;
         ctx.shadowOffsetY=4;
+        if(locked){
+          ctx.filter='brightness(0) saturate(0)';
+          ctx.globalAlpha=.88;
+        }
         ctx.drawImage(source,cx-gw/2,cy-gh/2,gw,gh);
         ctx.restore();
       }
