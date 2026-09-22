@@ -986,6 +986,17 @@
     selectCollectionTab,
     renderTreasureCollection,
     openTreasureDetail,
+    getTreasureInfo:id=>{
+      const treasure=treasureById(id);
+      if(!treasure) return null;
+      const file=TREASURE_ART_FILES[treasure.id];
+      return {
+        id:treasure.id,
+        name:treasure.name,
+        rarity:treasure.rarity,
+        art:file?'assets/treasures/'+file:null
+      };
+    },
     getState:()=>state
   };
 
