@@ -4188,3 +4188,145 @@ body{
 .start-overlay{
   min-height:calc(100dvh + 2px)!important;
 }
+
+
+/* === TREASURE CARD LAYOUT CLEANUP 2026-09-22 === */
+.treasure-grid{
+  align-items:stretch;
+  gap:12px!important;
+}
+.treasure-card{
+  min-height:272px!important;
+  padding:8px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  text-align:left!important;
+}
+.treasure-card:disabled{
+  opacity:1!important;
+}
+.treasure-card__art{
+  height:178px!important;
+  flex:0 0 178px!important;
+  border-radius:18px!important;
+}
+.treasure-card__meta{
+  min-width:0!important;
+  min-height:0!important;
+  padding:10px 7px 7px!important;
+  flex:1 1 auto!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-areas:
+    "name count"
+    "rarity rarity"
+    "complete complete"!important;
+  grid-template-rows:auto auto auto!important;
+  align-content:start!important;
+  align-items:center!important;
+  column-gap:8px!important;
+  row-gap:5px!important;
+}
+.treasure-card__meta strong{
+  grid-area:name!important;
+  min-width:0!important;
+  width:auto!important;
+  display:block!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:#fff4ee!important;
+  font-size:15px!important;
+  line-height:1.2!important;
+  font-weight:900!important;
+}
+.treasure-card__count{
+  grid-area:count!important;
+  justify-self:end!important;
+  min-width:max-content!important;
+  color:#ffd36e!important;
+  font-size:14px!important;
+  line-height:1.2!important;
+  font-weight:900!important;
+}
+.treasure-card__rarity{
+  grid-area:rarity!important;
+  min-width:0!important;
+  color:#bba7c1!important;
+  font-size:14px!important;
+  line-height:1.2!important;
+  font-weight:800!important;
+  letter-spacing:.06em!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.treasure-card__complete{
+  grid-area:complete!important;
+  min-width:0!important;
+  margin-top:2px!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:center!important;
+  gap:5px!important;
+  color:#8edeb7!important;
+  font-size:14px!important;
+  line-height:1.2!important;
+  font-weight:900!important;
+  text-transform:uppercase!important;
+}
+.treasure-card__complete span{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:25px!important;
+  padding:4px 7px!important;
+  border-radius:999px!important;
+  white-space:nowrap!important;
+  background:rgba(68,171,120,.10)!important;
+  border:1px solid rgba(122,224,173,.13)!important;
+}
+.treasure-card.locked .treasure-card__meta{
+  display:flex!important;
+  min-height:72px!important;
+  padding:12px 7px 8px!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:center!important;
+  gap:5px!important;
+  text-align:center!important;
+}
+.treasure-card.locked .treasure-card__meta strong{
+  width:100%!important;
+  text-align:center!important;
+  color:#d7cbd9!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+.treasure-card.locked .treasure-card__rarity{
+  width:100%!important;
+  text-align:center!important;
+  color:#85758b!important;
+}
+.treasure-card.locked .treasure-card__count,
+.treasure-card.locked .treasure-card__complete{
+  display:none!important;
+}
+
+@media(max-width:390px){
+  .treasure-grid{
+    gap:10px!important;
+  }
+  .treasure-card{
+    min-height:252px!important;
+    padding:7px!important;
+  }
+  .treasure-card__art{
+    height:164px!important;
+    flex-basis:164px!important;
+  }
+  .treasure-card__meta{
+    padding:9px 5px 6px!important;
+    row-gap:4px!important;
+  }
+}
