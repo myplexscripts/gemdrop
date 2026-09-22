@@ -3547,3 +3547,20 @@ body[data-vault-theme="goldsmith"] .game-app{
   .treasure-modal.burst .treasure-chest-closed{opacity:0}
   .treasure-modal.burst .treasure-chest-open{opacity:1;transform:scale(.94) translateY(10px)}
 }
+
+
+/* === ACTUAL ART SILHOUETTES 2026-09-21 === */
+.treasure-art.is-silhouette{
+  filter:brightness(0) saturate(0) drop-shadow(0 8px 10px rgba(0,0,0,.38))!important;
+  opacity:.9!important;
+}
+.treasure-card.locked .treasure-card__art svg{
+  filter:brightness(0) saturate(0) drop-shadow(0 8px 10px rgba(0,0,0,.38))!important;
+  opacity:.9!important;
+}
+.gem-card.locked .gem-card__art::after{
+  display:none!important;
+}
+.gem-card.locked .gem-card__art canvas{
+  opacity:.96!important;
+}
