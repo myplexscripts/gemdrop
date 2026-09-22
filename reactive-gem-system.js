@@ -423,7 +423,7 @@
       Math.round(clamp(c.b,0,1)*255)+')';
   }
 
-  function renderPreviewCanvas(name,color,angle=0,size=256,palette=null){
+  function renderPreviewCanvas(name,color,angle=0,size=256,palette=null,lightAngleOverride=null){
     const model=models.get(name);
     if(!model) throw new Error('Gem model not prepared: '+name);
 
@@ -443,7 +443,7 @@
     const deepColor=parseHex((palette&&palette.dark)||color)||gemColor;
     const accentColor=parseHex((palette&&palette.accent)||color)||gemColor;
 
-    const lightAngle=-Math.PI*.32;
+    const lightAngle=Number.isFinite(lightAngleOverride)?lightAngleOverride:-Math.PI*.32;
     const light=norm3(Math.cos(lightAngle)*.67,Math.sin(lightAngle)*.67,.74);
     const tintLight=norm3(-Math.cos(lightAngle)*.16,-Math.sin(lightAngle)*.16,.97);
     const view=[0,0,1];
