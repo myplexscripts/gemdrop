@@ -19,25 +19,9 @@
 <body>
   <main class="game-app" id="gameApp">
     <header class="hud">
-      <div class="hud-controls">
-        <button class="hud-button" id="homeButton" type="button" aria-label="Return to main menu">
-          <i data-lucide="house" aria-hidden="true"></i>
-        </button>
-        <button class="hud-button hud-button--mute" id="muteButton" type="button" aria-label="Mute game" aria-pressed="false">
-          <i class="mute-icon mute-icon--sound" data-lucide="volume-2" aria-hidden="true"></i>
-          <i class="mute-icon mute-icon--muted" data-lucide="volume-x" aria-hidden="true"></i>
-        </button>
-      </div>
-
-      <div id="statusHud" class="status-hud" aria-live="polite">
-        <span id="statusIcon" class="status-icon" aria-hidden="true"></span>
-        <span id="statusText" class="status-text"></span>
-      </div>
-
-      <div class="score">
-        <span>VALUE</span>
-        <strong id="score">$0</strong>
-      </div>
+      <button class="hud-button hud-menu-button" id="menuButton" type="button" aria-label="Open game menu">
+        <i data-lucide="menu" aria-hidden="true"></i>
+      </button>
 
       <button id="treasureMeter" class="treasure-meter" type="button" aria-label="Treasure chest progress" aria-disabled="true">
         <span class="treasure-meter__track" aria-hidden="true">
@@ -47,6 +31,15 @@
           <img src="assets/treasures/chest-closed.png?v=20260922-chest2" alt="">
         </span>
       </button>
+
+      <div class="score">
+        <strong id="score">$0</strong>
+      </div>
+
+      <div id="statusHud" class="status-hud" aria-live="polite">
+        <span id="statusIcon" class="status-icon" aria-hidden="true"></span>
+        <span id="statusText" class="status-text"></span>
+      </div>
     </header>
 
     <section class="play-shell">
@@ -68,17 +61,14 @@
     </section>
 
     <section class="power-dock" aria-label="Power ups">
-      <button id="powerTumble" class="power-button" type="button" disabled>
-        <i data-lucide="rotate-cw" aria-hidden="true"></i>
-        <span>TUMBLE</span>
+      <button id="powerTumble" class="power-button" type="button" aria-label="Tumble" disabled>
+        <i data-lucide="rotate-3d" aria-hidden="true"></i>
       </button>
-      <button id="powerCascade" class="power-button" type="button" disabled>
-        <i data-lucide="sparkles" aria-hidden="true"></i>
-        <span>MERGE</span>
+      <button id="powerCascade" class="power-button" type="button" aria-label="Merge" disabled>
+        <i data-lucide="minimize-2" aria-hidden="true"></i>
       </button>
-      <button id="powerPrism" class="power-button" type="button" disabled>
-        <i data-lucide="gem" aria-hidden="true"></i>
-        <span>UPGRADE</span>
+      <button id="powerPrism" class="power-button" type="button" aria-label="Upgrade" disabled>
+        <i data-lucide="circle-fading-arrow-up" aria-hidden="true"></i>
       </button>
     </section>
 
@@ -252,17 +242,28 @@
     </div>
   </section>
 
-  <section id="pauseOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="pauseTitle">
-    <div class="sheet-card">
-      <div class="sheet-icon"><i data-lucide="pause" aria-hidden="true"></i></div>
-      <p class="eyebrow">VAULT PAUSED</p>
-      <h2 id="pauseTitle">The jewels are waiting</h2>
-      <button id="resumeButton" class="primary-button" type="button">
-        <i data-lucide="play" aria-hidden="true"></i><span>RESUME</span>
+  <section id="pauseOverlay" class="overlay game-menu-overlay" aria-modal="true" role="dialog" aria-labelledby="pauseTitle">
+    <div class="sheet-card game-menu-card">
+      <button id="menuCloseButton" class="game-menu-close" type="button" aria-label="Close menu">
+        <i data-lucide="x" aria-hidden="true"></i>
       </button>
-      <button id="restartFromPause" class="secondary-button" type="button">
-        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Restart run</span>
-      </button>
+      <div class="sheet-icon"><i data-lucide="menu" aria-hidden="true"></i></div>
+      <p class="eyebrow">GAME PAUSED</p>
+      <h2 id="pauseTitle">Menu</h2>
+
+      <div class="game-menu-actions">
+        <button id="menuMainButton" class="primary-button" type="button">
+          <i data-lucide="house" aria-hidden="true"></i><span>MAIN MENU</span>
+        </button>
+        <button id="menuHowToButton" class="secondary-button" type="button" disabled>
+          <i data-lucide="circle-help" aria-hidden="true"></i><span>HOW TO PLAY</span>
+        </button>
+        <button id="muteButton" class="secondary-button game-menu-mute" type="button" aria-label="Mute game" aria-pressed="false">
+          <i class="mute-icon mute-icon--sound" data-lucide="volume-2" aria-hidden="true"></i>
+          <i class="mute-icon mute-icon--muted" data-lucide="volume-x" aria-hidden="true"></i>
+          <span class="mute-copy">MUTE</span>
+        </button>
+      </div>
     </div>
   </section>
 
