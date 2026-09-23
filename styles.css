@@ -927,7 +927,7 @@ body{
   inset:0;
   z-index:4;
   pointer-events:none;
-  background:url("gem-frame.webp") center/100% 100% no-repeat;
+  background:url("assets/ui/gem-frame.webp") center/100% 100% no-repeat;
 }
 .hud,
 .aim-strip,
@@ -8037,5 +8037,145 @@ body,
 
   .treasure-reward-card{
     gap:6px!important;
+  }
+}
+
+
+/* === MAIN BACKGROUND + RANDOM PARTICLES 2026-09-23 === */
+/* main-bg.png is authored as a seamless 400 × 400 tile. Keep it behind the
+   board and controls, and drift exactly one tile per loop so there is no jump. */
+.game-app{
+  background:#110619!important;
+}
+
+.game-app::before{
+  content:""!important;
+  position:absolute!important;
+  inset:-420px!important;
+  z-index:0!important;
+  opacity:1!important;
+  pointer-events:none!important;
+  background-color:#110619!important;
+  background-image:url("assets/ui/main-bg.png")!important;
+  background-repeat:repeat!important;
+  background-size:400px 400px!important;
+  background-position:0 0!important;
+  animation:gemdropMainBackgroundDrift 82s linear infinite!important;
+  will-change:background-position;
+}
+
+@keyframes gemdropMainBackgroundDrift{
+  from{background-position:0 0}
+  to{background-position:400px 400px}
+}
+
+/* Real DOM particles sit above the moving tile. Every particle gets its own
+   random direction, distance, speed, size and phase from game.js. */
+.background-particles{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  overflow:hidden;
+  pointer-events:none;
+  contain:strict;
+}
+
+.background-particle{
+  position:absolute;
+  left:var(--particle-left);
+  top:var(--particle-top);
+  width:var(--particle-size);
+  height:var(--particle-size);
+  border-radius:50%;
+  opacity:var(--particle-opacity);
+  background:rgba(244,224,255,.96);
+  box-shadow:
+    0 0 5px rgba(223,177,255,.52),
+    0 0 10px rgba(132,86,216,.22);
+  transform:translate3d(0,0,0);
+  animation:
+    gemdropParticleWander var(--particle-duration) ease-in-out var(--particle-delay) infinite alternate,
+    gemdropParticleTwinkle var(--particle-twinkle) ease-in-out var(--particle-delay) infinite alternate;
+  will-change:transform,opacity;
+}
+
+.background-particle:nth-child(3n){
+  background:rgba(255,220,143,.92);
+  box-shadow:
+    0 0 5px rgba(255,206,105,.44),
+    0 0 10px rgba(255,183,67,.16);
+}
+
+.background-particle:nth-child(4n){
+  background:rgba(201,169,255,.92);
+}
+
+@keyframes gemdropParticleWander{
+  0%{
+    transform:translate3d(
+      calc(var(--particle-dx) * -.45),
+      calc(var(--particle-dy) * -.45),
+      0
+    ) scale(.82);
+  }
+  48%{
+    transform:translate3d(
+      calc(var(--particle-dx) * .18),
+      calc(var(--particle-dy) * .18),
+      0
+    ) scale(1);
+  }
+  100%{
+    transform:translate3d(
+      var(--particle-dx),
+      var(--particle-dy),
+      0
+    ) scale(1.12);
+  }
+}
+
+@keyframes gemdropParticleTwinkle{
+  from{opacity:calc(var(--particle-opacity) * .48)}
+  to{opacity:var(--particle-opacity)}
+}
+
+/* The frame was moved under assets/ui. */
+.game-app::after{
+  background-image:url("assets/ui/gem-frame.webp")!important;
+}
+
+/* Use the authored sunburst art instead of the generated conic-gradient rays.
+   Its rotation is still driven by the exact Animation Studio recipe. */
+.studio-reveal-rays{
+  background:
+    url("assets/ui/sunburst.png")
+    center / contain
+    no-repeat!important;
+  -webkit-mask:none!important;
+  mask:none!important;
+  border-radius:0!important;
+}
+
+/* Keep the reveal animation unchanged, only make the awarded treasure larger. */
+.studio-reveal-treasure{
+  width:56%!important;
+  height:46%!important;
+}
+
+@media(max-height:720px){
+  .studio-reveal-treasure{
+    width:52%!important;
+    height:42%!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .game-app::before{
+    animation:none!important;
+  }
+
+  .background-particle{
+    animation:gemdropParticleTwinkle var(--particle-twinkle) ease-in-out var(--particle-delay) infinite alternate!important;
+    transform:none!important;
   }
 }
