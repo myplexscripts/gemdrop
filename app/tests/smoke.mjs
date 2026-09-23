@@ -61,7 +61,7 @@ try{
     await page.waitForTimeout(550);
   }
 
-  await page.locator('#autoFireToggle').check();
+  await page.locator('.auto-fire-row').click();
   if(!(await page.locator('#autoFireToggle').isChecked())) failures.push('auto fire toggle failed');
 
   const box2=await track.boundingBox();
