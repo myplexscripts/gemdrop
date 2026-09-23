@@ -99,8 +99,14 @@
       particle.style.setProperty('--particle-left',x+'%');
       particle.style.setProperty('--particle-top',y+'%');
       particle.style.setProperty('--particle-size',size.toFixed(2)+'px');
-      particle.style.setProperty('--particle-dx',(Math.cos(angle)*distance).toFixed(1)+'px');
-      particle.style.setProperty('--particle-dy',(Math.sin(angle)*distance).toFixed(1)+'px');
+      const dx=Math.cos(angle)*distance;
+      const dy=Math.sin(angle)*distance;
+      particle.style.setProperty('--particle-start-x',(dx*-.45).toFixed(1)+'px');
+      particle.style.setProperty('--particle-start-y',(dy*-.45).toFixed(1)+'px');
+      particle.style.setProperty('--particle-mid-x',(dx*.18).toFixed(1)+'px');
+      particle.style.setProperty('--particle-mid-y',(dy*.18).toFixed(1)+'px');
+      particle.style.setProperty('--particle-dx',dx.toFixed(1)+'px');
+      particle.style.setProperty('--particle-dy',dy.toFixed(1)+'px');
       particle.style.setProperty('--particle-duration',duration.toFixed(2)+'s');
       particle.style.setProperty('--particle-delay',delay.toFixed(2)+'s');
       particle.style.setProperty('--particle-opacity',opacity.toFixed(2));
