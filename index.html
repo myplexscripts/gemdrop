@@ -61,7 +61,7 @@
       <i data-lucide="chevron-right" aria-hidden="true"></i>
     </section>
 
-    <section class="power-dock" aria-label="Power ups">
+    <section class="power-dock" aria-label="Power ups and auto fire">
       <button id="powerTumble" class="power-button" type="button" aria-label="Tumble" disabled>
         <i data-lucide="rotate-3d" aria-hidden="true"></i>
       </button>
@@ -71,13 +71,10 @@
       <button id="powerPrism" class="power-button" type="button" aria-label="Upgrade" disabled>
         <i data-lucide="circle-fading-arrow-up" aria-hidden="true"></i>
       </button>
+      <button id="autoFireButton" class="power-button auto-fire-button" type="button" aria-label="Turn auto fire on" aria-pressed="false">
+        <i data-lucide="repeat-2" aria-hidden="true"></i>
+      </button>
     </section>
-
-    <label class="auto-fire-row" for="autoFireToggle">
-      <span class="auto-fire-label">AUTO FIRE</span>
-      <input id="autoFireToggle" class="auto-fire-input" type="checkbox" role="switch" aria-label="Auto fire">
-      <span class="auto-fire-switch" aria-hidden="true"><span></span></span>
-    </label>
   </main>
 
   <section id="startOverlay" class="overlay visible start-overlay" aria-modal="true" role="dialog" aria-labelledby="startTitle">
