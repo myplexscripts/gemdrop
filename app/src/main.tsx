@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { createIcons } from 'lucide';
-import '../../reactive-gem-system.js';
+import './gems/reactive-system';
 import './react-app.css';
 import App from './App';
 
