@@ -1842,14 +1842,53 @@
       this.time.removeAllEvents();
     }
 
+    destroySpecialVisuals(gameObject) {
+      if(!gameObject) return;
+
+      if(gameObject.specialHalo&&gameObject.specialHalo.active){
+        gameObject.specialHalo.destroy();
+      }
+      gameObject.specialHalo=null;
+
+      if(gameObject.specialIridescence&&gameObject.specialIridescence.active){
+        gameObject.specialIridescence.destroy();
+      }
+      gameObject.specialIridescence=null;
+
+      if(Array.isArray(gameObject.specialSparkles)){
+        for(const sparkle of gameObject.specialSparkles){
+          if(sparkle&&sparkle.active) sparkle.destroy();
+        }
+      }
+      gameObject.specialSparkles=null;
+    }
+
     destroyPreview() {
       if(!this.preview) return;
-      if(this.preview.specialHalo&&this.preview.specialHalo.active){
-        this.preview.specialHalo.destroy();
-      }
-      this.preview.specialHalo=null;
+      this.destroySpecialVisuals(this.preview);
       this.preview.destroy();
       this.preview=null;
+    }
+
+    rainbowTint(phase) {
+      let h=((phase%1)+1)%1*6;
+      const sector=Math.floor(h);
+      const f=h-sector;
+      const q=1-f;
+      const values=[
+        [1,f,0],
+        [q,1,0],
+        [0,1,f],
+        [0,q,1],
+        [f,0,1],
+        [1,0,q]
+      ][sector%6];
+
+      const lift=.22;
+      const r=Math.round((lift+values[0]*(1-lift))*255);
+      const g=Math.round((lift+values[1]*(1-lift))*255);
+      const b=Math.round((lift+values[2]*(1-lift))*255);
+      return (r<<16)|(g<<8)|b;
     }
 
     createSpecialHalo(gameObject,specialType,tier,preview=false) {
@@ -1857,29 +1896,117 @@
       const t=tiers[tier];
       if(!gameObject||!special||!t) return;
 
+      this.destroySpecialVisuals(gameObject);
+
+      const overlay=this.add.image(
+        gameObject.x,
+        gameObject.y,
+        gemTextureKey(tier)
+      )
+        .setDepth((gameObject.depth||10)+.055)
+        .setScale(gameObject.scaleX,gameObject.scaleY)
+        .setAlpha(preview?.24:.20)
+        .setBlendMode(Phaser.BlendModes.ADD);
+
+      if(this.gemMask) overlay.setMask(this.gemMask);
+
       const halo=this.add.circle(
         gameObject.x,
         gameObject.y,
-        t.r*(preview?1.08:1.06),
+        t.r*(preview?1.10:1.075),
         special.color,
-        .025
+        .018
       )
-        .setStrokeStyle(preview?4:3,special.color,.82)
-        .setDepth((gameObject.depth||10)+(preview?.12:.08))
+        .setStrokeStyle(preview?4:3,special.color,.88)
+        .setDepth((gameObject.depth||10)+.06)
         .setBlendMode(Phaser.BlendModes.ADD);
 
       if(this.gemMask) halo.setMask(this.gemMask);
+
+      const sparkles=[];
+      const sparkleCount=preview?3:3;
+      for(let i=0;i<sparkleCount;i++){
+        const sparkle=this.add.image(gameObject.x,gameObject.y,'gem-sparkle')
+          .setDepth((gameObject.depth||10)+.075+i*.001)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setAlpha(0)
+          .setScale(.07);
+        if(this.gemMask) sparkle.setMask(this.gemMask);
+        sparkle.specialPhase=(Math.PI*2*i)/sparkleCount+Math.random()*.55;
+        sparkles.push(sparkle);
+      }
+
       gameObject.specialHalo=halo;
+      gameObject.specialIridescence=overlay;
+      gameObject.specialSparkles=sparkles;
       gameObject.specialPulseOffset=Math.random()*Math.PI*2;
+      gameObject.specialHueOffset=Math.random();
+      gameObject.specialPreview=!!preview;
+      gameObject.specialTier=tier;
     }
 
     syncSpecialHalo(gameObject,time) {
-      if(!gameObject||!gameObject.active||!gameObject.specialHalo||!gameObject.specialHalo.active) return;
-      const p=(time*.0055)+(gameObject.specialPulseOffset||0);
-      gameObject.specialHalo.x=gameObject.x;
-      gameObject.specialHalo.y=gameObject.y;
-      gameObject.specialHalo.setScale(1+Math.sin(p)*.035);
-      gameObject.specialHalo.setAlpha(.72+Math.sin(p)*.12);
+      if(!gameObject||!gameObject.active) return;
+
+      const halo=gameObject.specialHalo;
+      const overlay=gameObject.specialIridescence;
+      if(!halo||!halo.active||!overlay||!overlay.active) return;
+
+      const t=tiers[gameObject.specialTier??gameObject.tier];
+      if(!t) return;
+
+      const baseAlpha=gameObject.alpha===undefined?1:gameObject.alpha;
+      const pulse=(time*.0048)+(gameObject.specialPulseOffset||0);
+      const hue=(time*.000075)+(gameObject.specialHueOffset||0);
+      const rainbowA=this.rainbowTint(hue);
+      const rainbowB=this.rainbowTint(hue+.19);
+      const rainbowC=this.rainbowTint(hue+.43);
+      const rainbowD=this.rainbowTint(hue+.69);
+
+      overlay.x=gameObject.x;
+      overlay.y=gameObject.y;
+      overlay.rotation=gameObject.rotation;
+      overlay.setScale(
+        gameObject.scaleX*(1+Math.sin(pulse)*.008),
+        gameObject.scaleY*(1+Math.sin(pulse)*.008)
+      );
+      overlay.setTint(rainbowA,rainbowB,rainbowC,rainbowD);
+      overlay.setAlpha(
+        baseAlpha*
+        (gameObject.specialPreview?.25:.21)*
+        (.88+Math.sin(pulse)*.12)
+      );
+
+      halo.x=gameObject.x;
+      halo.y=gameObject.y;
+      halo.setScale(1+Math.sin(pulse)*.045);
+      halo.setFillStyle(this.rainbowTint(hue+.32),.018);
+      halo.setStrokeStyle(
+        gameObject.specialPreview?4:3,
+        this.rainbowTint(hue+.08),
+        .78+Math.sin(pulse)*.10
+      );
+      halo.setAlpha(baseAlpha);
+
+      const sparkles=gameObject.specialSparkles||[];
+      const radius=t.r*(gameObject.specialPreview?.62:.58);
+
+      sparkles.forEach((sparkle,index)=>{
+        if(!sparkle||!sparkle.active) return;
+        const phase=(sparkle.specialPhase||0)+time*.00048*(index%2?-.86:1);
+        const flicker=.5+.5*Math.sin(time*.0065+(index*2.1)+(gameObject.specialPulseOffset||0));
+        const localX=Math.cos(phase)*radius;
+        const localY=Math.sin(phase)*radius*.78;
+        const cos=Math.cos(gameObject.rotation);
+        const sin=Math.sin(gameObject.rotation);
+
+        sparkle.x=gameObject.x+localX*cos-localY*sin;
+        sparkle.y=gameObject.y+localX*sin+localY*cos;
+        sparkle.rotation=-gameObject.rotation*.2+phase*.12;
+        sparkle.setTint(this.rainbowTint(hue+index*.27));
+        sparkle.setScale((gameObject.specialPreview?.065:.06)+flicker*.025);
+        sparkle.setAlpha(baseAlpha*(.10+flicker*.40));
+      });
     }
 
     createDropPreview(animate=false) {
@@ -2011,8 +2138,7 @@
       if(gem.shadow&&gem.shadow.active) gem.shadow.destroy();
       gem.shadow=null;
 
-      if(gem.specialHalo&&gem.specialHalo.active) gem.specialHalo.destroy();
-      gem.specialHalo=null;
+      this.destroySpecialVisuals(gem);
 
       if(gem.body) this.matter.world.remove(gem.body);
       gem.destroy();
