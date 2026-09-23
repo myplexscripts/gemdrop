@@ -2671,42 +2671,57 @@
     }
 
     floatText(x,y,text,color,size,opts={}) {
-      const big=!!opts.big||text.includes('× CHAIN')||text.startsWith('MASTER CUT');
-      const fontSize=Math.max(big?24:18,size||18);
+      const isChain=text.includes('× CHAIN');
+      const isMaster=text.startsWith('MASTER CUT');
+      const big=!!opts.big||isChain||isMaster;
+      const fontSize=Math.max(big?27:20,size||20);
+
+      let displayText=text;
+      if(isChain){
+        const match=text.match(/^(\d+× CHAIN)\s+(\+\$.*)$/);
+        if(match) displayText=match[1]+'\n'+match[2];
+      }else if(isMaster){
+        const match=text.match(/^(MASTER CUT)\s+(\+\$.*)$/);
+        if(match) displayText=match[1]+'\n'+match[2];
+      }
 
       const burst=this.trackTransientFx(
-        this.add.circle(x,y,10,0xffffff,.16)
+        this.add.circle(x,y,12,hexToInt(color),.16)
           .setDepth(45)
-          .setScale(.25)
+          .setScale(.30)
           .setBlendMode(Phaser.BlendModes.ADD)
       );
 
-      const glow=this.trackTransientFx(this.add.text(x,y,text,{
-        fontFamily:'Manrope, sans-serif',
+      const glow=this.trackTransientFx(this.add.text(x,y,displayText,{
+        fontFamily:'Fredoka, "Arial Rounded MT Bold", sans-serif',
         fontSize:fontSize+'px',
-        fontStyle:'800',
+        fontStyle:'700',
+        align:'center',
+        lineSpacing:-2,
         color:color,
         stroke:color,
-        strokeThickness:big?9:7
+        strokeThickness:big?11:9
       })
         .setOrigin(.5)
         .setDepth(46)
-        .setAlpha(.20)
-        .setScale(.48)
+        .setAlpha(.18)
+        .setScale(.72)
         .setBlendMode(Phaser.BlendModes.ADD));
 
-      const label=this.trackTransientFx(this.add.text(x,y,text,{
-        fontFamily:'Manrope, sans-serif',
+      const label=this.trackTransientFx(this.add.text(x,y,displayText,{
+        fontFamily:'Fredoka, "Arial Rounded MT Bold", sans-serif',
         fontSize:fontSize+'px',
-        fontStyle:'800',
+        fontStyle:'700',
+        align:'center',
+        lineSpacing:-2,
         color:color,
-        stroke:'#23072f',
-        strokeThickness:big?5:4,
+        stroke:'#25102f',
+        strokeThickness:big?6:5,
         shadow:{
           offsetX:0,
           offsetY:5,
-          color:'rgba(0,0,0,.48)',
-          blur:10,
+          color:'rgba(0,0,0,.38)',
+          blur:8,
           stroke:true,
           fill:true
         }
@@ -2714,50 +2729,110 @@
         .setOrigin(.5)
         .setDepth(48)
         .setAlpha(0)
-        .setScale(.48)
-        .setAngle(Phaser.Math.FloatBetween(-2.4,2.4)));
+        .setScale(.58)
+        .setAngle(Phaser.Math.FloatBetween(-1.1,1.1)));
+
+      const highlight=this.trackTransientFx(this.add.text(x,y-2,displayText,{
+        fontFamily:'Fredoka, "Arial Rounded MT Bold", sans-serif',
+        fontSize:fontSize+'px',
+        fontStyle:'700',
+        align:'center',
+        lineSpacing:-2,
+        color:'#ffffff'
+      })
+        .setOrigin(.5)
+        .setDepth(49)
+        .setAlpha(0)
+        .setScale(.58)
+        .setBlendMode(Phaser.BlendModes.SCREEN));
+
+      const sparkleCount=big?6:4;
+      for(let i=0;i<sparkleCount;i++){
+        const angle=(Math.PI*2*i)/sparkleCount+Phaser.Math.FloatBetween(-.3,.3);
+        const sparkle=this.trackTransientFx(
+          this.add.circle(
+            x,
+            y,
+            big?Phaser.Math.FloatBetween(2.2,3.6):Phaser.Math.FloatBetween(1.6,2.8),
+            i%2===0?0xffffff:hexToInt(color),
+            .92
+          ).setDepth(47).setBlendMode(Phaser.BlendModes.ADD)
+        );
+
+        const distance=Phaser.Math.Between(big?34:25,big?62:44);
+        this.tweens.add({
+          targets:sparkle,
+          x:x+Math.cos(angle)*distance,
+          y:y+Math.sin(angle)*distance,
+          alpha:0,
+          scale:{from:.7,to:.2},
+          duration:Phaser.Math.Between(300,480),
+          ease:'Quad.Out',
+          onComplete:()=>this.destroyTransientFx(sparkle)
+        });
+      }
 
       this.tweens.add({
         targets:burst,
-        scale:big?5.2:4,
+        scale:big?5.6:4.4,
         alpha:0,
-        duration:300,
+        duration:330,
         ease:'Quad.Out',
         onComplete:()=>this.destroyTransientFx(burst)
       });
 
       this.tweens.add({
         targets:glow,
-        alpha:{from:.24,to:0},
-        scale:big?1.34:1.20,
-        y:y-18,
-        duration:390,
+        alpha:{from:.22,to:0},
+        scale:big?1.34:1.22,
+        y:y-(big?24:18),
+        duration:420,
         ease:'Quad.Out',
         onComplete:()=>this.destroyTransientFx(glow)
       });
 
       this.tweens.add({
-        targets:label,
+        targets:[label,highlight],
         alpha:1,
-        scaleX:big?1.18:1.10,
-        scaleY:big?.86:.92,
-        y:y-11,
+        scale:big?1.14:1.10,
+        y:y-(big?13:10),
         angle:0,
-        duration:135,
+        duration:145,
         ease:'Back.Out',
         onComplete:()=>{
           this.tweens.add({
-            targets:label,
-            scaleX:1,
-            scaleY:1,
-            y:y-(big?58:46),
-            alpha:0,
-            duration:big?820:700,
-            delay:big?90:65,
-            ease:'Cubic.Out',
-            onComplete:()=>this.destroyTransientFx(label)
+            targets:[label,highlight],
+            scale:1,
+            y:y-(big?22:17),
+            duration:95,
+            ease:'Quad.Out',
+            onComplete:()=>{
+              this.tweens.add({
+                targets:[label,highlight],
+                y:y-(big?66:50),
+                alpha:0,
+                scale:.94,
+                duration:big?760:650,
+                delay:big?115:85,
+                ease:'Cubic.In',
+                onComplete:()=>{
+                  this.destroyTransientFx(label);
+                  this.destroyTransientFx(highlight);
+                }
+              });
+            }
           });
         }
+      });
+
+      highlight.setAlpha(0);
+      this.tweens.add({
+        targets:highlight,
+        alpha:{from:0,to:.13},
+        duration:110,
+        yoyo:true,
+        hold:120,
+        ease:'Sine.Out'
       });
     }
 
