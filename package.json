@@ -16,7 +16,8 @@
     "matter-js": "^0.20.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "tone": "^15.1.22"
+    "tone": "^15.1.22",
+    "lucide": "^0.468.0"
   },
   "devDependencies": {
     "@types/matter-js": "^0.19.8",
