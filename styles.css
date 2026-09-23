@@ -5978,3 +5978,202 @@ body,
     border-top:1px solid rgba(255,255,255,.07)!important;
   }
 }
+
+
+/* === CHEST ART + REVEAL SEQUENCE 2026-09-22 === */
+.treasure-meter__chest{
+  width:42px!important;
+  height:42px!important;
+  right:-3px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  box-shadow:none!important;
+}
+.treasure-meter__chest img{
+  width:42px;
+  height:42px;
+  display:block;
+  object-fit:contain;
+  filter:drop-shadow(0 5px 8px rgba(0,0,0,.38));
+  pointer-events:none;
+}
+.treasure-meter.ready .treasure-meter__chest{
+  background:none!important;
+  border:0!important;
+}
+.treasure-meter.ready .treasure-meter__chest img{
+  animation:treasureReadyChest 1.15s ease-in-out infinite;
+  filter:
+    drop-shadow(0 5px 8px rgba(0,0,0,.34))
+    drop-shadow(0 0 9px rgba(255,201,86,.36));
+}
+@keyframes treasureReadyChest{
+  0%,100%{transform:translateY(0) scale(1) rotate(0)}
+  35%{transform:translateY(-2px) scale(1.08) rotate(-4deg)}
+  65%{transform:translateY(-2px) scale(1.08) rotate(4deg)}
+}
+
+/* The reward stage owns both chest states, the starburst, and the treasure. */
+.treasure-chest-reveal{
+  width:min(390px,92vw)!important;
+  margin:-12px auto -28px!important;
+  overflow:visible!important;
+}
+.treasure-reward-art{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  z-index:6!important;
+  width:184px!important;
+  height:150px!important;
+  margin:0!important;
+  opacity:0!important;
+  transform:translate(-50%,-50%) scale(.55)!important;
+  filter:brightness(1.35) drop-shadow(0 15px 20px rgba(0,0,0,.42))!important;
+  pointer-events:none;
+}
+.treasure-reward-art svg{
+  width:100%!important;
+  height:100%!important;
+}
+.treasure-modal.revealed .treasure-reward-art{
+  opacity:1!important;
+  animation:rewardTreasureCenterPop .34s cubic-bezier(.12,.9,.18,1.28) both!important;
+}
+.treasure-modal.revealed .treasure-chest-closed,
+.treasure-modal.revealed .treasure-chest-open{
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* Phase 1: closed chest pops in and shakes. */
+.treasure-modal.opening:not(.burst) .treasure-chest-closed{
+  animation:
+    rewardClosedPop .30s cubic-bezier(.12,.9,.2,1.18) both,
+    rewardClosedShake .46s .28s cubic-bezier(.36,.07,.19,.97) both!important;
+}
+
+/* Phase 2: closed chest expands/fades while open chest pops in. */
+.treasure-modal.burst .treasure-chest-closed{
+  animation:rewardClosedBurst .22s ease-out both!important;
+}
+.treasure-modal.burst:not(.open-burst) .treasure-chest-open{
+  animation:rewardOpenPop .24s cubic-bezier(.12,.9,.2,1.22) both!important;
+}
+
+/* Phase 3: open chest quickly expands and disappears. */
+.treasure-modal.open-burst .treasure-chest-open{
+  animation:rewardOpenBurst .20s ease-out both!important;
+}
+.treasure-modal.open-burst .treasure-chest-closed{
+  opacity:0!important;
+}
+
+/* Phase 4: treasure appears in the middle of the starburst. */
+.treasure-chest-rays{
+  top:50%!important;
+  width:92%!important;
+}
+.treasure-modal.revealed .treasure-chest-rays{
+  opacity:.82!important;
+  animation:rewardTreasureStarburst 4.5s linear infinite!important;
+}
+.treasure-modal.revealed .treasure-chest-aura{
+  top:50%!important;
+  opacity:.72!important;
+  transform:scale(1.05);
+  animation:rewardTreasureAura 1.5s ease-in-out infinite alternate!important;
+}
+.treasure-modal.revealed .treasure-reward-sparkles i{
+  animation:rewardSpark .72s var(--d) cubic-bezier(.13,.7,.25,1) both!important;
+}
+
+@keyframes rewardClosedPop{
+  0%{opacity:0;transform:scale(.45) translateY(24px)}
+  72%{opacity:1;transform:scale(.96) translateY(-4px)}
+  100%{opacity:1;transform:scale(.90) translateY(6px)}
+}
+@keyframes rewardClosedShake{
+  0%,100%{opacity:1;transform:scale(.90) translate(0,6px) rotate(0)}
+  14%{transform:scale(.93) translate(-8px,5px) rotate(-2.5deg)}
+  28%{transform:scale(.96) translate(9px,3px) rotate(2.8deg)}
+  42%{transform:scale(.99) translate(-8px,1px) rotate(-2deg)}
+  58%{transform:scale(1.02) translate(7px,-2px) rotate(1.8deg)}
+  74%{transform:scale(1.04) translate(-4px,-4px) rotate(-1deg)}
+  88%{transform:scale(1.05) translate(3px,-5px) rotate(.6deg)}
+}
+@keyframes rewardClosedBurst{
+  from{opacity:1;transform:scale(1.05) translateY(-5px);filter:brightness(1)}
+  to{opacity:0;transform:scale(1.30) translateY(-7px);filter:brightness(1.8)}
+}
+@keyframes rewardOpenPop{
+  0%{opacity:0;transform:scale(.58) translateY(15px);filter:brightness(2)}
+  70%{opacity:1;transform:scale(1.04) translateY(-5px);filter:brightness(1.25)}
+  100%{opacity:1;transform:scale(.96) translateY(5px);filter:brightness(1)}
+}
+@keyframes rewardOpenBurst{
+  from{opacity:1;transform:scale(.96) translateY(5px);filter:brightness(1)}
+  to{opacity:0;transform:scale(1.24) translateY(0);filter:brightness(1.65)}
+}
+@keyframes rewardTreasureCenterPop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.48);filter:brightness(1.65)}
+  72%{opacity:1;transform:translate(-50%,-50%) scale(1.08);filter:brightness(1.12)}
+  100%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:brightness(1)}
+}
+@keyframes rewardTreasureStarburst{
+  from{transform:translate(-50%,-50%) rotate(0deg) scale(1)}
+  to{transform:translate(-50%,-50%) rotate(360deg) scale(1)}
+}
+@keyframes rewardTreasureAura{
+  from{transform:translate(-50%,-50%) scale(.94)}
+  to{transform:translate(-50%,-50%) scale(1.08)}
+}
+
+/* Solid-fill art sits behind sockets; transparent authored treasure art stays
+   above them. This fills unintended transparent gaps without covering gems. */
+.treasure-detail-fill,
+.treasure-detail-art,
+.treasure-sockets{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+}
+.treasure-detail-fill{
+  z-index:1!important;
+  pointer-events:none!important;
+}
+.treasure-detail-fill svg,
+.treasure-detail-fill image,
+.treasure-detail-art svg,
+.treasure-detail-art image{
+  width:100%!important;
+  height:100%!important;
+  display:block;
+}
+.treasure-sockets{
+  z-index:2!important;
+}
+.treasure-detail-art{
+  z-index:3!important;
+}
+
+/* no-inlay.png is always the backing layer, even when a gem is installed. */
+.treasure-socket>.socket-no-inlay{
+  z-index:0!important;
+}
+.treasure-socket>.socket-gem{
+  z-index:1!important;
+}
+
+@media(max-height:720px){
+  .treasure-chest-reveal{
+    width:min(320px,86vw)!important;
+    margin:-20px auto -30px!important;
+  }
+  .treasure-reward-art{
+    width:150px!important;
+    height:122px!important;
+  }
+}
