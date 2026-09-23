@@ -478,10 +478,183 @@
   }
 
   let rewardTimers=[];
+  let rewardAnimationFrame=0;
+
+  const STOCK_TREASURE_REVEAL={
+    duration:1600,
+    layers:{
+      closed:{
+        spin:0,
+        keyframes:[
+          {t:0,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
+          {t:180,x:0,y:0,scale:.84,rotation:0,opacity:1,ease:'backOut'},
+          {t:300,x:0,y:0,scale:.76,rotation:0,opacity:1,ease:'easeOut'},
+          {t:380,x:-8,y:0,scale:.79,rotation:-4,opacity:1,ease:'easeOut'},
+          {t:460,x:9,y:0,scale:.82,rotation:4.5,opacity:1,ease:'easeOut'},
+          {t:540,x:-7,y:0,scale:.84,rotation:-3,opacity:1,ease:'easeOut'},
+          {t:620,x:6,y:0,scale:.86,rotation:2,opacity:1,ease:'easeOut'},
+          {t:760,x:0,y:0,scale:.88,rotation:0,opacity:1,ease:'easeOut'},
+          {t:940,x:0,y:0,scale:1.12,rotation:0,opacity:0,ease:'easeOut'}
+        ]
+      },
+      open:{
+        spin:0,
+        keyframes:[
+          {t:0,x:0,y:0,scale:.46,rotation:0,opacity:0,ease:'linear'},
+          {t:760,x:0,y:0,scale:.46,rotation:0,opacity:0,ease:'linear'},
+          {t:910,x:0,y:0,scale:.84,rotation:0,opacity:1,ease:'backOut'},
+          {t:1040,x:0,y:0,scale:.78,rotation:0,opacity:1,ease:'easeOut'},
+          {t:1190,x:0,y:0,scale:1.10,rotation:0,opacity:0,ease:'easeOut'}
+        ]
+      },
+      treasure:{
+        spin:0,
+        keyframes:[
+          {t:0,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
+          {t:1190,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
+          {t:1380,x:0,y:0,scale:1.08,rotation:0,opacity:1,ease:'backOut'},
+          {t:1500,x:0,y:0,scale:.97,rotation:0,opacity:1,ease:'easeOut'},
+          {t:1600,x:0,y:0,scale:1,rotation:0,opacity:1,ease:'easeOut'}
+        ]
+      },
+      rays:{
+        spin:36,
+        keyframes:[
+          {t:0,x:0,y:0,scale:.96,rotation:0,opacity:.42,ease:'linear'},
+          {t:760,x:0,y:0,scale:1.04,rotation:0,opacity:.76,ease:'easeOut'},
+          {t:1240,x:0,y:0,scale:1,rotation:0,opacity:.68,ease:'easeOut'},
+          {t:1600,x:0,y:0,scale:1,rotation:0,opacity:.68,ease:'linear'}
+        ]
+      },
+      aura:{
+        spin:0,
+        keyframes:[
+          {t:0,x:0,y:0,scale:.90,rotation:0,opacity:.36,ease:'linear'},
+          {t:800,x:0,y:0,scale:1.06,rotation:0,opacity:.62,ease:'easeInOut'},
+          {t:1600,x:0,y:0,scale:.94,rotation:0,opacity:.45,ease:'easeInOut'}
+        ]
+      },
+      shock:{
+        spin:0,
+        keyframes:[
+          {t:0,x:0,y:0,scale:.42,rotation:0,opacity:0,ease:'linear'},
+          {t:760,x:0,y:0,scale:.42,rotation:0,opacity:.82,ease:'linear'},
+          {t:1120,x:0,y:0,scale:2.18,rotation:0,opacity:0,ease:'easeOut'}
+        ]
+      }
+    }
+  };
 
   function clearRewardTimers(){
     rewardTimers.forEach(id=>window.clearTimeout(id));
     rewardTimers=[];
+  }
+
+  function stopRewardAnimation(){
+    if(rewardAnimationFrame){
+      window.cancelAnimationFrame(rewardAnimationFrame);
+      rewardAnimationFrame=0;
+    }
+  }
+
+  function rewardEase(name,p){
+    p=clamp(p,0,1);
+    if(name==='easeIn') return p*p*p;
+    if(name==='easeOut') return 1-Math.pow(1-p,3);
+    if(name==='easeInOut') return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+    if(name==='backOut'){
+      const c1=1.70158;
+      const c3=c1+1;
+      return 1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2);
+    }
+    return p;
+  }
+
+  function rewardPoseAt(layer,t){
+    const keys=layer.keyframes;
+    if(!keys.length) return {x:0,y:0,scale:1,rotation:0,opacity:1};
+
+    let pose;
+    if(t<=keys[0].t){
+      pose={...keys[0]};
+    }else if(t>=keys[keys.length-1].t){
+      pose={...keys[keys.length-1]};
+    }else{
+      let a=keys[0];
+      let b=keys[1];
+      for(let i=1;i<keys.length;i++){
+        if(t<=keys[i].t){
+          a=keys[i-1];
+          b=keys[i];
+          break;
+        }
+      }
+      const raw=(t-a.t)/Math.max(1,b.t-a.t);
+      const p=rewardEase(b.ease,raw);
+      pose={
+        x:a.x+(b.x-a.x)*p,
+        y:a.y+(b.y-a.y)*p,
+        scale:a.scale+(b.scale-a.scale)*p,
+        rotation:a.rotation+(b.rotation-a.rotation)*p,
+        opacity:a.opacity+(b.opacity-a.opacity)*p
+      };
+    }
+
+    if(layer.spin){
+      pose.rotation+=layer.spin*t/1000;
+    }
+    return pose;
+  }
+
+  function applyRewardPose(node,pose,stageScale){
+    if(!node) return;
+    const x=pose.x*stageScale;
+    const y=pose.y*stageScale;
+    node.style.setProperty(
+      'transform',
+      'translate(-50%,-50%) translate('+x+'px,'+y+'px) scale('+pose.scale+') rotate('+pose.rotation+'deg)',
+      'important'
+    );
+    node.style.setProperty('opacity',String(pose.opacity),'important');
+  }
+
+  function startRewardAnimation(){
+    stopRewardAnimation();
+
+    const overlay=$('treasureRewardOverlay');
+    const stage=$('treasureChestReveal');
+    if(!overlay||!stage) return;
+
+    const nodes={
+      closed:stage.querySelector('.treasure-chest-closed'),
+      open:stage.querySelector('.treasure-chest-open'),
+      treasure:$('treasureRewardArt'),
+      rays:stage.querySelector('.treasure-chest-rays'),
+      aura:stage.querySelector('.treasure-chest-aura'),
+      shock:stage.querySelector('.treasure-chest-shockwave')
+    };
+
+    const started=performance.now();
+
+    const frame=now=>{
+      if(!overlay.classList.contains('visible')){
+        stopRewardAnimation();
+        return;
+      }
+
+      const elapsed=Math.max(0,now-started);
+      const stageWidth=stage.getBoundingClientRect().width||350;
+      const stageScale=stageWidth/560;
+
+      for(const key of Object.keys(nodes)){
+        const layer=STOCK_TREASURE_REVEAL.layers[key];
+        applyRewardPose(nodes[key],rewardPoseAt(layer,elapsed),stageScale);
+      }
+
+      rewardAnimationFrame=window.requestAnimationFrame(frame);
+    };
+
+    rewardAnimationFrame=window.requestAnimationFrame(frame);
   }
 
   function claimTreasure(){
@@ -510,6 +683,7 @@
     void overlay.offsetWidth;
     overlay.classList.add('visible','opening');
     pauseForMeta(true);
+    startRewardAnimation();
 
     const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const closedBurstAt=reduced?60:760;
@@ -536,6 +710,7 @@
 
   function closeReward(resume=true){
     clearRewardTimers();
+    stopRewardAnimation();
     const overlay=$('treasureRewardOverlay');
     overlay.classList.remove('visible','opening','burst','open-burst','revealed');
     if(resume) pauseForMeta(false);
