@@ -8233,3 +8233,38 @@ body,
     padding-top:0!important;
   }
 }
+
+
+/* === SHARED GAME + MENU BACKGROUND 2026-09-23 === */
+/* Main menu now uses the exact same tiled background treatment as gameplay. */
+.start-overlay{
+  background:#110619!important;
+}
+
+.start-world{
+  background-color:#110619!important;
+  background-image:url("assets/ui/main-bg.png")!important;
+  background-repeat:repeat!important;
+  background-size:400px 400px!important;
+  background-position:0 0!important;
+  animation:gemdropMainBackgroundDrift 36s linear infinite!important;
+  will-change:background-position;
+}
+
+.start-world::after,
+.start-aurora,
+.start-stars,
+.start-vault-ring,
+.start-gem-field{
+  display:none!important;
+}
+
+.menu-background-particles{
+  z-index:2!important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .start-world{
+    animation-duration:110s!important;
+  }
+}
