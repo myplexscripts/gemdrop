@@ -40,11 +40,11 @@
   }
 
   const W = 640;
-  const H = 936;
+  const H = 980;
   const FRAME_WALL = 24;
-  const FRAME_FLOOR = 900;
+  const FRAME_FLOOR = 944;
   const WALL = 16;
-  const FLOOR = 880;
+  const FLOOR = 924;
   const DROP_Y = 104;
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
@@ -365,6 +365,9 @@
     button.setAttribute('aria-pressed',gameMuted?'true':'false');
     button.setAttribute('aria-label',gameMuted?'Unmute game':'Mute game');
     button.title=gameMuted?'Unmute game':'Mute game';
+
+    const copy=button.querySelector('.mute-copy');
+    if(copy) copy.textContent=gameMuted?'UNMUTE':'MUTE';
   }
 
   function setGameMuted(value) {
