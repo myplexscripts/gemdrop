@@ -1,5 +1,9 @@
 name: React Matter migration check
 
+concurrency:
+  group: react-matter-migration
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -37,6 +41,29 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Prepare runtime assets for smoke test
+        run: |
+          cp -R assets dist/assets
+          cp -R gems dist/gems
+          cp manifest.webmanifest dist/manifest.webmanifest
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke test production build
+        shell: bash
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/gemdrop-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill $PREVIEW_PID || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          node app/tests/smoke.mjs
 
       - name: Stage production build
         shell: bash
