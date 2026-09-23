@@ -613,12 +613,13 @@
     if(!node) return;
     const x=pose.x*stageScale;
     const y=pose.y*stageScale;
+    const opacityScale=node.id==='treasureRevealRays'?.5:1;
     node.style.setProperty(
       'transform',
       'translate(-50%,-50%) translate('+x+'px,'+y+'px) scale('+pose.scale+') rotate('+pose.rotation+'deg)',
       'important'
     );
-    node.style.setProperty('opacity',String(pose.opacity),'important');
+    node.style.setProperty('opacity',String(pose.opacity*opacityScale),'important');
   }
 
   function startRewardAnimation(){
