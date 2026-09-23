@@ -76,11 +76,12 @@
   const homeCrownProgressFill = $('homeCrownProgressFill');
 
   const backgroundParticles = $('backgroundParticles');
+  const menuBackgroundParticles = $('menuBackgroundParticles');
 
-  function initBackgroundParticles(){
-    if(!backgroundParticles) return;
+  function populateBackgroundParticles(target){
+    if(!target) return;
 
-    backgroundParticles.innerHTML='';
+    target.innerHTML='';
     const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const count=reduced?14:26;
 
@@ -114,8 +115,13 @@
       particle.style.setProperty('--particle-twinkle',(Phaser.Math.FloatBetween(.8,2.2)).toFixed(2)+'s');
 
       if(reduced) particle.classList.add('is-static');
-      backgroundParticles.appendChild(particle);
+      target.appendChild(particle);
     }
+  }
+
+  function initBackgroundParticles(){
+    populateBackgroundParticles(backgroundParticles);
+    populateBackgroundParticles(menuBackgroundParticles);
   }
 
   initBackgroundParticles();
