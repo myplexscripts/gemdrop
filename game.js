@@ -2564,6 +2564,10 @@
 
       this.renderStatusIcon(resolvedIcon,tier);
       statusText.textContent=text;
+
+      // Re-trigger the compact HUD pop for every event without changing layout.
+      statusHud.className='status-hud';
+      void statusHud.offsetWidth;
       statusHud.className='status-hud show'+(kind==='danger'?' danger':'');
 
       if(duration>0){
