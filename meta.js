@@ -512,9 +512,9 @@
     pauseForMeta(true);
 
     const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const closedBurstAt=reduced?60:690;
-    const openBurstAt=reduced?105:920;
-    const revealAt=reduced?150:1125;
+    const closedBurstAt=reduced?60:760;
+    const openBurstAt=reduced?105:1040;
+    const revealAt=reduced?150:1240;
 
     rewardTimers.push(window.setTimeout(()=>{
       overlay.classList.add('burst');
