@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260922-runscreen1" />
+  <link rel="stylesheet" href="styles.css?v=20260922-chestreveal2" />
 </head>
 <body>
   <main class="game-app" id="gameApp">
@@ -44,7 +44,7 @@
           <span id="treasureMeterFill" class="treasure-meter__fill"></span>
         </span>
         <span class="treasure-meter__chest" aria-hidden="true">
-          <i data-lucide="archive"></i>
+          <img src="assets/treasures/chest-closed.png?v=20260922-chest2" alt="">
         </span>
       </button>
     </header>
@@ -130,7 +130,7 @@
 
       </div>
 
-      <div class="start-version" aria-label="Game version">v0.8.4</div>
+      <div class="start-version" aria-label="Game version">v0.8.5</div>
     </div>
   </section>
 
@@ -171,15 +171,15 @@
         <div class="treasure-chest-aura"></div>
         <div class="treasure-chest-rays"></div>
         <div class="treasure-chest-shockwave"></div>
-        <img class="treasure-chest-image treasure-chest-closed" src="assets/treasures/chest-closed.png?v=20260921-pngart1" alt="">
-        <img class="treasure-chest-image treasure-chest-open" src="assets/treasures/chest-open.png?v=20260921-pngart1" alt="">
+        <img class="treasure-chest-image treasure-chest-closed" src="assets/treasures/chest-closed.png?v=20260922-chest2" alt="">
+        <img class="treasure-chest-image treasure-chest-open" src="assets/treasures/chest-open.png?v=20260922-chest2" alt="">
+        <div id="treasureRewardArt" class="treasure-reward-art"></div>
         <div class="treasure-reward-sparkles">
           <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
         </div>
       </div>
 
       <div class="treasure-reward-result">
-        <div id="treasureRewardArt" class="treasure-reward-art"></div>
         <p id="treasureRewardRarity" class="eyebrow">TREASURE FOUND</p>
         <h2 id="treasureRewardTitle">Treasure</h2>
         <p id="treasureRewardCopy" class="treasure-reward-copy">Added to your Treasure Vault.</p>
@@ -205,8 +205,9 @@
 
       <div class="treasure-detail-body">
         <div class="treasure-display">
-          <div id="treasureDetailArt" class="treasure-detail-art"></div>
+          <div id="treasureDetailFill" class="treasure-detail-fill" aria-hidden="true"></div>
           <div id="treasureSockets" class="treasure-sockets" aria-label="Gem inlay sockets"></div>
+          <div id="treasureDetailArt" class="treasure-detail-art"></div>
         </div>
 
         <p id="treasureDetailDescription" class="treasure-detail-description"></p>
@@ -315,7 +316,7 @@
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="reactive-gem-system.js?v=20260922-aspect2"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
-  <script src="meta.js?v=20260922-runscreen1"></script>
+  <script src="meta.js?v=20260922-chestreveal2"></script>
   <script src="game.js?v=20260922-runscreen1"></script>
 </body>
 </html>
