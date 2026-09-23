@@ -320,11 +320,27 @@
     'star-sceptre':'assets/treasures/star-sceptre.png'
   };
 
-  function treasureSVG(treasure,silhouette=false){
+  function treasureSolidFillFile(treasure){
+    const artFile=TREASURE_ART_FILES[treasure.id];
+    if(!artFile) return null;
+    return artFile.replace('assets/treasures/','assets/treasures/solid-fill/');
+  }
+
+  function treasureFillSVG(treasure){
+    const fillFile=treasureSolidFillFile(treasure);
+    if(!fillFile) return '';
+    return '<svg viewBox="0 0 320 260" class="treasure-fill-art" style="overflow:hidden" aria-hidden="true">'+
+      '<image href="'+fillFile+'?v=20260922-solidfill1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+    '</svg>';
+  }
+
+  function treasureSVG(treasure,silhouette=false,includeFill=true){
     const artFile=TREASURE_ART_FILES[treasure.id];
     if(artFile){
+      const fillFile=includeFill?treasureSolidFillFile(treasure):null;
       return '<svg viewBox="0 0 320 260" class="treasure-art'+(silhouette?' is-silhouette':'')+'" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
-        '<image href="'+artFile+'?v=20260921-silhouette1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+        (fillFile?'<image href="'+fillFile+'?v=20260922-solidfill1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>':'')+
+        '<image href="'+artFile+'?v=20260922-transparentart1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
       '</svg>';
     }
 
@@ -490,22 +506,27 @@
     art.innerHTML=treasureSVG(treasure,false);
 
     clearRewardTimers();
-    overlay.classList.remove('opening','burst','revealed');
+    overlay.classList.remove('opening','burst','open-burst','revealed');
     void overlay.offsetWidth;
     overlay.classList.add('visible','opening');
     pauseForMeta(true);
 
     const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const burstAt=reduced?90:760;
-    const revealAt=reduced?150:1120;
+    const closedBurstAt=reduced?70:790;
+    const openBurstAt=reduced?115:1050;
+    const revealAt=reduced?165:1270;
 
     rewardTimers.push(window.setTimeout(()=>{
       overlay.classList.add('burst');
       if(navigator.vibrate) navigator.vibrate([18,28,42]);
-    },burstAt));
+    },closedBurstAt));
 
     rewardTimers.push(window.setTimeout(()=>{
-      overlay.classList.remove('opening');
+      overlay.classList.add('open-burst');
+    },openBurstAt));
+
+    rewardTimers.push(window.setTimeout(()=>{
+      overlay.classList.remove('opening','burst','open-burst');
       overlay.classList.add('revealed');
       rewardTimers=[];
     },revealAt));
@@ -516,7 +537,7 @@
   function closeReward(resume=true){
     clearRewardTimers();
     const overlay=$('treasureRewardOverlay');
-    overlay.classList.remove('visible','opening','burst','revealed');
+    overlay.classList.remove('visible','opening','burst','open-burst','revealed');
     if(resume) pauseForMeta(false);
   }
 
@@ -651,16 +672,17 @@
   function renderSocketArt(container,socket,tier=null){
     container.innerHTML='';
 
-    if(!Number.isInteger(tier)){
-      const empty=document.createElement('img');
-      empty.className='socket-no-inlay';
-      empty.src='assets/treasures/no-inlay.png?v=20260922-noinlay1';
-      empty.alt='';
-      empty.setAttribute('aria-hidden','true');
-      empty.addEventListener('error',()=>{ empty.style.display='none'; },{once:true});
-      container.appendChild(empty);
-      return;
-    }
+    // Always keep the inlay fill under the socket. Filled gems sit above it,
+    // so any transparent facet/edge still has the intended inlay backing.
+    const backing=document.createElement('img');
+    backing.className='socket-no-inlay';
+    backing.src='assets/treasures/no-inlay.png?v=20260922-noinlay2';
+    backing.alt='';
+    backing.setAttribute('aria-hidden','true');
+    backing.addEventListener('error',()=>{ backing.style.display='none'; },{once:true});
+    container.appendChild(backing);
+
+    if(!Number.isInteger(tier)) return;
 
     const gem=GEMS[tier];
     const logicalW=Math.max(12,Number(socket.width)||Number(socket.size)||40);
@@ -729,7 +751,8 @@
     $('treasureDetailTitle').textContent=treasure.name;
     $('treasureDetailDescription').textContent=treasure.description;
     $('treasureCopyCount').textContent=(currentCopyIndex+1)+' / '+copies.length;
-    $('treasureDetailArt').innerHTML=treasureSVG(treasure,false);
+    $('treasureDetailFill').innerHTML=treasureFillSVG(treasure);
+    $('treasureDetailArt').innerHTML=treasureSVG(treasure,false,false);
     $('treasureBaseValue').textContent=money(treasure.base);
     $('treasureGemValue').textContent=money(calc.gemValue);
 
@@ -994,7 +1017,7 @@
         id:treasure.id,
         name:treasure.name,
         rarity:treasure.rarity,
-        art:file?'assets/treasures/'+file:null
+        art:file||null
       };
     },
     getState:()=>state
