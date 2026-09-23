@@ -8060,13 +8060,13 @@ body,
   background-repeat:repeat!important;
   background-size:400px 400px!important;
   background-position:0 0!important;
-  animation:gemdropMainBackgroundDrift 82s linear infinite!important;
+  animation:gemdropMainBackgroundDrift 36s linear infinite!important;
   will-change:background-position;
 }
 
 @keyframes gemdropMainBackgroundDrift{
   from{background-position:0 0}
-  to{background-position:400px 400px}
+  to{background-position:400px -400px}
 }
 
 /* Real DOM particles sit above the moving tile. Every particle gets its own
@@ -8113,15 +8113,15 @@ body,
 @keyframes gemdropParticleWander{
   0%{
     transform:translate3d(
-      calc(var(--particle-dx) * -.45),
-      calc(var(--particle-dy) * -.45),
+      var(--particle-start-x),
+      var(--particle-start-y),
       0
     ) scale(.82);
   }
   48%{
     transform:translate3d(
-      calc(var(--particle-dx) * .18),
-      calc(var(--particle-dy) * .18),
+      var(--particle-mid-x),
+      var(--particle-mid-y),
       0
     ) scale(1);
   }
@@ -8171,7 +8171,7 @@ body,
 
 @media(prefers-reduced-motion:reduce){
   .game-app::before{
-    animation:none!important;
+    animation-duration:110s!important;
   }
 
   .background-particle{
