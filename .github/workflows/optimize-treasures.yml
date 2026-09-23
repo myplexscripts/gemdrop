@@ -1,0 +1,79 @@
+name: Optimize treasure images once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/optimize-treasures.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Optimize treasure PNGs for runtime display sizes
+        run: |
+          python -m pip install --disable-pip-version-check pillow
+          python <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          root = Path("assets/treasures")
+          art_names = {
+              "ceremonial-goblet.png",
+              "crown-reliquary.png",
+              "heart-pendant.png",
+              "moon-necklace.png",
+              "moon-tiara.png",
+              "ornate-chalice.png",
+              "signet-ring.png",
+              "silver-ring.png",
+              "sovereign-crown.png",
+              "star-sceptre.png",
+              "sun-brooch.png",
+          }
+
+          def save_png(img, path):
+              img.save(path, "PNG", optimize=True, compress_level=9)
+
+          for path in sorted(root.glob("*.png")):
+              with Image.open(path) as im:
+                  im.load()
+                  if path.name in {"chest-open.png", "chest-closed.png"}:
+                      out = im.convert("RGBA")
+                      out.thumbnail((680, 680), Image.Resampling.LANCZOS)
+                  elif path.name in art_names:
+                      out = im.convert("RGBA").resize((640, 520), Image.Resampling.LANCZOS)
+                  else:
+                      out = im.convert("RGBA")
+                  save_png(out, path)
+
+          fill_root = root / "solid-fill"
+          for path in sorted(fill_root.glob("*.png")):
+              with Image.open(path) as im:
+                  im.load()
+                  out = im.convert("RGBA").resize((640, 520), Image.Resampling.LANCZOS)
+                  save_png(out, path)
+          PY
+
+      - name: Commit optimized images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/treasures
+          if git diff --cached --quiet; then
+            echo "No image changes to commit."
+            exit 0
+          fi
+          git commit -m "Optimize treasure image assets"
+          git push origin HEAD:main
