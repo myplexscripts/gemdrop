@@ -793,7 +793,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
   function applyPose(key,pose){
     const node=layerEls[key];
-    node.style.transform='translate(-50%,-50%) translate('+pose.x+'px,'+pose.y+'px) scale('+pose.scale+') rotate('+pose.rotation+'deg)';
+    const rect=els.stage.getBoundingClientRect();
+    const stageScale=rect.width/560;
+    node.style.transform='translate(-50%,-50%) translate('+(pose.x*stageScale)+'px,'+(pose.y*stageScale)+'px) scale('+pose.scale+') rotate('+pose.rotation+'deg)';
     node.style.opacity=String(pose.opacity);
     node.classList.toggle('selected',key===selected&&!playing);
   }
@@ -918,13 +920,17 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     const layer=state.layers[selected];
     const pose=poseAt(selected,time);
     const spin=layer.spin.enabled?layer.spin.degPerSec*time/1000:0;
+    const valueOr=(node,fallback)=>{
+      const value=Number(node.value);
+      return Number.isFinite(value)?value:fallback;
+    };
     return {
       t:Math.round(time),
-      x:Number(els.xInput.value)||pose.x,
-      y:Number(els.yInput.value)||pose.y,
-      scale:Number(els.scaleInput.value),
-      rotation:Number(els.rotationInput.value)||pose.rotation-spin,
-      opacity:Number(els.opacityInput.value),
+      x:valueOr(els.xInput,pose.x),
+      y:valueOr(els.yInput,pose.y),
+      scale:valueOr(els.scaleInput,pose.scale),
+      rotation:valueOr(els.rotationInput,pose.rotation-spin),
+      opacity:valueOr(els.opacityInput,pose.opacity),
       ease:els.easeSelect.value
     };
   }
