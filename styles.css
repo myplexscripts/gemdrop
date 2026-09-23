@@ -7870,3 +7870,172 @@ body,
     width:min(300px,80vw,41dvh)!important;
   }
 }
+
+
+/* === ISOLATED ANIMATION STUDIO TREASURE STAGE 2026-09-23 === */
+/* These classes are intentionally unique so none of the older treasure-reveal
+   experiments can affect the Animation Studio runtime. */
+.treasure-reward-card{
+  position:relative!important;
+  width:min(520px,100%)!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  padding:
+    max(18px,env(safe-area-inset-top))
+    18px
+    max(18px,env(safe-area-inset-bottom))!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  overflow:hidden!important;
+}
+
+.treasure-reward-kicker{
+  display:none!important;
+}
+
+.studio-reveal-stage{
+  position:relative!important;
+  width:min(350px,86vw,43dvh)!important;
+  height:auto!important;
+  aspect-ratio:1 / 1!important;
+  flex:0 0 auto!important;
+  margin:0!important;
+  overflow:visible!important;
+  isolation:isolate;
+}
+
+.studio-reveal-layer{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  margin:0!important;
+  transform:translate(-50%,-50%);
+  transform-origin:50% 50%!important;
+  pointer-events:none!important;
+  animation:none!important;
+  transition:none!important;
+  will-change:transform,opacity;
+}
+
+.studio-reveal-chest{
+  z-index:6!important;
+  width:72%!important;
+  height:72%!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))!important;
+}
+
+.studio-reveal-treasure{
+  z-index:7!important;
+  width:42%!important;
+  height:34%!important;
+  overflow:visible!important;
+  filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))!important;
+}
+
+.studio-reveal-treasure svg{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  overflow:visible!important;
+  filter:none!important;
+}
+
+.studio-reveal-rays{
+  z-index:2!important;
+  width:108%!important;
+  height:auto!important;
+  aspect-ratio:1 / 1!important;
+  border-radius:50%!important;
+  background:repeating-conic-gradient(
+    from 0deg,
+    rgba(255,239,190,.32) 0deg 3deg,
+    rgba(220,174,255,.18) 3deg 7deg,
+    transparent 7deg 19deg
+  )!important;
+  -webkit-mask:radial-gradient(circle,transparent 0 18%,#000 31% 67%,transparent 82%)!important;
+  mask:radial-gradient(circle,transparent 0 18%,#000 31% 67%,transparent 82%)!important;
+}
+
+.studio-reveal-aura{
+  z-index:1!important;
+  width:72%!important;
+  height:auto!important;
+  aspect-ratio:1 / 1!important;
+  border-radius:50%!important;
+  background:radial-gradient(
+    circle,
+    rgba(255,239,190,.42) 0 7%,
+    rgba(210,125,255,.28) 22%,
+    rgba(134,61,199,.12) 49%,
+    transparent 72%
+  )!important;
+  filter:blur(12px)!important;
+}
+
+.studio-reveal-shock{
+  z-index:5!important;
+  width:42%!important;
+  height:auto!important;
+  aspect-ratio:1 / 1!important;
+  border-radius:50%!important;
+  border:2px solid rgba(255,237,186,.78)!important;
+  box-shadow:0 0 26px rgba(213,128,255,.42)!important;
+  background:transparent!important;
+}
+
+.treasure-reward-result{
+  position:relative!important;
+  z-index:8!important;
+  width:min(390px,100%)!important;
+  flex:0 0 auto!important;
+  margin:0!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  text-align:center!important;
+  opacity:0!important;
+  transform:translateY(10px)!important;
+  pointer-events:none!important;
+  visibility:hidden!important;
+}
+
+.treasure-modal.revealed .treasure-reward-result{
+  opacity:1!important;
+  transform:translateY(0)!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transition:
+    opacity .22s .05s ease,
+    transform .34s .05s cubic-bezier(.14,.84,.24,1.12)!important;
+}
+
+.treasure-reward-result .eyebrow{
+  margin:0 0 3px!important;
+}
+
+.treasure-reward-card h2{
+  margin:0 0 6px!important;
+}
+
+.treasure-reward-copy{
+  margin:0 auto 14px!important;
+}
+
+@media(max-height:720px){
+  .studio-reveal-stage{
+    width:min(300px,80vw,41dvh)!important;
+  }
+
+  .treasure-reward-card{
+    gap:6px!important;
+  }
+}
