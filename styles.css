@@ -6578,3 +6578,294 @@ body,
     animation:none!important;
   }
 }
+
+
+/* === HUD MENU + TALLER BOARD 2026-09-23 === */
+
+/* Compact top row: menu, chest progress, score. */
+.hud{
+  position:relative!important;
+  z-index:18!important;
+  width:88%!important;
+  max-width:500px!important;
+  min-height:calc(64px + env(safe-area-inset-top))!important;
+  padding:
+    calc(5px + env(safe-area-inset-top))
+    0
+    4px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  display:grid!important;
+  grid-template-columns:48px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  column-gap:10px!important;
+}
+
+.hud-menu-button{
+  width:46px!important;
+  height:46px!important;
+  min-width:46px!important;
+  min-height:46px!important;
+  border-radius:16px!important;
+}
+
+.score{
+  min-width:84px!important;
+  text-align:right!important;
+  align-self:center!important;
+}
+
+.score>strong{
+  display:block!important;
+  font-size:29px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+
+.treasure-meter{
+  position:relative!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:250px!important;
+  height:46px!important;
+  min-height:46px!important;
+  padding:0 42px 0 2px!important;
+  margin:0 auto!important;
+  justify-self:center!important;
+}
+
+.treasure-meter__track{
+  width:100%!important;
+}
+
+.treasure-meter__chest{
+  right:-1px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+}
+
+/* Notifications float over the board instead of participating in header layout. */
+.status-hud{
+  position:absolute!important;
+  z-index:30!important;
+  top:calc(100% + 4px)!important;
+  left:50%!important;
+  width:min(72vw,360px)!important;
+  height:42px!important;
+  min-height:42px!important;
+  max-height:42px!important;
+  padding:6px 11px!important;
+  transform:translate(-50%,-4px)!important;
+  border-radius:15px!important;
+  background:
+    linear-gradient(180deg,rgba(72,20,86,.91),rgba(38,9,50,.94))!important;
+  border:1px solid rgba(255,215,132,.16)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 7px 18px rgba(0,0,0,.24)!important;
+  pointer-events:none!important;
+}
+
+.status-hud.show{
+  transform:translate(-50%,0)!important;
+  animation:hudNoticePop .25s cubic-bezier(.17,.89,.32,1.25)!important;
+}
+
+.status-hud:not(.show){
+  opacity:0!important;
+}
+
+@keyframes hudNoticePop{
+  0%{opacity:0;transform:translate(-50%,-6px) scale(.95)}
+  58%{opacity:1;transform:translate(-50%,1px) scale(1.02)}
+  100%{opacity:1;transform:translate(-50%,0) scale(1)}
+}
+
+/* Icon-only powerups. */
+.power-dock{
+  flex-basis:54px!important;
+  min-height:54px!important;
+  height:54px!important;
+  padding:0!important;
+  gap:10px!important;
+}
+
+.power-button{
+  min-height:50px!important;
+  height:50px!important;
+  padding:0!important;
+  gap:0!important;
+  border-radius:18px!important;
+}
+
+.power-button>svg{
+  width:27px!important;
+  height:27px!important;
+  stroke-width:2.1!important;
+}
+
+.power-button>span{
+  display:none!important;
+}
+
+/* The actual playfield is now physically taller too. */
+#game canvas{
+  aspect-ratio:640 / 980!important;
+}
+
+.aim-strip{
+  flex-basis:54px!important;
+  min-height:54px!important;
+  max-height:54px!important;
+}
+
+.auto-fire-row{
+  flex-basis:calc(36px + env(safe-area-inset-bottom))!important;
+  min-height:calc(36px + env(safe-area-inset-bottom))!important;
+}
+
+/* Pause/menu popup. */
+.game-menu-overlay{
+  z-index:80!important;
+}
+
+.game-menu-card{
+  position:relative!important;
+  width:min(360px,calc(100vw - 34px))!important;
+  padding:26px 20px 20px!important;
+  border-radius:28px!important;
+  background:
+    radial-gradient(circle at 50% -20%,rgba(190,81,218,.18),transparent 52%),
+    linear-gradient(180deg,rgba(48,16,60,.98),rgba(21,7,29,.99))!important;
+  border:1px solid rgba(255,218,137,.20)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 22px 60px rgba(0,0,0,.52)!important;
+}
+
+.game-menu-card .sheet-icon{
+  margin-bottom:8px!important;
+}
+
+.game-menu-card h2{
+  margin-bottom:18px!important;
+}
+
+.game-menu-close{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:42px;
+  height:42px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  color:#ead8ed;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.09);
+}
+
+.game-menu-close svg{
+  width:21px;
+  height:21px;
+}
+
+.game-menu-actions{
+  display:grid;
+  gap:10px;
+}
+
+.game-menu-actions button{
+  margin:0!important;
+}
+
+.game-menu-actions .secondary-button:disabled{
+  opacity:.46!important;
+}
+
+.game-menu-mute{
+  position:relative;
+}
+
+.game-menu-mute .mute-icon--muted{
+  display:none;
+}
+
+.game-menu-mute[aria-pressed="true"] .mute-icon--sound{
+  display:none;
+}
+
+.game-menu-mute[aria-pressed="true"] .mute-icon--muted{
+  display:block;
+}
+
+@media(max-width:390px){
+  .hud{
+    width:92%!important;
+    grid-template-columns:44px minmax(0,1fr) auto!important;
+    column-gap:7px!important;
+  }
+
+  .hud-menu-button{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+    min-height:42px!important;
+  }
+
+  .score{
+    min-width:76px!important;
+  }
+
+  .score>strong{
+    font-size:25px!important;
+  }
+
+  .treasure-meter{
+    height:42px!important;
+    min-height:42px!important;
+    padding-right:38px!important;
+  }
+
+  .treasure-meter__chest,
+  .treasure-meter__chest img{
+    width:38px!important;
+    height:38px!important;
+  }
+
+  .power-button>svg{
+    width:25px!important;
+    height:25px!important;
+  }
+}
+
+@media(max-height:760px){
+  .hud{
+    min-height:calc(58px + env(safe-area-inset-top))!important;
+    padding-top:calc(3px + env(safe-area-inset-top))!important;
+    padding-bottom:3px!important;
+  }
+
+  .aim-strip{
+    flex-basis:50px!important;
+    min-height:50px!important;
+    max-height:50px!important;
+  }
+
+  .power-dock{
+    flex-basis:50px!important;
+    min-height:50px!important;
+    height:50px!important;
+  }
+
+  .power-button{
+    height:46px!important;
+    min-height:46px!important;
+  }
+}
