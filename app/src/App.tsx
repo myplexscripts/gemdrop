@@ -262,10 +262,13 @@ export default function App(){
       setSnapshot(instance.getSnapshot());
       if(!metaLoaded.current&&!window.GemdropMeta){
         metaLoaded.current=true;
-        void import('../../meta.js').then(()=>{
+        const script=document.createElement('script');
+        script.src='./meta.js?v=react09';
+        script.onload=()=>{
           window.lucide?.createIcons({attrs:{'stroke-width':1.9}});
           setSnapshot(instance.getSnapshot());
-        });
+        };
+        document.body.appendChild(script);
       }
     });
 
