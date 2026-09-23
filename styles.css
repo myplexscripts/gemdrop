@@ -6869,3 +6869,137 @@ body,
     min-height:46px!important;
   }
 }
+
+
+/* === TREASURE JUICE PASS 2026-09-23 === */
+
+/* A full chest should demand attention without moving the progress bar. */
+.treasure-meter.ready .treasure-meter__chest img{
+  animation:treasureChestReadyJuicy 1.05s cubic-bezier(.2,.75,.25,1) infinite!important;
+  transform-origin:50% 65%;
+  will-change:transform,filter;
+}
+
+@keyframes treasureChestReadyJuicy{
+  0%,100%{
+    transform:translateY(0) scale(1) rotate(0deg);
+    filter:
+      drop-shadow(0 5px 8px rgba(0,0,0,.34))
+      drop-shadow(0 0 8px rgba(255,201,86,.34));
+  }
+  20%{
+    transform:translateY(-4px) scale(1.26) rotate(-8deg);
+    filter:
+      drop-shadow(0 7px 10px rgba(0,0,0,.30))
+      drop-shadow(0 0 17px rgba(255,205,92,.62));
+  }
+  36%{transform:translateY(-5px) scale(1.31) rotate(8deg)}
+  52%{transform:translateY(-4px) scale(1.23) rotate(-6deg)}
+  67%{transform:translateY(-3px) scale(1.17) rotate(4deg)}
+  82%{transform:translateY(-1px) scale(1.08) rotate(-2deg)}
+}
+
+/* The starburst is alive through the entire reveal, behind every stage. */
+.treasure-modal.visible .treasure-chest-rays{
+  opacity:.76!important;
+  animation:treasureRevealRaysSpin 5.2s linear infinite!important;
+}
+
+.treasure-modal.visible .treasure-chest-aura{
+  opacity:.52!important;
+  animation:treasureRevealAuraPulse 1.15s ease-in-out infinite alternate!important;
+}
+
+@keyframes treasureRevealRaysSpin{
+  from{transform:translate(-50%,-50%) rotate(0deg) scale(1)!important}
+  to{transform:translate(-50%,-50%) rotate(360deg) scale(1)!important}
+}
+
+@keyframes treasureRevealAuraPulse{
+  from{transform:translate(-50%,-50%) scale(.92)}
+  to{transform:translate(-50%,-50%) scale(1.10)}
+}
+
+/* Phase 1: closed chest rockets in, then does a tight juicy wiggle. */
+.treasure-modal.opening:not(.burst) .treasure-chest-closed{
+  animation:
+    treasureClosedZoomIn .24s cubic-bezier(.12,.9,.18,1.25) both,
+    treasureClosedJuicyWiggle .44s .22s cubic-bezier(.32,.04,.18,.98) both!important;
+}
+
+@keyframes treasureClosedZoomIn{
+  0%{opacity:0;transform:scale(.24) translateY(22px);filter:brightness(1.7)}
+  72%{opacity:1;transform:scale(1.03) translateY(-4px);filter:brightness(1.16)}
+  100%{opacity:1;transform:scale(.92) translateY(4px);filter:brightness(1)}
+}
+
+@keyframes treasureClosedJuicyWiggle{
+  0%,100%{transform:scale(.92) translate(0,4px) rotate(0)}
+  14%{transform:scale(.97) translate(-10px,2px) rotate(-4deg)}
+  28%{transform:scale(1.01) translate(11px,-1px) rotate(4.5deg)}
+  43%{transform:scale(1.04) translate(-9px,-3px) rotate(-3.3deg)}
+  58%{transform:scale(1.07) translate(8px,-5px) rotate(2.7deg)}
+  73%{transform:scale(1.09) translate(-5px,-6px) rotate(-1.7deg)}
+  88%{transform:scale(1.10) translate(3px,-6px) rotate(.8deg)}
+}
+
+/* Phase 2: closed chest blooms out while open chest snaps into its place. */
+.treasure-modal.burst .treasure-chest-closed{
+  animation:treasureClosedExpandAway .22s ease-out both!important;
+}
+
+@keyframes treasureClosedExpandAway{
+  from{opacity:1;transform:scale(1.10) translateY(-6px);filter:brightness(1)}
+  to{opacity:0;transform:scale(1.43) translateY(-8px);filter:brightness(2.15)}
+}
+
+.treasure-modal.burst:not(.open-burst) .treasure-chest-open{
+  animation:treasureOpenSnapIn .22s cubic-bezier(.1,.92,.18,1.30) both!important;
+}
+
+@keyframes treasureOpenSnapIn{
+  0%{opacity:0;transform:scale(.38) translateY(15px);filter:brightness(2.1)}
+  72%{opacity:1;transform:scale(1.10) translateY(-6px);filter:brightness(1.2)}
+  100%{opacity:1;transform:scale(.98) translateY(3px);filter:brightness(1)}
+}
+
+/* Phase 3: open chest does a quick second burst outward. */
+.treasure-modal.open-burst .treasure-chest-open{
+  animation:treasureOpenExpandAway .18s ease-out both!important;
+}
+
+@keyframes treasureOpenExpandAway{
+  from{opacity:1;transform:scale(.98) translateY(3px);filter:brightness(1)}
+  to{opacity:0;transform:scale(1.38) translateY(-2px);filter:brightness(1.9)}
+}
+
+/* Phase 4: reward lands with a fast overshoot and settles at centre. */
+.treasure-modal.revealed .treasure-reward-art{
+  opacity:1!important;
+  animation:treasureRewardJuicyPop .38s cubic-bezier(.10,.92,.18,1.32) both!important;
+}
+
+@keyframes treasureRewardJuicyPop{
+  0%{opacity:0;scale:.30;filter:brightness(1.9) saturate(1.25)}
+  68%{opacity:1;scale:1.14;filter:brightness(1.12) saturate(1.08)}
+  84%{scale:.96}
+  100%{opacity:1;scale:1;filter:brightness(1) saturate(1)}
+}
+
+/* Keep the popup iconless after the menu cleanup. */
+.game-menu-card>.sheet-icon{
+  display:none!important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .treasure-meter.ready .treasure-meter__chest img,
+  .treasure-modal.visible .treasure-chest-rays,
+  .treasure-modal.visible .treasure-chest-aura,
+  .treasure-modal.opening:not(.burst) .treasure-chest-closed,
+  .treasure-modal.burst .treasure-chest-closed,
+  .treasure-modal.burst:not(.open-burst) .treasure-chest-open,
+  .treasure-modal.open-burst .treasure-chest-open,
+  .treasure-modal.revealed .treasure-reward-art{
+    animation:none!important;
+  }
+}
