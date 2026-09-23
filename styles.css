@@ -6326,3 +6326,197 @@ body,
     width:min(160px,44vw)!important;
   }
 }
+
+
+/* === JUICY FEEDBACK PASS 2026-09-23 === */
+
+/* Status messages stay a fixed single line so longer copy can never resize
+   the HUD or push the board downward. */
+.status-hud{
+  height:46px!important;
+  min-height:46px!important;
+  max-height:46px!important;
+  overflow:hidden!important;
+  flex-wrap:nowrap!important;
+  contain:layout paint;
+}
+.status-text{
+  display:block!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+  line-height:1!important;
+}
+.status-hud.show{
+  animation:gemdropStatusPop .28s cubic-bezier(.18,.89,.32,1.28);
+}
+@keyframes gemdropStatusPop{
+  0%{opacity:0;transform:translateY(-5px) scale(.94)}
+  55%{opacity:1;transform:translateY(1px) scale(1.025)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Recharge reads as a glowing liquid capsule rather than a flat block.
+   Scaling a fully rounded inset surface keeps both ends soft at every charge. */
+.power-button{
+  --power-glow:rgba(222,99,255,.24);
+  border-color:rgba(255,221,153,.20)!important;
+  background:
+    radial-gradient(circle at 50% -35%,rgba(255,255,255,.13),transparent 58%),
+    linear-gradient(180deg,rgba(58,19,72,.94),rgba(26,7,36,.98))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.28),
+    0 7px 18px rgba(0,0,0,.20)!important;
+  transition:
+    transform .13s ease,
+    border-color .2s ease,
+    box-shadow .24s ease!important;
+}
+
+.power-button::before{
+  top:4px!important;
+  right:4px!important;
+  bottom:4px!important;
+  left:4px!important;
+  width:auto!important;
+  height:auto!important;
+  border-radius:14px!important;
+  transform:scaleX(var(--charge))!important;
+  transform-origin:left center!important;
+  z-index:0!important;
+  opacity:1!important;
+  background:
+    radial-gradient(circle at 24% 18%,rgba(255,255,255,.26),transparent 34%),
+    linear-gradient(
+      100deg,
+      var(--power-fill-bottom) 0%,
+      var(--power-fill-mid) 54%,
+      var(--power-fill-top) 100%
+    )!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.22),
+    inset 0 -1px 0 rgba(0,0,0,.16),
+    0 0 18px var(--power-glow)!important;
+  transition:
+    transform .48s cubic-bezier(.2,.82,.22,1),
+    filter .24s ease!important;
+}
+
+.power-button::after{
+  content:""!important;
+  top:4px!important;
+  right:4px!important;
+  bottom:4px!important;
+  left:4px!important;
+  width:auto!important;
+  height:auto!important;
+  border-radius:14px!important;
+  z-index:1!important;
+  opacity:0!important;
+  background:
+    linear-gradient(
+      112deg,
+      transparent 16%,
+      rgba(255,255,255,.04) 32%,
+      rgba(255,255,255,.34) 46%,
+      rgba(255,244,195,.20) 53%,
+      transparent 68%
+    )!important;
+  box-shadow:none!important;
+  transform:translateX(-135%)!important;
+  pointer-events:none;
+}
+
+.power-button>svg,
+.power-button>span{
+  z-index:2!important;
+  transition:
+    transform .16s ease,
+    opacity .2s ease,
+    filter .2s ease!important;
+}
+
+.power-button:not(.charged)>svg,
+.power-button:not(.charged)>span{
+  opacity:.76;
+}
+
+.power-button:disabled{
+  opacity:.90!important;
+  filter:none!important;
+}
+
+.power-button:active:not(:disabled){
+  transform:translateY(1px) scale(.965)!important;
+}
+
+.power-button:active:not(:disabled)>svg,
+.power-button:active:not(:disabled)>span{
+  transform:scale(.96);
+}
+
+.power-button.charged{
+  border-color:rgba(255,224,143,.44)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 -1px 0 rgba(0,0,0,.22),
+    0 0 0 1px rgba(255,213,117,.06),
+    0 7px 20px rgba(0,0,0,.22),
+    0 0 20px var(--power-glow)!important;
+  animation:powerReadyBreath 1.9s ease-in-out infinite;
+}
+
+.power-button.charged::after{
+  opacity:.82!important;
+  animation:powerChargeSheen 2.35s cubic-bezier(.2,.7,.2,1) infinite!important;
+}
+
+#powerTumble{
+  --power-fill-bottom:rgba(151,74,25,.76);
+  --power-fill-mid:rgba(235,129,44,.72);
+  --power-fill-top:rgba(255,201,92,.68);
+  --power-glow:rgba(255,155,65,.28);
+}
+#powerCascade{
+  --power-fill-bottom:rgba(92,35,153,.78);
+  --power-fill-mid:rgba(173,70,225,.72);
+  --power-fill-top:rgba(243,121,255,.66);
+  --power-glow:rgba(205,89,255,.28);
+}
+#powerPrism{
+  --power-fill-bottom:rgba(27,84,151,.80);
+  --power-fill-mid:rgba(51,161,221,.72);
+  --power-fill-top:rgba(111,231,255,.66);
+  --power-glow:rgba(75,193,255,.28);
+}
+
+@keyframes powerChargeSheen{
+  0%,32%{transform:translateX(-135%)}
+  68%,100%{transform:translateX(135%)}
+}
+@keyframes powerReadyBreath{
+  0%,100%{filter:brightness(1)}
+  50%{filter:brightness(1.08)}
+}
+
+@media(max-width:390px){
+  .status-hud{
+    height:42px!important;
+    min-height:42px!important;
+    max-height:42px!important;
+  }
+  .status-text{
+    font-size:13px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .status-hud.show,
+  .power-button.charged,
+  .power-button.charged::after{
+    animation:none!important;
+  }
+}
