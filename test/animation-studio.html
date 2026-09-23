@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GemDrop Animation Studio</title>
+<style>
+:root{
+  color-scheme:dark;
+  font-family:Manrope,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --bg:#0d0611;
+  --panel:#17101c;
+  --panel2:#211329;
+  --line:rgba(255,255,255,.10);
+  --muted:#b7a6bd;
+  --text:#f7edf8;
+  --gold:#ffd46b;
+  --purple:#b96de9;
+  --cyan:#72dfff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+body{
+  padding:18px;
+  background:
+    radial-gradient(circle at 50% -15%,rgba(127,54,160,.20),transparent 38%),
+    linear-gradient(180deg,#100715,#09040c 100%);
+}
+button,input,select,textarea{font:inherit;font-size:14px}
+button,input,select{min-height:44px}
+button{
+  color:var(--text);
+  border:1px solid var(--line);
+  background:#291631;
+  border-radius:12px;
+  padding:0 13px;
+  font-weight:800;
+  cursor:pointer;
+}
+button:hover{background:#35203f}
+button:active{transform:scale(.985)}
+button.primary{
+  background:linear-gradient(180deg,#ffe18d,#e9b44e);
+  color:#321625;
+  border-color:#ffedb6;
+}
+button.ghost{background:#120a16}
+button.danger{color:#ffbdca}
+button:disabled{opacity:.42;cursor:default}
+input,select,textarea{
+  width:100%;
+  color:var(--text);
+  background:#0f0913;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:8px 10px;
+}
+input[type="range"]{padding:0;accent-color:#d58af0}
+input[type="checkbox"]{width:20px;height:20px;min-height:0;accent-color:#d58af0}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:3px solid rgba(255,212,107,.42);
+  outline-offset:2px;
+}
+.app{max-width:1420px;margin:0 auto}
+.topbar{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:14px;
+}
+.topbar h1{margin:0;font-size:30px;line-height:1}
+.topbar p{margin:7px 0 0;color:var(--muted);font-size:14px;line-height:1.45;max-width:760px}
+.badge{
+  flex:0 0 auto;
+  border:1px solid rgba(255,212,107,.20);
+  background:rgba(255,212,107,.07);
+  color:#f3d88f;
+  border-radius:999px;
+  padding:8px 11px;
+  font-size:14px;
+  font-weight:800;
+}
+.toolbar{
+  display:grid;
+  grid-template-columns:minmax(190px,1fr) 170px auto auto auto;
+  gap:9px;
+  align-items:end;
+  padding:11px;
+  border:1px solid var(--line);
+  background:rgba(23,16,28,.94);
+  border-radius:16px;
+  margin-bottom:12px;
+}
+.field{display:grid;gap:6px;min-width:0}
+.field label{font-size:14px;font-weight:800;color:#d9cadf}
+.toggle{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 4px;
+  color:#d9cadf;
+  font-weight:750;
+}
+.main{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 390px;
+  gap:12px;
+  align-items:start;
+}
+.workspace,.sidebar{
+  border:1px solid var(--line);
+  background:rgba(23,16,28,.95);
+  border-radius:18px;
+}
+.workspace{padding:12px}
+.stage-shell{
+  position:relative;
+  display:grid;
+  place-items:center;
+  min-height:620px;
+  overflow:hidden;
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 50% 48%,rgba(100,38,133,.24),transparent 34%),
+    radial-gradient(circle at 50% 48%,rgba(255,205,104,.06),transparent 56%),
+    #09040c;
+}
+.stage{
+  --stage-size:min(72vw,560px);
+  position:relative;
+  width:min(100%,560px);
+  aspect-ratio:1;
+  overflow:visible;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.stage.guides::before,
+.stage.guides::after{
+  content:"";
+  position:absolute;
+  z-index:30;
+  pointer-events:none;
+  background:rgba(255,212,107,.18);
+}
+.stage.guides::before{left:50%;top:0;bottom:0;width:1px}
+.stage.guides::after{top:50%;left:0;right:0;height:1px}
+.stage-ring{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:70%;
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:1px dashed rgba(255,255,255,.08);
+  pointer-events:none;
+}
+.anim-layer{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  transform-origin:50% 50%;
+  pointer-events:none;
+  will-change:transform,opacity,filter;
+}
+.anim-layer.selected{
+  outline:2px solid rgba(255,212,107,.78);
+  outline-offset:5px;
+}
+.asset-layer{
+  width:72%;
+  height:72%;
+  object-fit:contain;
+  filter:drop-shadow(0 18px 24px rgba(0,0,0,.45));
+}
+#treasureLayer{width:42%;height:34%;z-index:7}
+#closedLayer,#openLayer{z-index:6}
+#openLayer{opacity:0}
+#raysLayer{
+  z-index:2;
+  width:108%;
+  aspect-ratio:1;
+  border-radius:50%;
+  background:repeating-conic-gradient(
+    from 0deg,
+    rgba(255,239,190,.32) 0 3deg,
+    rgba(220,174,255,.18) 3deg 7deg,
+    transparent 7deg 19deg
+  );
+  -webkit-mask:radial-gradient(circle,transparent 0 18%,#000 31% 67%,transparent 82%);
+  mask:radial-gradient(circle,transparent 0 18%,#000 31% 67%,transparent 82%);
+}
+#auraLayer{
+  z-index:1;
+  width:72%;
+  aspect-ratio:1;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,239,190,.42) 0 7%,rgba(210,125,255,.28) 22%,rgba(134,61,199,.12) 49%,transparent 72%);
+  filter:blur(12px);
+}
+#shockLayer{
+  z-index:5;
+  width:42%;
+  aspect-ratio:1;
+  border-radius:50%;
+  border:2px solid rgba(255,237,186,.78);
+  box-shadow:0 0 26px rgba(213,128,255,.42);
+}
+.drag-target{
+  position:absolute;
+  z-index:40;
+  left:50%;
+  top:50%;
+  width:58%;
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:18px;
+  cursor:grab;
+  touch-action:none;
+}
+.drag-target:active{cursor:grabbing}
+.drag-target.hidden{display:none}
+.stage-caption{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:8px;
+  color:var(--muted);
+  font-size:14px;
+}
+.timeline-card{
+  margin-top:11px;
+  padding:12px;
+  border:1px solid var(--line);
+  background:#110a15;
+  border-radius:14px;
+}
+.transport{
+  display:grid;
+  grid-template-columns:auto auto 1fr auto;
+  gap:8px;
+  align-items:center;
+}
+.time-readout{
+  min-width:92px;
+  text-align:right;
+  color:#f2da97;
+  font-variant-numeric:tabular-nums;
+  font-weight:850;
+}
+.timeline-wrap{position:relative;margin-top:11px;padding-top:25px}
+#timeline{width:100%}
+.markers{
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:23px;
+  pointer-events:none;
+}
+.marker{
+  position:absolute;
+  top:3px;
+  width:8px;
+  height:16px;
+  border-radius:999px;
+  transform:translateX(-50%);
+  background:var(--gold);
+  box-shadow:0 0 9px rgba(255,212,107,.32);
+}
+.marker.active{height:20px;top:1px;background:#fff1bd}
+.sidebar{
+  padding:12px;
+  display:grid;
+  gap:12px;
+  max-height:calc(100dvh - 110px);
+  overflow:auto;
+}
+.section{
+  padding:12px;
+  border:1px solid var(--line);
+  background:#120a16;
+  border-radius:14px;
+}
+.section h2{margin:0 0 10px;font-size:16px}
+.layer-list{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.layer-btn{
+  min-width:0;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.layer-btn::before{
+  content:"";
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#76617c;
+  flex:0 0 auto;
+}
+.layer-btn.active{
+  border-color:rgba(255,212,107,.62);
+  background:#3b293a;
+  color:#ffe397;
+}
+.layer-btn.active::before{background:var(--gold);box-shadow:0 0 10px rgba(255,212,107,.48)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.control-row{
+  display:grid;
+  grid-template-columns:1fr 82px;
+  align-items:end;
+  gap:7px;
+  margin-top:9px;
+}
+.control-row input[type="number"]{font-variant-numeric:tabular-nums}
+.key-actions,.preset-actions,.export-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:10px;
+}
+.preset-actions{grid-template-columns:repeat(3,1fr)}
+.preset-actions button{padding:0 7px}
+.keyframes{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+}
+.key-chip{
+  min-height:38px;
+  padding:0 10px;
+  font-variant-numeric:tabular-nums;
+}
+.key-chip.active{border-color:var(--gold);color:var(--gold);background:#362638}
+.spin-row{
+  display:grid;
+  grid-template-columns:auto 1fr 78px;
+  align-items:center;
+  gap:8px;
+  margin-top:10px;
+}
+.spin-row label{font-size:14px;color:#d9cadf}
+.help{
+  margin:9px 0 0;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.45;
+}
+.output{
+  min-height:160px;
+  resize:vertical;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  line-height:1.4;
+  font-size:14px;
+}
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:max(20px,env(safe-area-inset-bottom));
+  z-index:100;
+  transform:translate(-50%,18px);
+  opacity:0;
+  pointer-events:none;
+  padding:10px 14px;
+  border:1px solid rgba(255,212,107,.25);
+  background:rgba(31,16,38,.96);
+  color:#ffe49b;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:800;
+  transition:.2s ease;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:980px){
+  body{padding:12px}
+  .main{grid-template-columns:1fr}
+  .sidebar{max-height:none;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sidebar .wide{grid-column:1/-1}
+  .stage-shell{min-height:520px}
+}
+@media(max-width:640px){
+  .topbar{align-items:flex-start;flex-direction:column}
+  .toolbar{grid-template-columns:1fr 1fr}
+  .toolbar .wide-mobile{grid-column:1/-1}
+  .sidebar{grid-template-columns:1fr}
+  .sidebar .wide{grid-column:auto}
+  .stage-shell{min-height:390px}
+  .transport{grid-template-columns:auto auto 1fr}
+  .time-readout{grid-column:1/-1;text-align:left}
+  .preset-actions{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div>
+      <h1>Animation Studio</h1>
+      <p>Build GemDrop reveal animations visually. Scrub to a moment, move the selected layer, tune its values, set a keyframe, then preview the whole sequence. Export the recipe and send it back to me.</p>
+    </div>
+    <div class="badge">GemDrop tool</div>
+  </header>
+
+  <section class="toolbar">
+    <div class="field">
+      <label for="rewardAsset">Treasure preview</label>
+      <select id="rewardAsset"></select>
+    </div>
+    <div class="field">
+      <label for="durationInput">Duration (ms)</label>
+      <input id="durationInput" type="number" min="300" max="8000" step="50">
+    </div>
+    <label class="toggle"><input id="guideToggle" type="checkbox" checked> Guides</label>
+    <button id="resetButton" type="button">Reset reveal</button>
+    <button id="playTop" class="primary wide-mobile" type="button">Play animation</button>
+  </section>
+
+  <div class="main">
+    <section class="workspace">
+      <div class="stage-shell">
+        <div>
+          <div id="stage" class="stage guides">
+            <div class="stage-ring"></div>
+            <div id="auraLayer" class="anim-layer"></div>
+            <div id="raysLayer" class="anim-layer"></div>
+            <div id="shockLayer" class="anim-layer"></div>
+            <img id="closedLayer" class="anim-layer asset-layer" src="../assets/treasures/chest-closed.png" alt="">
+            <img id="openLayer" class="anim-layer asset-layer" src="../assets/treasures/chest-open.png" alt="">
+            <img id="treasureLayer" class="anim-layer asset-layer" src="../assets/treasures/silver-ring.png" alt="">
+            <div id="dragTarget" class="drag-target" aria-label="Drag selected layer"></div>
+          </div>
+          <div class="stage-caption">
+            <span>Drag the selected layer directly on the stage</span>
+            <span>Centre is 0, 0</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="timeline-card">
+        <div class="transport">
+          <button id="playButton" class="primary" type="button">Play</button>
+          <button id="restartButton" type="button">Restart</button>
+          <span></span>
+          <div id="timeReadout" class="time-readout">0 / 1600 ms</div>
+        </div>
+        <div class="timeline-wrap">
+          <div id="markers" class="markers"></div>
+          <input id="timeline" type="range" min="0" max="1600" step="1" value="0" aria-label="Animation timeline">
+        </div>
+      </section>
+    </section>
+
+    <aside class="sidebar">
+      <section class="section wide">
+        <h2>Layers</h2>
+        <div id="layerList" class="layer-list"></div>
+        <p class="help">Select what you want to animate. Chest, treasure, rays, aura and shockwave all use the same centre point.</p>
+      </section>
+
+      <section class="section">
+        <h2>Current pose</h2>
+        <div class="grid2">
+          <div class="field"><label for="xInput">X</label><input id="xInput" type="number" min="-200" max="200" step="1"></div>
+          <div class="field"><label for="yInput">Y</label><input id="yInput" type="number" min="-200" max="200" step="1"></div>
+        </div>
+        <div class="control-row">
+          <div class="field"><label for="scaleRange">Scale</label><input id="scaleRange" type="range" min="0" max="2.5" step="0.01"></div>
+          <input id="scaleInput" type="number" min="0" max="2.5" step="0.01" aria-label="Scale">
+        </div>
+        <div class="control-row">
+          <div class="field"><label for="rotationRange">Rotation</label><input id="rotationRange" type="range" min="-360" max="360" step="1"></div>
+          <input id="rotationInput" type="number" min="-360" max="360" step="1" aria-label="Rotation">
+        </div>
+        <div class="control-row">
+          <div class="field"><label for="opacityRange">Opacity</label><input id="opacityRange" type="range" min="0" max="1" step="0.01"></div>
+          <input id="opacityInput" type="number" min="0" max="1" step="0.01" aria-label="Opacity">
+        </div>
+        <div class="field" style="margin-top:9px">
+          <label for="easeSelect">Ease into this keyframe</label>
+          <select id="easeSelect">
+            <option value="linear">Linear</option>
+            <option value="easeOut">Ease out</option>
+            <option value="easeIn">Ease in</option>
+            <option value="easeInOut">Ease in/out</option>
+            <option value="backOut">Back out</option>
+          </select>
+        </div>
+        <div class="key-actions">
+          <button id="centerButton" type="button">Centre layer</button>
+          <button id="setKeyButton" class="primary" type="button">Set keyframe</button>
+          <button id="deleteKeyButton" class="danger" type="button">Delete keyframe</button>
+          <button id="duplicateKeyButton" type="button">Duplicate +100ms</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Keyframes</h2>
+        <div id="keyframes" class="keyframes"></div>
+        <p class="help">Scrub anywhere, change the pose, then tap Set keyframe. Existing keyframes at that time are updated.</p>
+      </section>
+
+      <section class="section">
+        <h2>Quick moves</h2>
+        <div class="preset-actions">
+          <button data-preset="pop" type="button">Pop in</button>
+          <button data-preset="shake" type="button">Shake</button>
+          <button data-preset="burst" type="button">Burst out</button>
+          <button data-preset="fade" type="button">Fade in</button>
+          <button data-preset="settle" type="button">Settle</button>
+          <button data-preset="clear" type="button">Clear layer</button>
+        </div>
+        <p class="help">Quick moves insert a small keyframe sequence starting at the current timeline position. You can edit every generated keyframe afterwards.</p>
+      </section>
+
+      <section id="spinSection" class="section">
+        <h2>Continuous spin</h2>
+        <div class="spin-row">
+          <input id="spinToggle" type="checkbox">
+          <label for="spinToggle">Spin this layer</label>
+          <input id="spinSpeed" type="number" min="-360" max="360" step="1" value="36" aria-label="Degrees per second">
+        </div>
+        <p class="help">Ideal for the starburst. Positive values rotate clockwise. The spin is layered on top of your keyframes.</p>
+      </section>
+
+      <section class="section wide">
+        <h2>Export</h2>
+        <textarea id="output" class="output" readonly></textarea>
+        <div class="export-actions">
+          <button id="copyButton" class="primary" type="button">Copy recipe</button>
+          <button id="downloadButton" type="button">Download JSON</button>
+          <button id="importButton" type="button">Import JSON</button>
+          <button id="copyPromptButton" type="button">Copy for ChatGPT</button>
+        </div>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+        <p class="help">Drafts save automatically in this browser. The exported recipe contains every keyframe, easing choice, layer position and spin setting.</p>
+      </section>
+    </aside>
+  </div>
+</main>
+<div id="toast" class="toast">Copied</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const ASSETS=[
+    ['Silver Ring','silver-ring.png'],
+    ['Sunburst Brooch','sun-brooch.png'],
+    ['Heart Pendant','heart-pendant.png'],
+    ['Royal Signet','signet-ring.png'],
+    ['Moon Necklace','moon-necklace.png'],
+    ['Ceremonial Goblet','ceremonial-goblet.png'],
+    ['Ornate Chalice','ornate-chalice.png'],
+    ['Moon Tiara','moon-tiara.png'],
+    ['Crown Reliquary','crown-reliquary.png'],
+    ['Sovereign Crown','sovereign-crown.png'],
+    ['Star Sceptre','star-sceptre.png']
+  ];
+
+  const LAYERS=[
+    ['closed','Closed chest'],
+    ['open','Open chest'],
+    ['treasure','Treasure'],
+    ['rays','Starburst'],
+    ['aura','Aura'],
+    ['shock','Shockwave']
+  ];
+
+  const el=id=>document.getElementById(id);
+  const els={
+    stage:el('stage'),
+    dragTarget:el('dragTarget'),
+    rewardAsset:el('rewardAsset'),
+    durationInput:el('durationInput'),
+    guideToggle:el('guideToggle'),
+    resetButton:el('resetButton'),
+    playTop:el('playTop'),
+    playButton:el('playButton'),
+    restartButton:el('restartButton'),
+    timeline:el('timeline'),
+    markers:el('markers'),
+    timeReadout:el('timeReadout'),
+    layerList:el('layerList'),
+    xInput:el('xInput'),
+    yInput:el('yInput'),
+    scaleRange:el('scaleRange'),
+    scaleInput:el('scaleInput'),
+    rotationRange:el('rotationRange'),
+    rotationInput:el('rotationInput'),
+    opacityRange:el('opacityRange'),
+    opacityInput:el('opacityInput'),
+    easeSelect:el('easeSelect'),
+    centerButton:el('centerButton'),
+    setKeyButton:el('setKeyButton'),
+    deleteKeyButton:el('deleteKeyButton'),
+    duplicateKeyButton:el('duplicateKeyButton'),
+    keyframes:el('keyframes'),
+    spinToggle:el('spinToggle'),
+    spinSpeed:el('spinSpeed'),
+    output:el('output'),
+    copyButton:el('copyButton'),
+    downloadButton:el('downloadButton'),
+    importButton:el('importButton'),
+    importFile:el('importFile'),
+    copyPromptButton:el('copyPromptButton'),
+    toast:el('toast')
+  };
+
+  const layerEls={
+    closed:el('closedLayer'),
+    open:el('openLayer'),
+    treasure:el('treasureLayer'),
+    rays:el('raysLayer'),
+    aura:el('auraLayer'),
+    shock:el('shockLayer')
+  };
+
+  const DEFAULT={
+    format:'gemdrop-animation-recipe',
+    formatVersion:1,
+    target:'treasure-reveal',
+    duration:1600,
+    rewardAsset:'silver-ring.png',
+    layers:{
+      closed:{
+        spin:{enabled:false,degPerSec:0},
+        keyframes:[
+          {t:0,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
+          {t:180,x:0,y:0,scale:.84,rotation:0,opacity:1,ease:'backOut'},
+          {t:300,x:0,y:0,scale:.76,rotation:0,opacity:1,ease:'easeOut'},
+          {t:380,x:-8,y:0,scale:.79,rotation:-4,opacity:1,ease:'easeOut'},
+          {t:460,x:9,y:0,scale:.82,rotation:4.5,opacity:1,ease:'easeOut'},
+          {t:540,x:-7,y:0,scale:.84,rotation:-3,opacity:1,ease:'easeOut'},
+          {t:620,x:6,y:0,scale:.86,rotation:2,opacity:1,ease:'easeOut'},
+          {t:760,x:0,y:0,scale:.88,rotation:0,opacity:1,ease:'easeOut'},
+          {t:940,x:0,y:0,scale:1.12,rotation:0,opacity:0,ease:'easeOut'}
+        ]
+      },
+      open:{
+        spin:{enabled:false,degPerSec:0},
+        keyframes:[
+          {t:0,x:0,y:0,scale:.46,rotation:0,opacity:0,ease:'linear'},
+          {t:760,x:0,y:0,scale:.46,rotation:0,opacity:0,ease:'linear'},
+          {t:910,x:0,y:0,scale:.84,rotation:0,opacity:1,ease:'backOut'},
+          {t:1040,x:0,y:0,scale:.78,rotation:0,opacity:1,ease:'easeOut'},
+          {t:1190,x:0,y:0,scale:1.10,rotation:0,opacity:0,ease:'easeOut'}
+        ]
+      },
+      treasure:{
+        spin:{enabled:false,degPerSec:0},
+        keyframes:[
+          {t:0,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
+          {t:1190,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
+          {t:1380,x:0,y:0,scale:1.08,rotation:0,opacity:1,ease:'backOut'},
+          {t:1500,x:0,y:0,scale:.97,rotation:0,opacity:1,ease:'easeOut'},
+          {t:1600,x:0,y:0,scale:1,rotation:0,opacity:1,ease:'easeOut'}
+        ]
+      },
+      rays:{
+        spin:{enabled:true,degPerSec:36},
+        keyframes:[
+          {t:0,x:0,y:0,scale:.96,rotation:0,opacity:.42,ease:'linear'},
+          {t:760,x:0,y:0,scale:1.04,rotation:0,opacity:.76,ease:'easeOut'},
+          {t:1240,x:0,y:0,scale:1,rotation:0,opacity:.68,ease:'easeOut'},
+          {t:1600,x:0,y:0,scale:1,rotation:0,opacity:.68,ease:'linear'}
+        ]
+      },
+      aura:{
+        spin:{enabled:false,degPerSec:0},
+        keyframes:[
+          {t:0,x:0,y:0,scale:.90,rotation:0,opacity:.36,ease:'linear'},
+          {t:800,x:0,y:0,scale:1.06,rotation:0,opacity:.62,ease:'easeInOut'},
+          {t:1600,x:0,y:0,scale:.94,rotation:0,opacity:.45,ease:'easeInOut'}
+        ]
+      },
+      shock:{
+        spin:{enabled:false,degPerSec:0},
+        keyframes:[
+          {t:0,x:0,y:0,scale:.42,rotation:0,opacity:0,ease:'linear'},
+          {t:760,x:0,y:0,scale:.42,rotation:0,opacity:.82,ease:'linear'},
+          {t:1120,x:0,y:0,scale:2.18,rotation:0,opacity:0,ease:'easeOut'}
+        ]
+      }
+    }
+  };
+
+  const clone=v=>JSON.parse(JSON.stringify(v));
+  let state=loadDraft()||clone(DEFAULT);
+  let selected='closed';
+  let time=0;
+  let playing=false;
+  let playStart=0;
+  let playFrom=0;
+  let raf=0;
+  let drag=null;
+
+  function normalizeState(candidate){
+    const next=clone(DEFAULT);
+    if(!candidate||candidate.format!=='gemdrop-animation-recipe') return next;
+    next.duration=Math.max(300,Math.min(8000,Number(candidate.duration)||1600));
+    next.rewardAsset=ASSETS.some(a=>a[1]===candidate.rewardAsset)?candidate.rewardAsset:next.rewardAsset;
+
+    for(const [key] of LAYERS){
+      if(!candidate.layers||!candidate.layers[key]) continue;
+      const incoming=candidate.layers[key];
+      if(incoming.spin){
+        next.layers[key].spin.enabled=!!incoming.spin.enabled;
+        next.layers[key].spin.degPerSec=Math.max(-360,Math.min(360,Number(incoming.spin.degPerSec)||0));
+      }
+      if(Array.isArray(incoming.keyframes)&&incoming.keyframes.length){
+        next.layers[key].keyframes=incoming.keyframes.map(k=>({
+          t:Math.max(0,Math.min(next.duration,Number(k.t)||0)),
+          x:Math.max(-200,Math.min(200,Number(k.x)||0)),
+          y:Math.max(-200,Math.min(200,Number(k.y)||0)),
+          scale:Math.max(0,Math.min(2.5,Number(k.scale)||0)),
+          rotation:Math.max(-360,Math.min(360,Number(k.rotation)||0)),
+          opacity:Math.max(0,Math.min(1,Number(k.opacity)||0)),
+          ease:['linear','easeOut','easeIn','easeInOut','backOut'].includes(k.ease)?k.ease:'easeOut'
+        })).sort((a,b)=>a.t-b.t);
+      }
+    }
+    return next;
+  }
+
+  function loadDraft(){
+    try{
+      const raw=localStorage.getItem('gemdrop-animation-studio-v1');
+      return raw?normalizeState(JSON.parse(raw)):null;
+    }catch(_){return null}
+  }
+
+  function saveDraft(){
+    try{localStorage.setItem('gemdrop-animation-studio-v1',JSON.stringify(state))}catch(_){}
+    updateOutput();
+  }
+
+  function toast(msg){
+    els.toast.textContent=msg;
+    els.toast.classList.add('show');
+    window.clearTimeout(toast._t);
+    toast._t=window.setTimeout(()=>els.toast.classList.remove('show'),1300);
+  }
+
+  function ease(name,p){
+    p=Math.max(0,Math.min(1,p));
+    if(name==='easeIn') return p*p*p;
+    if(name==='easeOut') return 1-Math.pow(1-p,3);
+    if(name==='easeInOut') return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+    if(name==='backOut'){
+      const c1=1.70158,c3=c1+1;
+      return 1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2);
+    }
+    return p;
+  }
+
+  function lerp(a,b,p){return a+(b-a)*p}
+
+  function poseAt(layerKey,t){
+    const layer=state.layers[layerKey];
+    const keys=layer.keyframes.slice().sort((a,b)=>a.t-b.t);
+    if(!keys.length) return {t,x:0,y:0,scale:1,rotation:0,opacity:1,ease:'linear'};
+    if(t<=keys[0].t) return {...keys[0]};
+    if(t>=keys[keys.length-1].t){
+      const last={...keys[keys.length-1]};
+      if(layer.spin.enabled) last.rotation+=(layer.spin.degPerSec*t/1000);
+      return last;
+    }
+
+    let a=keys[0],b=keys[1];
+    for(let i=1;i<keys.length;i++){
+      if(t<=keys[i].t){a=keys[i-1];b=keys[i];break}
+    }
+    const raw=(t-a.t)/Math.max(1,b.t-a.t);
+    const p=ease(b.ease,raw);
+    const pose={
+      t,
+      x:lerp(a.x,b.x,p),
+      y:lerp(a.y,b.y,p),
+      scale:lerp(a.scale,b.scale,p),
+      rotation:lerp(a.rotation,b.rotation,p),
+      opacity:lerp(a.opacity,b.opacity,p),
+      ease:b.ease
+    };
+    if(layer.spin.enabled) pose.rotation+=(layer.spin.degPerSec*t/1000);
+    return pose;
+  }
+
+  function applyPose(key,pose){
+    const node=layerEls[key];
+    node.style.transform='translate(-50%,-50%) translate('+pose.x+'px,'+pose.y+'px) scale('+pose.scale+') rotate('+pose.rotation+'deg)';
+    node.style.opacity=String(pose.opacity);
+    node.classList.toggle('selected',key===selected&&!playing);
+  }
+
+  function render(){
+    for(const [key] of LAYERS) applyPose(key,poseAt(key,time));
+    els.timeline.value=String(Math.round(time));
+    els.timeReadout.textContent=Math.round(time)+' / '+state.duration+' ms';
+    syncInspector();
+    renderMarkers();
+  }
+
+  function syncInspector(){
+    const pose=poseAt(selected,time);
+    const layer=state.layers[selected];
+    const exact=layer.keyframes.find(k=>Math.abs(k.t-time)<.5);
+    const controls=[
+      [els.xInput,'x',pose.x],
+      [els.yInput,'y',pose.y],
+      [els.scaleRange,'scale',pose.scale],
+      [els.scaleInput,'scale',pose.scale],
+      [els.rotationRange,'rotation',pose.rotation-(layer.spin.enabled?layer.spin.degPerSec*time/1000:0)],
+      [els.rotationInput,'rotation',pose.rotation-(layer.spin.enabled?layer.spin.degPerSec*time/1000:0)],
+      [els.opacityRange,'opacity',pose.opacity],
+      [els.opacityInput,'opacity',pose.opacity]
+    ];
+    controls.forEach(([node,key,val])=>{
+      if(document.activeElement!==node) node.value=key==='scale'||key==='opacity'?Number(val).toFixed(2):Math.round(val*10)/10;
+    });
+    if(document.activeElement!==els.easeSelect) els.easeSelect.value=exact?exact.ease:'easeOut';
+    els.spinToggle.checked=!!layer.spin.enabled;
+    if(document.activeElement!==els.spinSpeed) els.spinSpeed.value=layer.spin.degPerSec;
+    els.deleteKeyButton.disabled=!exact;
+  }
+
+  function setTime(next){
+    time=Math.max(0,Math.min(state.duration,Number(next)||0));
+    render();
+  }
+
+  function stop(){
+    playing=false;
+    cancelAnimationFrame(raf);
+    els.playButton.textContent='Play';
+    els.playTop.textContent='Play animation';
+    render();
+  }
+
+  function play(){
+    if(playing){stop();return}
+    if(time>=state.duration-1) time=0;
+    playing=true;
+    playFrom=time;
+    playStart=performance.now();
+    els.playButton.textContent='Pause';
+    els.playTop.textContent='Pause';
+    for(const [key] of LAYERS) layerEls[key].classList.remove('selected');
+
+    const frame=now=>{
+      if(!playing) return;
+      const next=playFrom+(now-playStart);
+      if(next>=state.duration){
+        time=state.duration;
+        render();
+        stop();
+        return;
+      }
+      time=next;
+      for(const [key] of LAYERS) applyPose(key,poseAt(key,time));
+      els.timeline.value=String(Math.round(time));
+      els.timeReadout.textContent=Math.round(time)+' / '+state.duration+' ms';
+      raf=requestAnimationFrame(frame);
+    };
+    raf=requestAnimationFrame(frame);
+  }
+
+  function renderLayers(){
+    els.layerList.innerHTML='';
+    for(const [key,label] of LAYERS){
+      const btn=document.createElement('button');
+      btn.className='layer-btn'+(key===selected?' active':'');
+      btn.type='button';
+      btn.textContent=label;
+      btn.onclick=()=>selectLayer(key);
+      els.layerList.appendChild(btn);
+    }
+  }
+
+  function selectLayer(key){
+    selected=key;
+    renderLayers();
+    renderKeyframes();
+    render();
+  }
+
+  function renderKeyframes(){
+    els.keyframes.innerHTML='';
+    const keys=state.layers[selected].keyframes;
+    keys.forEach((k,index)=>{
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='key-chip'+(Math.abs(k.t-time)<.5?' active':'');
+      btn.textContent=k.t+' ms';
+      btn.title='Keyframe '+(index+1);
+      btn.onclick=()=>setTime(k.t);
+      els.keyframes.appendChild(btn);
+    });
+  }
+
+  function renderMarkers(){
+    els.markers.innerHTML='';
+    for(const k of state.layers[selected].keyframes){
+      const m=document.createElement('i');
+      m.className='marker'+(Math.abs(k.t-time)<.5?' active':'');
+      m.style.left=(k.t/state.duration*100)+'%';
+      els.markers.appendChild(m);
+    }
+    renderKeyframes();
+  }
+
+  function currentBasePose(){
+    const layer=state.layers[selected];
+    const pose=poseAt(selected,time);
+    const spin=layer.spin.enabled?layer.spin.degPerSec*time/1000:0;
+    return {
+      t:Math.round(time),
+      x:Number(els.xInput.value)||pose.x,
+      y:Number(els.yInput.value)||pose.y,
+      scale:Number(els.scaleInput.value),
+      rotation:Number(els.rotationInput.value)||pose.rotation-spin,
+      opacity:Number(els.opacityInput.value),
+      ease:els.easeSelect.value
+    };
+  }
+
+  function setKeyframe(frame=currentBasePose()){
+    const layer=state.layers[selected];
+    const rounded=Math.max(0,Math.min(state.duration,Math.round(frame.t)));
+    const next={...frame,t:rounded};
+    const index=layer.keyframes.findIndex(k=>Math.abs(k.t-rounded)<.5);
+    if(index>=0) layer.keyframes[index]=next;
+    else layer.keyframes.push(next);
+    layer.keyframes.sort((a,b)=>a.t-b.t);
+    time=rounded;
+    saveDraft();
+    render();
+  }
+
+  function deleteKeyframe(){
+    const layer=state.layers[selected];
+    const index=layer.keyframes.findIndex(k=>Math.abs(k.t-time)<.5);
+    if(index<0) return;
+    if(layer.keyframes.length<=1){toast('Keep at least one keyframe');return}
+    layer.keyframes.splice(index,1);
+    saveDraft();
+    render();
+  }
+
+  function duplicateKeyframe(){
+    const p=currentBasePose();
+    p.t=Math.min(state.duration,Math.round(time+100));
+    setKeyframe(p);
+  }
+
+  function updatePoseControl(){
+    stop();
+    const p=currentBasePose();
+    const node=layerEls[selected];
+    let rotation=p.rotation;
+    const spin=state.layers[selected].spin;
+    if(spin.enabled) rotation+=spin.degPerSec*time/1000;
+    applyPose(selected,{...p,rotation});
+  }
+
+  function preset(name){
+    stop();
+    const start=Math.round(time);
+    const base=currentBasePose();
+    const add=(dt,changes,easeName='easeOut')=>{
+      setKeyframe({...base,...changes,t:Math.min(state.duration,start+dt),ease:easeName});
+    };
+
+    if(name==='clear'){
+      state.layers[selected].keyframes=[{t:0,x:0,y:0,scale:1,rotation:0,opacity:1,ease:'linear'}];
+      saveDraft();
+      setTime(0);
+      return;
+    }
+    if(name==='pop'){
+      add(0,{scale:.35,opacity:0},'linear');
+      add(180,{scale:1.10,opacity:1},'backOut');
+      add(300,{scale:1,opacity:1},'easeOut');
+    }
+    if(name==='fade'){
+      add(0,{opacity:0},'linear');
+      add(260,{opacity:1},'easeOut');
+    }
+    if(name==='settle'){
+      add(0,{scale:1.08},'linear');
+      add(120,{scale:.97},'easeOut');
+      add(220,{scale:1},'easeOut');
+    }
+    if(name==='burst'){
+      add(0,{scale:1,opacity:1},'linear');
+      add(190,{scale:1.35,opacity:0},'easeOut');
+    }
+    if(name==='shake'){
+      const seq=[
+        [0,0,0],
+        [55,-8,-4],
+        [110,9,4.5],
+        [165,-7,-3],
+        [220,6,2.3],
+        [275,-4,-1.4],
+        [330,2,.6],
+        [385,0,0]
+      ];
+      seq.forEach(([dt,x,rotation],i)=>add(dt,{x:base.x+x,rotation:base.rotation+rotation,opacity:base.opacity,scale:base.scale},i?'easeOut':'linear'));
+    }
+    saveDraft();
+    setTime(start);
+  }
+
+  function updateOutput(){
+    els.output.value=JSON.stringify(state,null,2);
+  }
+
+  function exportBlob(){
+    return new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  }
+
+  function download(){
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(exportBlob());
+    a.download='gemdrop-treasure-animation.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),250);
+  }
+
+  async function copy(text,msg='Copied'){
+    try{
+      await navigator.clipboard.writeText(text);
+      toast(msg);
+    }catch(_){
+      els.output.focus();
+      els.output.select();
+      document.execCommand('copy');
+      toast(msg);
+    }
+  }
+
+  function initAssets(){
+    els.rewardAsset.innerHTML='';
+    ASSETS.forEach(([label,file])=>{
+      const o=document.createElement('option');
+      o.value=file;
+      o.textContent=label;
+      els.rewardAsset.appendChild(o);
+    });
+    els.rewardAsset.value=state.rewardAsset;
+    layerEls.treasure.src='../assets/treasures/'+state.rewardAsset;
+  }
+
+  function initControls(){
+    els.durationInput.value=state.duration;
+    els.timeline.max=state.duration;
+
+    els.rewardAsset.addEventListener('change',()=>{
+      state.rewardAsset=els.rewardAsset.value;
+      layerEls.treasure.src='../assets/treasures/'+state.rewardAsset;
+      saveDraft();
+    });
+
+    els.durationInput.addEventListener('change',()=>{
+      state.duration=Math.max(300,Math.min(8000,Number(els.durationInput.value)||1600));
+      els.durationInput.value=state.duration;
+      els.timeline.max=state.duration;
+      for(const [key] of LAYERS){
+        state.layers[key].keyframes.forEach(k=>k.t=Math.min(k.t,state.duration));
+        state.layers[key].keyframes.sort((a,b)=>a.t-b.t);
+      }
+      setTime(Math.min(time,state.duration));
+      saveDraft();
+    });
+
+    els.guideToggle.addEventListener('change',()=>els.stage.classList.toggle('guides',els.guideToggle.checked));
+    els.playButton.onclick=play;
+    els.playTop.onclick=play;
+    els.restartButton.onclick=()=>{stop();setTime(0)};
+    els.timeline.addEventListener('input',()=>{stop();setTime(els.timeline.value)});
+
+    [els.xInput,els.yInput,els.scaleRange,els.scaleInput,els.rotationRange,els.rotationInput,els.opacityRange,els.opacityInput].forEach(node=>{
+      node.addEventListener('input',()=>{
+        if(node===els.scaleRange) els.scaleInput.value=node.value;
+        if(node===els.scaleInput) els.scaleRange.value=node.value;
+        if(node===els.rotationRange) els.rotationInput.value=node.value;
+        if(node===els.rotationInput) els.rotationRange.value=node.value;
+        if(node===els.opacityRange) els.opacityInput.value=node.value;
+        if(node===els.opacityInput) els.opacityRange.value=node.value;
+        updatePoseControl();
+      });
+    });
+
+    els.centerButton.onclick=()=>{
+      els.xInput.value=0;
+      els.yInput.value=0;
+      updatePoseControl();
+    };
+    els.setKeyButton.onclick=()=>setKeyframe();
+    els.deleteKeyButton.onclick=deleteKeyframe;
+    els.duplicateKeyButton.onclick=duplicateKeyframe;
+
+    els.spinToggle.addEventListener('change',()=>{
+      state.layers[selected].spin.enabled=els.spinToggle.checked;
+      saveDraft();
+      render();
+    });
+    els.spinSpeed.addEventListener('change',()=>{
+      state.layers[selected].spin.degPerSec=Math.max(-360,Math.min(360,Number(els.spinSpeed.value)||0));
+      saveDraft();
+      render();
+    });
+
+    document.querySelectorAll('[data-preset]').forEach(btn=>btn.onclick=()=>preset(btn.dataset.preset));
+
+    els.resetButton.onclick=()=>{
+      if(!confirm('Reset the animation to the clean GemDrop reveal preset?')) return;
+      state=clone(DEFAULT);
+      selected='closed';
+      time=0;
+      stop();
+      initAssets();
+      els.durationInput.value=state.duration;
+      els.timeline.max=state.duration;
+      saveDraft();
+      renderLayers();
+      render();
+      toast('Reveal reset');
+    };
+
+    els.copyButton.onclick=()=>copy(JSON.stringify(state,null,2),'Recipe copied');
+    els.copyPromptButton.onclick=()=>copy(
+      'Use this GemDrop animation recipe and implement it exactly in myplexscripts/gemdrop. Keep all stage layers centred to the same origin and preserve the exported easing and continuous-spin settings.\n\n'+JSON.stringify(state,null,2),
+      'ChatGPT recipe copied'
+    );
+    els.downloadButton.onclick=download;
+    els.importButton.onclick=()=>els.importFile.click();
+    els.importFile.addEventListener('change',async()=>{
+      const file=els.importFile.files&&els.importFile.files[0];
+      if(!file) return;
+      try{
+        const parsed=JSON.parse(await file.text());
+        state=normalizeState(parsed);
+        selected='closed';
+        time=0;
+        stop();
+        initAssets();
+        els.durationInput.value=state.duration;
+        els.timeline.max=state.duration;
+        saveDraft();
+        renderLayers();
+        render();
+        toast('Recipe imported');
+      }catch(_){
+        alert('That JSON file is not a valid GemDrop animation recipe.');
+      }
+      els.importFile.value='';
+    });
+
+    els.dragTarget.addEventListener('pointerdown',event=>{
+      if(playing) return;
+      const pose=poseAt(selected,time);
+      drag={
+        id:event.pointerId,
+        startX:event.clientX,
+        startY:event.clientY,
+        x:pose.x,
+        y:pose.y
+      };
+      els.dragTarget.setPointerCapture(event.pointerId);
+    });
+
+    els.dragTarget.addEventListener('pointermove',event=>{
+      if(!drag||drag.id!==event.pointerId) return;
+      const rect=els.stage.getBoundingClientRect();
+      const scale=560/rect.width;
+      els.xInput.value=Math.round((drag.x+(event.clientX-drag.startX)*scale)*10)/10;
+      els.yInput.value=Math.round((drag.y+(event.clientY-drag.startY)*scale)*10)/10;
+      updatePoseControl();
+    });
+
+    const endDrag=event=>{
+      if(!drag||drag.id!==event.pointerId) return;
+      drag=null;
+    };
+    els.dragTarget.addEventListener('pointerup',endDrag);
+    els.dragTarget.addEventListener('pointercancel',endDrag);
+  }
+
+  initAssets();
+  initControls();
+  renderLayers();
+  updateOutput();
+  render();
+})();
+</script>
+</body>
+</html>
