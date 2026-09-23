@@ -7003,3 +7003,36 @@ body,
     animation:none!important;
   }
 }
+
+
+/* === SLIDER / POWER DOCK SPACING FIX 2026-09-23 === */
+/* Keep the aim control and powerups as separate flex rows. The older aim
+   padding was being added outside its fixed content-box height on iOS, which
+   visually pushed the slider over the power buttons. */
+.aim-strip{
+  box-sizing:border-box!important;
+  flex:0 0 58px!important;
+  height:58px!important;
+  min-height:58px!important;
+  max-height:58px!important;
+  margin-top:4px!important;
+  margin-bottom:8px!important;
+  padding:4px 8px!important;
+}
+
+.power-dock{
+  box-sizing:border-box!important;
+  margin-top:0!important;
+}
+
+@media(max-height:760px){
+  .aim-strip{
+    flex-basis:52px!important;
+    height:52px!important;
+    min-height:52px!important;
+    max-height:52px!important;
+    margin-bottom:6px!important;
+    padding-top:3px!important;
+    padding-bottom:3px!important;
+  }
+}
