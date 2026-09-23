@@ -222,6 +222,15 @@
     {name:'Crownstone',description:'The vault’s legendary prize, blazing with golden light.', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:206, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
+  const POWER_START_CHARGE={tumble:.44,cascade:.16,prism:.28};
+  const POWER_CHARGE_PER_MERGE={tumble:1/9,cascade:1/18,prism:1/13};
+
+  const SPECIAL_DROPS={
+    scatter:{label:'Scatter',hint:'SHAKES THE BOARD',color:0xe06cff,css:'#E06CFF'},
+    fusion:{label:'Fusion',hint:'UPGRADES FIRST GEM',color:0x5ce5ff,css:'#5CE5FF'},
+    charge:{label:'Charge',hint:'REFILLS POWERS',color:0xffd45c,css:'#FFD45C'}
+  };
+
   function gemTextureKey(tier) {
     const t=tiers[tier];
     return 'reactive-gem-'+(t?t.reactiveCut:'rectangular');
@@ -862,7 +871,16 @@
       this.limitJewels=[];
       this.statusTimer=null;
       this.statusKind='';
-      this.powerCharge={tumble:1,cascade:1,prism:1};
+      this.powerCharge={...POWER_START_CHARGE};
+      this.spawnBag=[];
+      this.spawnBagShift=-1;
+      this.lastSpawnTier=null;
+      this.spawnRepeat=0;
+      this.specialGenerated=0;
+      this.specialCountdown=6;
+      this.currentSpecial=null;
+      this.nextSpecial=null;
+      this.runDrops=0;
       this.gemMaskShape=null;
       this.gemMask=null;
       this.webglLighting=false;
@@ -1674,9 +1692,79 @@
       }
     }
 
+    spawnTierShift() {
+      const best=Math.max(0,this.bestTierReached||0);
+      if(best>=16) return 4;
+      if(best>=13) return 3;
+      if(best>=10) return 2;
+      if(best>=7) return 1;
+      return 0;
+    }
+
+    refillSpawnBag(shift=this.spawnTierShift()) {
+      const counts=[5,4,3,2,1];
+      const bag=[];
+      counts.forEach((count,index)=>{
+        const tier=Math.min(tiers.length-1,shift+index);
+        for(let i=0;i<count;i++) bag.push(tier);
+      });
+      for(let i=bag.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [bag[i],bag[j]]=[bag[j],bag[i]];
+      }
+      this.spawnBag=bag;
+      this.spawnBagShift=shift;
+    }
+
     randomSpawnTier() {
+      const shift=this.spawnTierShift();
+      if(!Array.isArray(this.spawnBag)||!this.spawnBag.length||this.spawnBagShift!==shift){
+        this.refillSpawnBag(shift);
+      }
+
+      let index=this.spawnBag.length-1;
+      let tier=this.spawnBag[index];
+      if(tier===this.lastSpawnTier&&(this.spawnRepeat||0)>=2){
+        const alt=this.spawnBag.findIndex(value=>value!==tier);
+        if(alt>=0){
+          [this.spawnBag[alt],this.spawnBag[index]]=[this.spawnBag[index],this.spawnBag[alt]];
+          tier=this.spawnBag[index];
+        }
+      }
+
+      tier=this.spawnBag.pop();
+      if(tier===this.lastSpawnTier) this.spawnRepeat=(this.spawnRepeat||0)+1;
+      else{
+        this.lastSpawnTier=tier;
+        this.spawnRepeat=1;
+      }
+      return tier;
+    }
+
+    rollSpecialDrop() {
+      this.specialGenerated=(this.specialGenerated||0)+1;
+      if(this.specialGenerated<=8) return null;
+
+      this.specialCountdown=Math.max(0,(this.specialCountdown||0)-1);
+      if(this.specialCountdown>0) return null;
+
+      this.specialCountdown=Phaser.Math.Between(14,22);
       const r=Math.random();
-      return r<.32?0:r<.59?1:r<.80?2:r<.94?3:4;
+      if(r<.52) return 'scatter';
+      if(r<.82) return 'fusion';
+      return 'charge';
+    }
+
+    announceCurrentSpecial() {
+      if(!this.currentSpecial) return;
+      const special=SPECIAL_DROPS[this.currentSpecial];
+      if(!special) return;
+      this.showStatus(
+        special.label.toUpperCase()+' GEM · '+special.hint,
+        'reward',
+        1250,
+        'sparkles'
+      );
     }
 
     startRun() {
@@ -1696,11 +1784,23 @@
       this.runPauseStartedAt=0;
 
       this.score=0;
+      this.bestTierReached=0;
+      this.spawnBag=[];
+      this.spawnBagShift=-1;
+      this.lastSpawnTier=null;
+      this.spawnRepeat=0;
+      this.specialGenerated=0;
+      this.specialCountdown=Phaser.Math.Between(5,8);
+      this.currentSpecial=null;
+      this.nextSpecial=null;
+      this.runDrops=0;
+
       this.currentTier=this.randomSpawnTier();
+      this.currentSpecial=this.rollSpecialDrop();
       this.nextTier=this.randomSpawnTier();
+      this.nextSpecial=this.rollSpecialDrop();
       this.unlockTier(this.currentTier,false);
       this.unlockTier(this.nextTier,false);
-      this.bestTierReached=0;
       this.ready=true;
       this.running=true;
       this.paused=false;
@@ -1713,7 +1813,7 @@
       this.mergeWindow=0;
       this.mergeChain=0;
       this.discoveredCuts=new Set(this.unlockedTiers);
-      this.powerCharge={tumble:1,cascade:1,prism:1};
+      this.powerCharge={...POWER_START_CHARGE};
 
       scoreEl.textContent='$0';
       this.clearStatus();
@@ -1737,17 +1837,54 @@
         this.matter.world.engine.gravity.y=this.baseGravityY;
       }
 
-      if(this.preview){
-        this.preview.destroy();
-        this.preview=null;
-      }
+      this.destroyPreview();
 
       this.time.removeAllEvents();
     }
 
+    destroyPreview() {
+      if(!this.preview) return;
+      if(this.preview.specialHalo&&this.preview.specialHalo.active){
+        this.preview.specialHalo.destroy();
+      }
+      this.preview.specialHalo=null;
+      this.preview.destroy();
+      this.preview=null;
+    }
+
+    createSpecialHalo(gameObject,specialType,tier,preview=false) {
+      const special=SPECIAL_DROPS[specialType];
+      const t=tiers[tier];
+      if(!gameObject||!special||!t) return;
+
+      const halo=this.add.circle(
+        gameObject.x,
+        gameObject.y,
+        t.r*(preview?1.08:1.06),
+        special.color,
+        .025
+      )
+        .setStrokeStyle(preview?4:3,special.color,.82)
+        .setDepth((gameObject.depth||10)+(preview?.12:.08))
+        .setBlendMode(Phaser.BlendModes.ADD);
+
+      if(this.gemMask) halo.setMask(this.gemMask);
+      gameObject.specialHalo=halo;
+      gameObject.specialPulseOffset=Math.random()*Math.PI*2;
+    }
+
+    syncSpecialHalo(gameObject,time) {
+      if(!gameObject||!gameObject.active||!gameObject.specialHalo||!gameObject.specialHalo.active) return;
+      const p=(time*.0055)+(gameObject.specialPulseOffset||0);
+      gameObject.specialHalo.x=gameObject.x;
+      gameObject.specialHalo.y=gameObject.y;
+      gameObject.specialHalo.setScale(1+Math.sin(p)*.035);
+      gameObject.specialHalo.setAlpha(.72+Math.sin(p)*.12);
+    }
+
     createDropPreview(animate=false) {
       if(!this.running||this.paused||this.metaPaused||!this.ready) return;
-      if(this.preview) this.preview.destroy();
+      this.destroyPreview();
 
       const t=tiers[this.currentTier];
       const min=WALL+t.r*COLLIDER_SCALE;
@@ -1759,7 +1896,11 @@
       this.sizeGemSprite(this.preview,this.currentTier);
       this.applyGemLighting(this.preview,this.currentTier);
       this.preview.setAlpha(1);
+      this.preview.specialType=this.currentSpecial||null;
       if(this.gemMask) this.preview.setMask(this.gemMask);
+      if(this.preview.specialType){
+        this.createSpecialHalo(this.preview,this.preview.specialType,this.currentTier,true);
+      }
 
       if(animate){
         this.preview.setAlpha(0);
@@ -1772,7 +1913,7 @@
       }
     }
 
-    createGem(x,y,tier) {
+    createGem(x,y,tier,specialType=null) {
       const t=tiers[tier];
 
       const gem=this.matter.add.image(x,y,gemTextureKey(tier),null,{
@@ -1830,6 +1971,8 @@
 
       gem.isGem=true;
       gem.tier=tier;
+      gem.specialType=specialType||null;
+      gem.specialTriggered=false;
       gem.merging=false;
       gem.born=this.time.now;
       gem.lastDingAt=0;
@@ -1842,6 +1985,9 @@
       this.gems.push(gem);
       this.createGemShadow(gem);
       this.createGemGlint(gem);
+      if(gem.specialType){
+        this.createSpecialHalo(gem,gem.specialType,tier,false);
+      }
       return gem;
     }
 
@@ -1864,6 +2010,9 @@
 
       if(gem.shadow&&gem.shadow.active) gem.shadow.destroy();
       gem.shadow=null;
+
+      if(gem.specialHalo&&gem.specialHalo.active) gem.specialHalo.destroy();
+      gem.specialHalo=null;
 
       if(gem.body) this.matter.world.remove(gem.body);
       gem.destroy();
@@ -1891,29 +2040,133 @@
       const max=W-WALL-t.r*COLLIDER_SCALE;
       const x=clamp(this.preview?this.preview.x:this.targetX,min,max);
 
-      if(this.preview){
-        this.preview.destroy();
-        this.preview=null;
-      }
+      this.destroyPreview();
 
-      const gem=this.createGem(x,DROP_Y,this.currentTier);
+      const gem=this.createGem(x,DROP_Y,this.currentTier,this.currentSpecial);
       gem.setVelocity(0,.15);
 
       this.lastDropAt=this.time.now;
       this.ready=false;
       this.dropGateGem=gem;
+      this.runDrops++;
 
       tone(180,.04,.015,'triangle');
       haptic(5);
 
       this.currentTier=this.nextTier;
+      this.currentSpecial=this.nextSpecial;
       this.nextTier=this.randomSpawnTier();
+      this.nextSpecial=this.rollSpecialDrop();
       this.unlockTier(this.currentTier,false);
       this.unlockTier(this.nextTier,false);
 
       this.updateNextPreview();
+      this.announceCurrentSpecial();
       this.updateAimHandle();
       this.updatePowerButtons();
+    }
+
+    activateSpecialGem(gem,target=null) {
+      if(!gem||!gem.active||!gem.specialType||gem.specialTriggered) return;
+      if(gem.specialType==='fusion'&&(!target||!target.active||target.specialType)) return;
+
+      gem.specialTriggered=true;
+      this.time.delayedCall(0,()=>{
+        if(!gem||!gem.active) return;
+
+        const type=gem.specialType;
+        const x=gem.x;
+        const y=gem.y;
+
+        if(type==='scatter'){
+          if(this.dropGateGem===gem) this.dropGateGem=null;
+          this.removeGem(gem);
+
+          const M=Phaser.Physics.Matter.Matter;
+          for(const other of this.gems){
+            if(!other||!other.active||!other.body) continue;
+            M.Sleeping.set(other.body,false);
+
+            const dx=other.x-x;
+            const dy=other.y-y;
+            const distance=Math.max(42,Math.hypot(dx,dy));
+            const nx=dx/distance;
+            const ny=dy/distance;
+            const falloff=1-clamp(distance/760,0,.72);
+            const force=2.3+falloff*2.4;
+
+            M.Body.setVelocity(other.body,{
+              x:clamp(other.body.velocity.x+nx*force+Phaser.Math.FloatBetween(-1.65,1.65),-10.5,10.5),
+              y:clamp(other.body.velocity.y+ny*force+Phaser.Math.FloatBetween(-1.4,1.15),-8.2,8.2)
+            });
+            M.Body.setAngularVelocity(
+              other.body,
+              clamp(other.body.angularVelocity+Phaser.Math.FloatBetween(-.13,.13),-.23,.23)
+            );
+          }
+
+          this.mergeBurst(x,y,tiers[Math.min(6,tiers.length-1)],true);
+          this.cameras.main.shake(420,.0105);
+          this.showStatus('SCATTER GEM!','reward',1100,'sparkles');
+          tone(230,.14,.03,'triangle');
+          haptic([12,18,12,24]);
+          return;
+        }
+
+        if(type==='charge'){
+          if(this.dropGateGem===gem) this.dropGateGem=null;
+          this.removeGem(gem);
+
+          for(const key of Object.keys(this.powerCharge)){
+            this.powerCharge[key]=clamp((this.powerCharge[key]||0)+.28,0,1);
+          }
+
+          this.mergeBurst(x,y,tiers[4],true);
+          this.updatePowerButtons();
+          this.showStatus('CHARGE GEM +28%','reward',1150,'zap');
+          tone(640,.13,.03,'sine');
+          haptic([8,12,8]);
+          return;
+        }
+
+        if(type==='fusion'){
+          if(!target||!target.active||target.specialType){
+            gem.specialTriggered=false;
+            return;
+          }
+
+          const tier=target.tier;
+          const next=Math.min(tier+1,tiers.length-1);
+          const vx=target.body?target.body.velocity.x*.45:0;
+          const vy=target.body?target.body.velocity.y*.30:0;
+          const tx=target.x;
+          const ty=target.y;
+
+          if(this.dropGateGem===gem) this.dropGateGem=null;
+          this.removeGem(gem);
+
+          if(next===tier){
+            this.addScore(Math.max(1,Math.round(tiers[tier].score*.5)));
+            this.mergeBurst(tx,ty,tiers[tier],true);
+            this.showStatus('FUSION GEM!','reward',1100,'sparkles');
+            return;
+          }
+
+          this.removeGem(target);
+          const upgraded=this.createGem(tx,ty,next);
+          upgraded.setVelocity(vx,vy);
+
+          this.bestTierReached=Math.max(this.bestTierReached,next);
+          this.addScore(Math.max(1,Math.round(tiers[next].score*.75)));
+          this.mergeBurst(tx,ty,tiers[next],next>=6);
+
+          if(!this.unlockedTiers.has(next)) this.unlockTier(next,true);
+
+          this.showStatus('FUSION GEM · '+tiers[next].name.toUpperCase(),'reward',1250,'sparkles');
+          tone(720,.14,.032,'sine');
+          haptic([9,16,9]);
+        }
+      });
     }
 
     onCollisionStart(event) {
@@ -1931,6 +2184,12 @@
 
         // Gem against gem.
         if(aGem&&bGem){
+          if(a.specialType||b.specialType){
+            if(a.specialType) this.activateSpecialGem(a,b);
+            if(b.specialType) this.activateSpecialGem(b,a);
+            continue;
+          }
+
           const av=a.body.velocity;
           const bv=b.body.velocity;
           const speed=Math.hypot(bv.x-av.x,bv.y-av.y);
@@ -1968,6 +2227,11 @@
 
         if(!otherBody||otherBody.label!=='vault-wall') continue;
 
+        if(gem.specialType&&gem.specialType!=='fusion'){
+          this.activateSpecialGem(gem,null);
+          continue;
+        }
+
         const v=gem.body.velocity;
         const speed=Math.hypot(v.x,v.y);
 
@@ -1980,6 +2244,7 @@
 
     queueMerge(a,b) {
       if(!a||!b||!a.active||!b.active) return;
+      if(a.specialType||b.specialType) return;
       if(a.tier!==b.tier||a.merging||b.merging) return;
 
       a.merging=true;
@@ -1990,11 +2255,11 @@
     scanForRestingMatches() {
       for(let i=0;i<this.gems.length;i++){
         const a=this.gems[i];
-        if(!a||!a.active||a.merging||!a.body) continue;
+        if(!a||!a.active||a.merging||a.specialType||!a.body) continue;
 
         for(let j=i+1;j<this.gems.length;j++){
           const b=this.gems[j];
-          if(!b||!b.active||b.merging||!b.body||a.tier!==b.tier) continue;
+          if(!b||!b.active||b.merging||b.specialType||!b.body||a.tier!==b.tier) continue;
 
           const A=a.body.bounds;
           const B=b.body.bounds;
@@ -2037,7 +2302,7 @@
         this.removeGem(a);
         this.removeGem(b);
 
-        this.rechargePowers(1);
+        this.rechargePowers(tier);
 
         this.mergeChain=this.mergeWindow>0?this.mergeChain+1:1;
         this.mergeWindow=.70;
@@ -2278,16 +2543,11 @@
       return pairs;
     }
 
-    rechargePowers(amount=1) {
-      const gains={
-        tumble:.18,
-        prism:.125,
-        cascade:.09
-      };
-
-      for(const key of Object.keys(gains)){
+    rechargePowers(mergeTier=0) {
+      const tierBonus=1+Math.min(.35,Math.max(0,mergeTier)*.035);
+      for(const key of Object.keys(POWER_CHARGE_PER_MERGE)){
         this.powerCharge[key]=clamp(
-          (this.powerCharge[key]??1)+gains[key]*amount,
+          (this.powerCharge[key]??0)+POWER_CHARGE_PER_MERGE[key]*tierBonus,
           0,
           1
         );
@@ -2314,7 +2574,7 @@
 
       buttons.tumble.disabled=!active||(this.powerCharge.tumble??0)<.999||this.gems.length===0;
       buttons.cascade.disabled=!active||(this.powerCharge.cascade??0)<.999||!canCascade;
-      buttons.prism.disabled=!active||(this.powerCharge.prism??0)<.999||!this.ready||this.currentTier>=tiers.length-1;
+      buttons.prism.disabled=!active||(this.powerCharge.prism??0)<.999||!this.ready||!!this.currentSpecial||this.currentTier>=tiers.length-1;
     }
 
     useTumble() {
@@ -2459,6 +2719,7 @@
         this.paused||
         (this.powerCharge.prism??0)<.999||
         !this.ready||
+        !!this.currentSpecial||
         this.currentTier>=tiers.length-1
       ) return;
 
@@ -2468,8 +2729,7 @@
 
       if(this.preview){
         const x=this.preview.x;
-        this.preview.destroy();
-        this.preview=null;
+        this.destroyPreview();
         this.createDropPreview(false);
         if(this.preview) this.preview.x=x;
       }
@@ -2750,6 +3010,23 @@
       const h=source.height*scale;
 
       c.drawImage(source,(nextPreview.width-w)/2,(nextPreview.height-h)/2,w,h);
+
+      if(this.nextSpecial&&SPECIAL_DROPS[this.nextSpecial]){
+        const special=SPECIAL_DROPS[this.nextSpecial];
+        const cx=nextPreview.width/2;
+        const cy=nextPreview.height/2;
+        const radius=Math.min(w,h)*.47;
+        c.save();
+        c.strokeStyle=special.css;
+        c.lineWidth=7;
+        c.globalAlpha=.92;
+        c.shadowColor=special.css;
+        c.shadowBlur=12;
+        c.beginPath();
+        c.arc(cx,cy,radius,0,Math.PI*2);
+        c.stroke();
+        c.restore();
+      }
     }
 
     update(time,delta) {
@@ -2798,6 +3075,7 @@
         if(this.mergeWindow<=0) this.mergeChain=0;
 
         if(this.preview){
+          this.syncSpecialHalo(this.preview,time);
           const t=tiers[this.currentTier];
           const min=WALL+t.r*COLLIDER_SCALE;
           const max=W-WALL-t.r*COLLIDER_SCALE;
@@ -2817,6 +3095,7 @@
 
           this.syncGemOptics(gem,time);
           this.syncGemShadow(gem);
+          this.syncSpecialHalo(gem,time);
 
           if(gem.body.isSleeping){
             Phaser.Physics.Matter.Matter.Sleeping.set(gem.body,false);
