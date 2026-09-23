@@ -1905,7 +1905,7 @@
       )
         .setDepth((gameObject.depth||10)+.055)
         .setScale(gameObject.scaleX,gameObject.scaleY)
-        .setAlpha(preview?.24:.20)
+        .setAlpha(preview ? .24 : .20)
         .setBlendMode(Phaser.BlendModes.ADD);
 
       if(this.gemMask) overlay.setMask(this.gemMask);
@@ -1973,7 +1973,7 @@
       overlay.setTint(rainbowA,rainbowB,rainbowC,rainbowD);
       overlay.setAlpha(
         baseAlpha*
-        (gameObject.specialPreview?.25:.21)*
+        (gameObject.specialPreview ? .25 : .21)*
         (.88+Math.sin(pulse)*.12)
       );
 
@@ -1989,7 +1989,7 @@
       halo.setAlpha(baseAlpha);
 
       const sparkles=gameObject.specialSparkles||[];
-      const radius=t.r*(gameObject.specialPreview?.62:.58);
+      const radius=t.r*(gameObject.specialPreview ? .62 : .58);
 
       sparkles.forEach((sparkle,index)=>{
         if(!sparkle||!sparkle.active) return;
