@@ -2460,7 +2460,7 @@
           this.addScore(masterValue);
           this.mergeBurst(x,y,tiers[tier],true);
           this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',28,{big:true});
-          this.emitMergeRewardTrails(x,y,masterValue,chargedPowerups,this.mergeChain,true);
+          this.emitMergeRewardTrails(x,y,masterValue,chargedPowerups,this.mergeChain,true,tiers[tier].color);
           this.showStatus('MASTER CUT +$'+masterValue,'reward',1450,'gem',tier);
           this.cameras.main.shake(100,.0038);
           tone(760,.15,.042,'sine');
@@ -2500,7 +2500,8 @@
           tiers[next].score,
           chargedPowerups,
           this.mergeChain,
-          next>=6
+          next>=6,
+          tiers[next].color
         );
 
         if(window.GemdropMeta){
@@ -2772,23 +2773,24 @@
       }
     }
 
-    emitMergeRewardTrails(x,y,reward,chargedPowerups=[],chain=1,big=false) {
+    emitMergeRewardTrails(x,y,reward,chargedPowerups=[],chain=1,big=false,resultColor='#FFD86F') {
       const source=this.scenePointToViewport(x,y);
       if(!source) return;
 
+      const particleColor=resultColor||'#FFD86F';
       const scoreCount=Math.min(10,5+(chain>=2?2:0)+(big?2:0));
-      this.emitHudTrail(source,scoreEl,'#FFD86F',scoreCount,70);
+      this.emitHudTrail(source,scoreEl,particleColor,scoreCount,70);
 
       const targets={
-        tumble:{el:$('powerTumble'),color:'#FFB255'},
-        cascade:{el:$('powerCascade'),color:'#DB7CFF'},
-        prism:{el:$('powerPrism'),color:'#72DFFF'}
+        tumble:$('powerTumble'),
+        cascade:$('powerCascade'),
+        prism:$('powerPrism')
       };
 
       chargedPowerups.forEach((key,index)=>{
         const target=targets[key];
-        if(!target||!target.el) return;
-        this.emitHudTrail(source,target.el,target.color,big?4:3,105+index*34);
+        if(!target) return;
+        this.emitHudTrail(source,target,particleColor,big?4:3,105+index*34);
       });
     }
 
