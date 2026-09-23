@@ -6,6 +6,9 @@ export default defineConfig({
   base: './',
   publicDir: false,
   plugins: [react()],
+  server: {
+    fs: { allow: ['..'] }
+  },
   build: {
     outDir: '../dist',
     emptyOutDir: true,
