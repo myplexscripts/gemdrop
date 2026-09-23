@@ -976,6 +976,7 @@
       this.gemVisualBounds=[];
       this.gemPipeline=null;
       this.activeGemGlints=0;
+      this.transientFx=new Set();
       this.collectionLightAngle=GEM_WORLD_LIGHT_ANGLE;
       this.collectionPointerLightAngle=null;
       this.collectionPointerLightUntil=0;
@@ -1857,6 +1858,10 @@
     startRun() {
       unlockAudio();
       syncMusic();
+
+      // Returning to the menu from the pause sheet can leave Phaser's global
+      // tween manager paused. Always resume it before constructing a new run.
+      this.tweens.resumeAll();
       this.clearRun();
 
       this.runStartUnlocked=new Set(this.unlockedTiers);
@@ -1914,6 +1919,8 @@
     }
 
     clearRun() {
+      this.clearTransientFx();
+
       for(const gem of [...this.gems]) this.removeGem(gem);
       this.gems.length=0;
       this.pendingMerges.length=0;
@@ -1928,6 +1935,36 @@
       this.destroyPreview();
 
       this.time.removeAllEvents();
+    }
+
+    trackTransientFx(gameObject) {
+      if(gameObject) this.transientFx.add(gameObject);
+      return gameObject;
+    }
+
+    destroyTransientFx(gameObject) {
+      if(!gameObject) return;
+      this.transientFx.delete(gameObject);
+      if(this.tweens) this.tweens.killTweensOf(gameObject);
+      if(gameObject.active&&typeof gameObject.destroy==='function') gameObject.destroy();
+    }
+
+    clearTransientFx() {
+      if(this.transientFx){
+        for(const fx of [...this.transientFx]) this.destroyTransientFx(fx);
+        this.transientFx.clear();
+      }
+
+      document.querySelectorAll('.reward-fly-particle').forEach(particle=>{
+        try{
+          for(const animation of particle.getAnimations()) animation.cancel();
+        }catch{}
+        particle.remove();
+      });
+
+      document.querySelectorAll('.reward-target-hit').forEach(node=>{
+        node.classList.remove('reward-target-hit');
+      });
     }
 
     destroySpecialVisuals(gameObject) {
@@ -2564,14 +2601,16 @@
         const angle=Math.random()*Math.PI*2;
         const dist=Phaser.Math.Between(big?45:28,big?96:68);
 
-        const shard=this.add.triangle(
-          x,y,
-          0,-3,
-          2.7,2.5,
-          -2.7,2.5,
-          i%3===0?0xffffff:color,
-          .90
-        ).setDepth(40).setRotation(angle);
+        const shard=this.trackTransientFx(
+          this.add.triangle(
+            x,y,
+            0,-3,
+            2.7,2.5,
+            -2.7,2.5,
+            i%3===0?0xffffff:color,
+            .90
+          ).setDepth(40).setRotation(angle)
+        );
 
         this.tweens.add({
           targets:shard,
@@ -2582,11 +2621,13 @@
           rotation:angle+Phaser.Math.FloatBetween(-1.4,1.4),
           duration:Phaser.Math.Between(250,410),
           ease:'Cubic.Out',
-          onComplete:()=>shard.destroy()
+          onComplete:()=>this.destroyTransientFx(shard)
         });
       }
 
-      const ring=this.add.circle(x,y,14,color,.08).setStrokeStyle(2,color,.68).setDepth(39);
+      const ring=this.trackTransientFx(
+        this.add.circle(x,y,14,color,.08).setStrokeStyle(2,color,.68).setDepth(39)
+      );
 
       this.tweens.add({
         targets:ring,
@@ -2594,7 +2635,7 @@
         alpha:0,
         duration:big?400:300,
         ease:'Quad.Out',
-        onComplete:()=>ring.destroy()
+        onComplete:()=>this.destroyTransientFx(ring)
       });
     }
 
@@ -2603,13 +2644,15 @@
       const color=hexToInt(colorHex);
 
       for(let i=0;i<count;i++){
-        const p=this.add.circle(
-          x,
-          y,
-          Phaser.Math.FloatBetween(1.1,2.0),
-          i===0?0xffffff:color,
-          .80
-        ).setDepth(38);
+        const p=this.trackTransientFx(
+          this.add.circle(
+            x,
+            y,
+            Phaser.Math.FloatBetween(1.1,2.0),
+            i===0?0xffffff:color,
+            .80
+          ).setDepth(38)
+        );
 
         const a=Phaser.Math.FloatBetween(-2.8,-.35);
         const d=Phaser.Math.Between(15,32);
@@ -2622,7 +2665,7 @@
           scale:.35,
           duration:160,
           ease:'Quad.Out',
-          onComplete:()=>p.destroy()
+          onComplete:()=>this.destroyTransientFx(p)
         });
       }
     }
@@ -2631,12 +2674,14 @@
       const big=!!opts.big||text.includes('× CHAIN')||text.startsWith('MASTER CUT');
       const fontSize=Math.max(big?24:18,size||18);
 
-      const burst=this.add.circle(x,y,10,0xffffff,.16)
-        .setDepth(45)
-        .setScale(.25)
-        .setBlendMode(Phaser.BlendModes.ADD);
+      const burst=this.trackTransientFx(
+        this.add.circle(x,y,10,0xffffff,.16)
+          .setDepth(45)
+          .setScale(.25)
+          .setBlendMode(Phaser.BlendModes.ADD)
+      );
 
-      const glow=this.add.text(x,y,text,{
+      const glow=this.trackTransientFx(this.add.text(x,y,text,{
         fontFamily:'Manrope, sans-serif',
         fontSize:fontSize+'px',
         fontStyle:'800',
@@ -2648,9 +2693,9 @@
         .setDepth(46)
         .setAlpha(.20)
         .setScale(.48)
-        .setBlendMode(Phaser.BlendModes.ADD);
+        .setBlendMode(Phaser.BlendModes.ADD));
 
-      const label=this.add.text(x,y,text,{
+      const label=this.trackTransientFx(this.add.text(x,y,text,{
         fontFamily:'Manrope, sans-serif',
         fontSize:fontSize+'px',
         fontStyle:'800',
@@ -2670,7 +2715,7 @@
         .setDepth(48)
         .setAlpha(0)
         .setScale(.48)
-        .setAngle(Phaser.Math.FloatBetween(-2.4,2.4));
+        .setAngle(Phaser.Math.FloatBetween(-2.4,2.4)));
 
       this.tweens.add({
         targets:burst,
@@ -2678,7 +2723,7 @@
         alpha:0,
         duration:300,
         ease:'Quad.Out',
-        onComplete:()=>burst.destroy()
+        onComplete:()=>this.destroyTransientFx(burst)
       });
 
       this.tweens.add({
@@ -2688,7 +2733,7 @@
         y:y-18,
         duration:390,
         ease:'Quad.Out',
-        onComplete:()=>glow.destroy()
+        onComplete:()=>this.destroyTransientFx(glow)
       });
 
       this.tweens.add({
@@ -2710,7 +2755,7 @@
             duration:big?820:700,
             delay:big?90:65,
             ease:'Cubic.Out',
-            onComplete:()=>label.destroy()
+            onComplete:()=>this.destroyTransientFx(label)
           });
         }
       });
@@ -3174,6 +3219,10 @@
     }
 
     returnToMenu() {
+      // The pause sheet pauses all Phaser tweens. Releasing that global pause
+      // here prevents the next run's ambient particles and effects freezing.
+      this.tweens.resumeAll();
+
       this.running=false;
       this.ready=false;
       this.paused=false;
