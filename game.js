@@ -49,7 +49,8 @@
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
   const DROP_DELAY = 300;
-  const AUTO_FIRE_DELAY = 390;
+  const AUTO_FIRE_DELAY = 820;
+  const DROP_GATE_CLEARANCE = 12;
   const AIM_CONTROL_GAIN = 1.25;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
@@ -271,8 +272,8 @@
     {name:'Crownstone',description:'The vault’s legendary prize, blazing with golden light.', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:206, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
-  const POWER_START_CHARGE={tumble:.44,cascade:.16,prism:.28};
-  const POWER_CHARGE_PER_MERGE={tumble:1/9,cascade:1/18,prism:1/13};
+  const POWER_START_CHARGE={tumble:.12,cascade:.04,prism:.08};
+  const POWER_CHARGE_PER_MERGE={tumble:1/22,cascade:1/34,prism:1/28};
 
   const SPECIAL_DROPS={
     scatter:{label:'Scatter',hint:'SHAKES THE BOARD',color:0xe06cff,css:'#E06CFF'},
@@ -1140,14 +1141,16 @@
       $('powerCascade').addEventListener('click',()=>this.useCascade());
       $('powerPrism').addEventListener('click',()=>this.usePrism());
 
-      const autoFireToggle=$('autoFireToggle');
-      if(autoFireToggle){
-        autoFireToggle.checked=this.autoFireEnabled;
-        autoFireToggle.addEventListener('change',()=>{
-          this.autoFireEnabled=!!autoFireToggle.checked;
+      const autoFireButton=$('autoFireButton');
+      if(autoFireButton){
+        this.syncAutoFireButton();
+        autoFireButton.addEventListener('click',()=>{
+          this.autoFireEnabled=!this.autoFireEnabled;
           try{
             localStorage.setItem('gemdrop-autofire',this.autoFireEnabled?'1':'0');
           }catch{}
+          this.syncAutoFireButton();
+          haptic(5);
         });
       }
 
@@ -1209,7 +1212,6 @@
         e.preventDefault();
         this.pointerHeld=true;
         aimFromEvent(e);
-        if(this.autoFireEnabled) this.dropCurrent();
         try{this.aimStrip.setPointerCapture(e.pointerId)}catch{}
       });
 
@@ -1901,6 +1903,7 @@
       this.updateAimHandle();
       this.createDropPreview(true);
       this.updatePowerButtons();
+      this.syncAutoFireButton();
     }
 
     clearRun() {
@@ -2267,12 +2270,12 @@
           this.removeGem(gem);
 
           for(const key of Object.keys(this.powerCharge)){
-            this.powerCharge[key]=clamp((this.powerCharge[key]||0)+.28,0,1);
+            this.powerCharge[key]=clamp((this.powerCharge[key]||0)+.14,0,1);
           }
 
           this.mergeBurst(x,y,tiers[4],true);
           this.updatePowerButtons();
-          this.showStatus('CHARGE GEM +28%','reward',1150,'zap');
+          this.showStatus('CHARGE GEM +14%','reward',1150,'zap');
           tone(640,.13,.03,'sine');
           haptic([8,12,8]);
           return;
@@ -2905,6 +2908,17 @@
       return charged;
     }
 
+    syncAutoFireButton() {
+      const button=$('autoFireButton');
+      if(!button) return;
+
+      button.setAttribute('aria-pressed',this.autoFireEnabled?'true':'false');
+      button.setAttribute('aria-label',this.autoFireEnabled?'Turn auto fire off':'Turn auto fire on');
+      button.title=this.autoFireEnabled?'Auto fire on':'Auto fire off';
+      button.classList.toggle('is-active',this.autoFireEnabled);
+      button.style.setProperty('--charge',this.autoFireEnabled?'1':'0');
+    }
+
     updatePowerButtons() {
       const active=this.running&&!this.paused&&!this.metaPaused;
       const canCascade=this.matchingPairs().length>0;
@@ -3413,7 +3427,7 @@
           this.createDropPreview(true);
         }else if(
           time-this.lastDropAt>=90 &&
-          gate.body.bounds.min.y>LIMIT_Y+2
+          gate.body.bounds.min.y>LIMIT_Y+DROP_GATE_CLEARANCE
         ){
           this.dropGateGem=null;
           this.ready=true;
@@ -3423,7 +3437,6 @@
 
       if(
         this.autoFireEnabled&&
-        this.pointerHeld&&
         this.running&&
         !this.paused&&
         !this.metaPaused&&
