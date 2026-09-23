@@ -330,7 +330,7 @@
     const fillFile=treasureSolidFillFile(treasure);
     if(!fillFile) return '';
     return '<svg viewBox="0 0 320 260" class="treasure-fill-art" style="overflow:hidden" aria-hidden="true">'+
-      '<image href="'+fillFile+'?v=20260922-solidfill1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+      '<image href="'+fillFile+'?v=20260923-opt1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
     '</svg>';
   }
 
@@ -339,8 +339,8 @@
     if(artFile){
       const fillFile=includeFill?treasureSolidFillFile(treasure):null;
       return '<svg viewBox="0 0 320 260" class="treasure-art'+(silhouette?' is-silhouette':'')+'" style="overflow:hidden" role="img" aria-label="'+treasure.name+'">'+
-        (fillFile?'<image href="'+fillFile+'?v=20260922-solidfill1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>':'')+
-        '<image href="'+artFile+'?v=20260922-transparentart1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
+        (fillFile?'<image href="'+fillFile+'?v=20260923-opt1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>':'')+
+        '<image href="'+artFile+'?v=20260923-opt1" x="0" y="0" width="320" height="260" preserveAspectRatio="none"/>'+
       '</svg>';
     }
 
@@ -676,7 +676,7 @@
     // so any transparent facet/edge still has the intended inlay backing.
     const backing=document.createElement('img');
     backing.className='socket-no-inlay';
-    backing.src='assets/treasures/no-inlay.png?v=20260922-noinlay2';
+    backing.src='assets/treasures/no-inlay.png?v=20260923-opt1';
     backing.alt='';
     backing.setAttribute('aria-hidden','true');
     backing.addEventListener('error',()=>{ backing.style.display='none'; },{once:true});
