@@ -2302,7 +2302,7 @@
         this.removeGem(a);
         this.removeGem(b);
 
-        this.rechargePowers(tier);
+        const chargedPowerups=this.rechargePowers(tier);
 
         this.mergeChain=this.mergeWindow>0?this.mergeChain+1:1;
         this.mergeWindow=.70;
@@ -2316,7 +2316,8 @@
           const masterValue=tiers[tier].score*2;
           this.addScore(masterValue);
           this.mergeBurst(x,y,tiers[tier],true);
-          this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',25);
+          this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',28,{big:true});
+          this.emitMergeRewardTrails(x,y,masterValue,chargedPowerups,this.mergeChain,true);
           this.showStatus('MASTER CUT +$'+masterValue,'reward',1450,'gem',tier);
           this.cameras.main.shake(100,.0038);
           tone(760,.15,.042,'sine');
@@ -2342,7 +2343,22 @@
           ? this.mergeChain+'× CHAIN  +$'+tiers[next].score
           : '+$'+tiers[next].score;
 
-        this.floatText(x,y-8,label,this.mergeChain>=2?'#ffd86f':'#ffe7c5',this.mergeChain>=2?23:18);
+        this.floatText(
+          x,
+          y-8,
+          label,
+          this.mergeChain>=2?'#ffd86f':'#ffe7c5',
+          this.mergeChain>=2?25:19,
+          {big:this.mergeChain>=2}
+        );
+        this.emitMergeRewardTrails(
+          x,
+          y,
+          tiers[next].score,
+          chargedPowerups,
+          this.mergeChain,
+          next>=6
+        );
 
         if(window.GemdropMeta){
           const progress=window.GemdropMeta.onMerge(tier,this.mergeChain,{resultTier:next});
@@ -2440,34 +2456,196 @@
       }
     }
 
-    floatText(x,y,text,color,size) {
+    floatText(x,y,text,color,size,opts={}) {
+      const big=!!opts.big||text.includes('× CHAIN')||text.startsWith('MASTER CUT');
+      const fontSize=Math.max(big?24:18,size||18);
+
+      const burst=this.add.circle(x,y,10,0xffffff,.16)
+        .setDepth(45)
+        .setScale(.25)
+        .setBlendMode(Phaser.BlendModes.ADD);
+
+      const glow=this.add.text(x,y,text,{
+        fontFamily:'Manrope, sans-serif',
+        fontSize:fontSize+'px',
+        fontStyle:'800',
+        color:color,
+        stroke:color,
+        strokeThickness:big?9:7
+      })
+        .setOrigin(.5)
+        .setDepth(46)
+        .setAlpha(.20)
+        .setScale(.48)
+        .setBlendMode(Phaser.BlendModes.ADD);
+
       const label=this.add.text(x,y,text,{
         fontFamily:'Manrope, sans-serif',
-        fontSize:Math.max(16,size||18)+'px',
+        fontSize:fontSize+'px',
         fontStyle:'800',
         color:color,
         stroke:'#23072f',
-        strokeThickness:4
-      }).setOrigin(.5).setDepth(48).setAlpha(0).setScale(.65);
+        strokeThickness:big?5:4,
+        shadow:{
+          offsetX:0,
+          offsetY:5,
+          color:'rgba(0,0,0,.48)',
+          blur:10,
+          stroke:true,
+          fill:true
+        }
+      })
+        .setOrigin(.5)
+        .setDepth(48)
+        .setAlpha(0)
+        .setScale(.48)
+        .setAngle(Phaser.Math.FloatBetween(-2.4,2.4));
+
+      this.tweens.add({
+        targets:burst,
+        scale:big?5.2:4,
+        alpha:0,
+        duration:300,
+        ease:'Quad.Out',
+        onComplete:()=>burst.destroy()
+      });
+
+      this.tweens.add({
+        targets:glow,
+        alpha:{from:.24,to:0},
+        scale:big?1.34:1.20,
+        y:y-18,
+        duration:390,
+        ease:'Quad.Out',
+        onComplete:()=>glow.destroy()
+      });
 
       this.tweens.add({
         targets:label,
         alpha:1,
-        scale:1.08,
-        y:y-10,
-        duration:120,
+        scaleX:big?1.18:1.10,
+        scaleY:big?.86:.92,
+        y:y-11,
+        angle:0,
+        duration:135,
         ease:'Back.Out',
         onComplete:()=>{
           this.tweens.add({
             targets:label,
-            y:y-44,
-            scale:1,
+            scaleX:1,
+            scaleY:1,
+            y:y-(big?58:46),
             alpha:0,
-            duration:680,
+            duration:big?820:700,
+            delay:big?90:65,
             ease:'Cubic.Out',
             onComplete:()=>label.destroy()
           });
         }
+      });
+    }
+
+    scenePointToViewport(x,y) {
+      const canvas=this.game&&this.game.canvas;
+      if(!canvas) return null;
+
+      const rect=canvas.getBoundingClientRect();
+      if(!rect.width||!rect.height) return null;
+
+      return {
+        x:rect.left+(x/W)*rect.width,
+        y:rect.top+(y/H)*rect.height
+      };
+    }
+
+    pulseRewardTarget(element) {
+      if(!element) return;
+      element.classList.remove('reward-target-hit');
+      void element.offsetWidth;
+      element.classList.add('reward-target-hit');
+      window.setTimeout(()=>element.classList.remove('reward-target-hit'),420);
+    }
+
+    emitHudTrail(source,target,color,count=4,delay=0) {
+      if(!source||!target||!document.body) return;
+
+      const rect=target.getBoundingClientRect();
+      if(!rect.width&&!rect.height) return;
+
+      const tx=rect.left+rect.width/2;
+      const ty=rect.top+rect.height/2;
+      let arrivals=0;
+
+      for(let i=0;i<count;i++){
+        const particle=document.createElement('span');
+        particle.className='reward-fly-particle';
+        particle.style.setProperty('--reward-particle-color',color);
+        particle.style.left=source.x+'px';
+        particle.style.top=source.y+'px';
+        document.body.appendChild(particle);
+
+        const jitterX=Phaser.Math.FloatBetween(-15,15);
+        const jitterY=Phaser.Math.FloatBetween(-10,10);
+        const dx=tx-source.x;
+        const dy=ty-source.y;
+        const arcX=dx*.46+Phaser.Math.FloatBetween(-36,36);
+        const arcY=dy*.40-Phaser.Math.FloatBetween(28,70);
+        const duration=Phaser.Math.Between(440,620);
+        const particleDelay=delay+i*24+Phaser.Math.Between(0,38);
+
+        const animation=particle.animate([
+          {
+            transform:'translate3d('+jitterX+'px,'+jitterY+'px,0) rotate(45deg) scale(.55)',
+            opacity:0
+          },
+          {
+            transform:'translate3d('+(jitterX*.7)+'px,'+(jitterY-8)+'px,0) rotate(95deg) scale(1.15)',
+            opacity:1,
+            offset:.14
+          },
+          {
+            transform:'translate3d('+arcX+'px,'+arcY+'px,0) rotate(210deg) scale(.92)',
+            opacity:.95,
+            offset:.58
+          },
+          {
+            transform:'translate3d('+dx+'px,'+dy+'px,0) rotate(360deg) scale(.30)',
+            opacity:.12
+          }
+        ],{
+          duration,
+          delay:particleDelay,
+          easing:'cubic-bezier(.18,.72,.22,1)',
+          fill:'forwards'
+        });
+
+        animation.onfinish=()=>{
+          particle.remove();
+          arrivals++;
+          if(arrivals===Math.max(1,Math.ceil(count*.55))){
+            this.pulseRewardTarget(target);
+          }
+        };
+      }
+    }
+
+    emitMergeRewardTrails(x,y,reward,chargedPowerups=[],chain=1,big=false) {
+      const source=this.scenePointToViewport(x,y);
+      if(!source) return;
+
+      const scoreCount=Math.min(10,5+(chain>=2?2:0)+(big?2:0));
+      this.emitHudTrail(source,scoreEl,'#FFD86F',scoreCount,70);
+
+      const targets={
+        tumble:{el:$('powerTumble'),color:'#FFB255'},
+        cascade:{el:$('powerCascade'),color:'#DB7CFF'},
+        prism:{el:$('powerPrism'),color:'#72DFFF'}
+      };
+
+      chargedPowerups.forEach((key,index)=>{
+        const target=targets[key];
+        if(!target||!target.el) return;
+        this.emitHudTrail(source,target.el,target.color,big?4:3,105+index*34);
       });
     }
 
@@ -2558,14 +2736,22 @@
 
     rechargePowers(mergeTier=0) {
       const tierBonus=1+Math.min(.35,Math.max(0,mergeTier)*.035);
+      const charged=[];
+
       for(const key of Object.keys(POWER_CHARGE_PER_MERGE)){
-        this.powerCharge[key]=clamp(
-          (this.powerCharge[key]??0)+POWER_CHARGE_PER_MERGE[key]*tierBonus,
+        const before=clamp(this.powerCharge[key]??0,0,1);
+        const after=clamp(
+          before+POWER_CHARGE_PER_MERGE[key]*tierBonus,
           0,
           1
         );
+
+        this.powerCharge[key]=after;
+        if(after>before+.0005) charged.push(key);
       }
+
       this.updatePowerButtons();
+      return charged;
     }
 
     updatePowerButtons() {
