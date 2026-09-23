@@ -278,8 +278,8 @@
     {name:'Crownstone',description:'The vault’s legendary prize, blazing with golden light.', cut:'Circular Starcut', cutKey:'brilliant', reactiveCut:'circular_starcut', r:206, score:400, color:'#FFD24A', accent:'#FFEBAE', dark:'#9E822E'}
   ];;;;
 
-  const POWER_START_CHARGE={tumble:.12,cascade:.04,prism:.08};
-  const POWER_CHARGE_PER_MERGE={tumble:1/22,cascade:1/34,prism:1/28};
+  const POWER_START_CHARGE={tumble:.02,cascade:0,prism:.01};
+  const POWER_CHARGE_PER_MERGE={tumble:1/40,cascade:1/64,prism:1/52};
 
   const SPECIAL_DROPS={
     scatter:{label:'Scatter',hint:'SHAKES THE BOARD',color:0xe06cff,css:'#E06CFF'},
@@ -2208,6 +2208,8 @@
       this.ready=false;
       this.dropGateGem=gem;
       this.runDrops++;
+      gem.dropSerial=this.runDrops;
+      gem.dropTransit=true;
 
       tone(180,.04,.015,'triangle');
       haptic(5);
@@ -2277,12 +2279,12 @@
           this.removeGem(gem);
 
           for(const key of Object.keys(this.powerCharge)){
-            this.powerCharge[key]=clamp((this.powerCharge[key]||0)+.14,0,1);
+            this.powerCharge[key]=clamp((this.powerCharge[key]||0)+.08,0,1);
           }
 
           this.mergeBurst(x,y,tiers[4],true);
           this.updatePowerButtons();
-          this.showStatus('CHARGE GEM +14%','reward',1150,'zap');
+          this.showStatus('CHARGE GEM +8%','reward',1150,'zap');
           tone(640,.13,.03,'sine');
           haptic([8,12,8]);
           return;
@@ -2405,6 +2407,15 @@
       if(!a||!b||!a.active||!b.active) return;
       if(a.specialType||b.specialType) return;
       if(a.tier!==b.tier||a.merging||b.merging) return;
+
+      // Consecutive drops may touch while both are still in transit, but they
+      // cannot merge until they have actually settled into the pile.
+      const consecutiveDrops=
+        Number.isInteger(a.dropSerial)&&
+        Number.isInteger(b.dropSerial)&&
+        Math.abs(a.dropSerial-b.dropSerial)===1;
+
+      if(consecutiveDrops&&(a.dropTransit||b.dropTransit)) return;
 
       a.merging=true;
       b.merging=true;
@@ -2896,7 +2907,7 @@
     }
 
     rechargePowers(mergeTier=0) {
-      const tierBonus=1+Math.min(.35,Math.max(0,mergeTier)*.035);
+      const tierBonus=1+Math.min(.20,Math.max(0,mergeTier)*.02);
       const charged=[];
 
       for(const key of Object.keys(POWER_CHARGE_PER_MERGE)){
@@ -3432,13 +3443,22 @@
           this.dropGateGem=null;
           this.ready=true;
           this.createDropPreview(true);
-        }else if(
-          time-this.lastDropAt>=90 &&
-          gate.body.bounds.min.y>LIMIT_Y+DROP_GATE_CLEARANCE
-        ){
-          this.dropGateGem=null;
-          this.ready=true;
-          this.createDropPreview(true);
+        }else{
+          const nextTier=tiers[this.currentTier];
+          const nextBottom=DROP_Y+(nextTier?nextTier.r*COLLIDER_SCALE:48);
+          const requiredTop=Math.max(
+            LIMIT_Y+DROP_GATE_CLEARANCE,
+            nextBottom+18
+          );
+
+          if(
+            time-this.lastDropAt>=90 &&
+            gate.body.bounds.min.y>requiredTop
+          ){
+            this.dropGateGem=null;
+            this.ready=true;
+            this.createDropPreview(true);
+          }
         }
       }
 
@@ -3488,6 +3508,17 @@
           this.syncGemOptics(gem,time);
           this.syncGemShadow(gem);
           this.syncSpecialVisuals(gem,time);
+
+          if(gem.dropTransit){
+            const age=time-gem.born;
+            const vy=Math.abs(gem.body.velocity.y);
+            if(
+              (age>260&&gem.body.speed<.82&&vy<.62) ||
+              age>1800
+            ){
+              gem.dropTransit=false;
+            }
+          }
 
           if(gem.body.isSleeping){
             Phaser.Physics.Matter.Matter.Sleeping.set(gem.body,false);
