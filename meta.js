@@ -481,10 +481,13 @@
   let rewardAnimationFrame=0;
 
   const STOCK_TREASURE_REVEAL={
+    format:'gemdrop-animation-recipe',
+    formatVersion:1,
+    target:'treasure-reveal',
     duration:1600,
     layers:{
       closed:{
-        spin:0,
+        spin:{enabled:false,degPerSec:0},
         keyframes:[
           {t:0,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
           {t:180,x:0,y:0,scale:.84,rotation:0,opacity:1,ease:'backOut'},
@@ -498,7 +501,7 @@
         ]
       },
       open:{
-        spin:0,
+        spin:{enabled:false,degPerSec:0},
         keyframes:[
           {t:0,x:0,y:0,scale:.46,rotation:0,opacity:0,ease:'linear'},
           {t:760,x:0,y:0,scale:.46,rotation:0,opacity:0,ease:'linear'},
@@ -508,7 +511,7 @@
         ]
       },
       treasure:{
-        spin:0,
+        spin:{enabled:false,degPerSec:0},
         keyframes:[
           {t:0,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
           {t:1190,x:0,y:0,scale:.34,rotation:0,opacity:0,ease:'linear'},
@@ -518,7 +521,7 @@
         ]
       },
       rays:{
-        spin:36,
+        spin:{enabled:true,degPerSec:36},
         keyframes:[
           {t:0,x:0,y:0,scale:.96,rotation:0,opacity:.42,ease:'linear'},
           {t:760,x:0,y:0,scale:1.04,rotation:0,opacity:.76,ease:'easeOut'},
@@ -527,7 +530,7 @@
         ]
       },
       aura:{
-        spin:0,
+        spin:{enabled:false,degPerSec:0},
         keyframes:[
           {t:0,x:0,y:0,scale:.90,rotation:0,opacity:.36,ease:'linear'},
           {t:800,x:0,y:0,scale:1.06,rotation:0,opacity:.62,ease:'easeInOut'},
@@ -535,7 +538,7 @@
         ]
       },
       shock:{
-        spin:0,
+        spin:{enabled:false,degPerSec:0},
         keyframes:[
           {t:0,x:0,y:0,scale:.42,rotation:0,opacity:0,ease:'linear'},
           {t:760,x:0,y:0,scale:.42,rotation:0,opacity:.82,ease:'linear'},
@@ -600,8 +603,8 @@
       };
     }
 
-    if(layer.spin){
-      pose.rotation+=layer.spin*t/1000;
+    if(layer.spin&&layer.spin.enabled){
+      pose.rotation+=(Number(layer.spin.degPerSec)||0)*t/1000;
     }
     return pose;
   }
