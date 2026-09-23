@@ -881,20 +881,27 @@
     canvas.setAttribute('aria-hidden','true');
 
     try{
+      // Inlaid gems keep their normal colour and brightness. The treasure
+      // setting should frame the gem, not shade or darken it.
+      const inlayPalette={
+        ...gem,
+        dark:gem.color
+      };
+
       const source=window.ReactiveGemSystem.renderPreviewCanvasSized
         ? window.ReactiveGemSystem.renderPreviewCanvasSized(
             socket.cut,
             gem.color,
             renderW,
             renderH,
-            gem
+            inlayPalette
           )
         : window.ReactiveGemSystem.renderPreviewCanvas(
             socket.cut,
             gem.color,
             0,
             Math.max(renderW,renderH),
-            gem
+            inlayPalette
           );
 
       canvas.width=source.width;
