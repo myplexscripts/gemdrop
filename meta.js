@@ -626,12 +626,12 @@
     if(!overlay||!stage) return;
 
     const nodes={
-      closed:stage.querySelector('.treasure-chest-closed'),
-      open:stage.querySelector('.treasure-chest-open'),
+      closed:$('treasureRevealClosed'),
+      open:$('treasureRevealOpen'),
       treasure:$('treasureRewardArt'),
-      rays:stage.querySelector('.treasure-chest-rays'),
-      aura:stage.querySelector('.treasure-chest-aura'),
-      shock:stage.querySelector('.treasure-chest-shockwave')
+      rays:$('treasureRevealRays'),
+      aura:$('treasureRevealAura'),
+      shock:$('treasureRevealShock')
     };
 
     const started=performance.now();
@@ -688,7 +688,7 @@
     const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const closedBurstAt=reduced?60:760;
     const openBurstAt=reduced?105:1040;
-    const revealAt=reduced?150:1240;
+    const revealAt=reduced?150:1600;
 
     rewardTimers.push(window.setTimeout(()=>{
       overlay.classList.add('burst');
