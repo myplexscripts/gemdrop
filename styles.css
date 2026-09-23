@@ -6177,3 +6177,152 @@ body,
     height:122px!important;
   }
 }
+
+
+/* === TREASURE REWARD ALIGNMENT FIX 2026-09-22 ===
+   One centred stage owns rays, chest and treasure. Legacy transforms are
+   explicitly neutralized so every layer shares the exact same origin. */
+.treasure-reward-card{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:0!important;
+}
+
+.treasure-chest-reveal{
+  position:relative!important;
+  width:min(340px,84vw,40dvh)!important;
+  height:auto!important;
+  aspect-ratio:1 / 1!important;
+  flex:0 0 auto!important;
+  margin:0 auto -18px!important;
+  display:block!important;
+  overflow:visible!important;
+  transform:none!important;
+  filter:none!important;
+}
+
+/* Every visual effect is centred on the same 50/50 point. */
+.treasure-chest-aura,
+.treasure-chest-rays,
+.treasure-chest-shockwave,
+.treasure-reward-art{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  margin:0!important;
+  translate:none!important;
+  transform-origin:50% 50%!important;
+}
+
+/* Rays/aura were previously being translated twice, which pushed the
+   starburst into the upper-left corner. */
+.treasure-chest-rays{
+  width:112%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  transform:translate(-50%,-50%) rotate(0deg) scale(1)!important;
+}
+.treasure-chest-aura{
+  width:72%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  transform:translate(-50%,-50%) scale(1)!important;
+}
+.treasure-chest-shockwave{
+  width:42%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  transform:translate(-50%,-50%) scale(1)!important;
+}
+
+/* Chest images remain full-stage assets and are inherently centred. */
+.treasure-chest-image{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+}
+
+/* Keep the treasure's position fixed at the exact stage centre. Use the
+   independent scale property for the pop so an older transform:none rule
+   cannot shove the artwork to the right. */
+.treasure-reward-art{
+  z-index:6!important;
+  width:min(190px,48vw)!important;
+  height:auto!important;
+  aspect-ratio:320 / 260!important;
+  opacity:0!important;
+  transform:translate(-50%,-50%)!important;
+  scale:.55;
+  filter:brightness(1.35) drop-shadow(0 15px 20px rgba(0,0,0,.42))!important;
+  pointer-events:none!important;
+}
+
+.treasure-modal.revealed .treasure-reward-art{
+  opacity:1!important;
+  transform:translate(-50%,-50%)!important;
+  animation:rewardTreasureAlignedPop .34s cubic-bezier(.12,.9,.18,1.28) both!important;
+}
+
+@keyframes rewardTreasureAlignedPop{
+  0%{opacity:0;scale:.48;filter:brightness(1.65)}
+  72%{opacity:1;scale:1.08;filter:brightness(1.12)}
+  100%{opacity:1;scale:1;filter:brightness(1)}
+}
+
+.treasure-modal.revealed .treasure-chest-rays{
+  opacity:.82!important;
+  animation:rewardTreasureAlignedRays 12s linear infinite!important;
+}
+@keyframes rewardTreasureAlignedRays{
+  from{transform:translate(-50%,-50%) rotate(0deg) scale(1)!important}
+  to{transform:translate(-50%,-50%) rotate(360deg) scale(1)!important}
+}
+
+.treasure-modal.revealed .treasure-chest-aura{
+  opacity:.72!important;
+  animation:rewardTreasureAlignedAura 1.5s ease-in-out infinite alternate!important;
+}
+@keyframes rewardTreasureAlignedAura{
+  from{transform:translate(-50%,-50%) scale(.94)!important}
+  to{transform:translate(-50%,-50%) scale(1.08)!important}
+}
+
+.treasure-reward-result{
+  position:relative!important;
+  z-index:8!important;
+  width:min(390px,100%)!important;
+  margin:0 auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  text-align:center!important;
+  transform:none!important;
+}
+
+.treasure-modal.revealed .treasure-reward-result{
+  transform:none!important;
+}
+
+.treasure-reward-result .eyebrow,
+.treasure-reward-card h2,
+.treasure-reward-copy,
+.treasure-reward-view{
+  align-self:center!important;
+}
+
+@media(max-height:720px){
+  .treasure-chest-reveal{
+    width:min(290px,76vw,37dvh)!important;
+    margin:0 auto -14px!important;
+  }
+
+  .treasure-reward-art{
+    width:min(160px,44vw)!important;
+  }
+}
