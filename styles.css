@@ -7744,3 +7744,129 @@ body,
     scale:.94!important;
   }
 }
+
+
+/* === ANIMATION STUDIO RUNTIME OVERRIDE 2026-09-23 === */
+/* The reveal is now driven by the exact Animation Studio keyframe evaluator
+   in meta.js. CSS only defines geometry and appearance. */
+.treasure-chest-reveal{
+  position:relative!important;
+  width:min(350px,86vw,43dvh)!important;
+  height:auto!important;
+  aspect-ratio:1 / 1!important;
+  margin:0 auto!important;
+  overflow:visible!important;
+  transform:none!important;
+}
+
+.treasure-chest-aura,
+.treasure-chest-rays,
+.treasure-chest-shockwave,
+.treasure-chest-image,
+.treasure-reward-art{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  inset:auto!important;
+  margin:0!important;
+  translate:none!important;
+  scale:none!important;
+  rotate:none!important;
+  transform-origin:50% 50%!important;
+  animation:none!important;
+  transition:none!important;
+  pointer-events:none!important;
+}
+
+.treasure-chest-image{
+  z-index:6!important;
+  width:72%!important;
+  height:72%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))!important;
+}
+
+.treasure-reward-art{
+  z-index:7!important;
+  width:42%!important;
+  height:34%!important;
+  aspect-ratio:auto!important;
+  filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))!important;
+}
+
+.treasure-reward-art svg{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  filter:none!important;
+}
+
+.treasure-chest-rays{
+  z-index:2!important;
+  width:108%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  border-radius:50%!important;
+  background:repeating-conic-gradient(
+    from 0deg,
+    rgba(255,239,190,.32) 0 3deg,
+    rgba(220,174,255,.18) 3deg 7deg,
+    transparent 7deg 19deg
+  )!important;
+  -webkit-mask:radial-gradient(circle,transparent 0 18%,#000 31% 67%,transparent 82%)!important;
+  mask:radial-gradient(circle,transparent 0 18%,#000 31% 67%,transparent 82%)!important;
+}
+
+.treasure-chest-aura{
+  z-index:1!important;
+  width:72%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  border-radius:50%!important;
+  background:radial-gradient(
+    circle,
+    rgba(255,239,190,.42) 0 7%,
+    rgba(210,125,255,.28) 22%,
+    rgba(134,61,199,.12) 49%,
+    transparent 72%
+  )!important;
+  filter:blur(12px)!important;
+}
+
+.treasure-chest-shockwave{
+  z-index:5!important;
+  width:42%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  border-radius:50%!important;
+  border:2px solid rgba(255,237,186,.78)!important;
+  box-shadow:0 0 26px rgba(213,128,255,.42)!important;
+  background:transparent!important;
+}
+
+/* Result copy fades in separately, but never touches the animation stage. */
+.treasure-reward-result{
+  position:relative!important;
+  z-index:8!important;
+  width:min(390px,100%)!important;
+  margin:4px auto 0!important;
+  opacity:0!important;
+  transform:translateY(12px)!important;
+  pointer-events:none!important;
+}
+
+.treasure-modal.revealed .treasure-reward-result{
+  opacity:1!important;
+  transform:translateY(0)!important;
+  pointer-events:auto!important;
+  transition:opacity .22s .08s ease,transform .34s .08s cubic-bezier(.14,.84,.24,1.12)!important;
+}
+
+@media(max-height:720px){
+  .treasure-chest-reveal{
+    width:min(300px,80vw,41dvh)!important;
+  }
+}
