@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY='gemdrop-meta-v1';
-  const CHEST_TARGET=120;
+  const CHEST_TARGET=280;
 
   const GEMS=[
     {name:'Quartz',description:'A pale crystal that catches even the faintest light.',score:1,color:'#D7EBF2',accent:'#EDF6F9',dark:'#859296',cut:'rectangular'},
@@ -120,7 +120,7 @@
 
   function blankState(){
     return {
-      version:1,
+      version:2,
       gemCounts:Array(GEMS.length).fill(0),
       chest:0,
       totalMerges:0,
@@ -164,6 +164,12 @@
         base.highestTier=Math.max(base.highestTier||0,...unlocked.filter(Number.isInteger));
       }
     }catch{}
+    if((Number(base.version)||1)<2){
+      const oldTarget=120;
+      const oldChest=Math.max(0,Number(base.chest)||0);
+      base.chest=(oldChest/oldTarget)*CHEST_TARGET;
+      base.version=2;
+    }
     base.chest=clamp(Number(base.chest)||0,0,CHEST_TARGET);
 
     // Old builds allowed any gem in any socket. Empty incompatible draft
@@ -399,7 +405,7 @@
       if(resultTier===GEMS.length-1&&!options.master) state.crownstonesCreated++;
     }
     const level=Number.isInteger(resultTier)?resultTier:0;
-    const gain=2.15+Math.min(level,12)*.30+Math.min(Math.max(0,chain-1),4)*.65+(options.master?5:0);
+    const gain=1.10+Math.min(level,12)*.16+Math.min(Math.max(0,chain-1),4)*.28+(options.master?3.2:0);
     const chestBefore=state.chest;
     state.chest=clamp(state.chest+gain,0,CHEST_TARGET);
     const chestGain=Math.max(0,state.chest-chestBefore);
