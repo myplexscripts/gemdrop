@@ -1,0 +1,49 @@
+/* React/Matter runtime ownership. Legacy visual CSS remains the design source. */
+#root{
+  width:100%;
+  height:100%;
+}
+
+#game canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  object-position:center;
+}
+
+.status-hud:not(.visible){
+  opacity:0;
+  pointer-events:none;
+}
+
+.status-hud.visible{
+  opacity:1;
+}
+
+.mute-icon--muted{
+  display:none;
+}
+
+.hud-button--mute[aria-pressed="true"] .mute-icon--sound{
+  display:none;
+}
+
+.hud-button--mute[aria-pressed="true"] .mute-icon--muted{
+  display:block;
+}
+
+.run-gem-haul,
+.run-treasure-haul{
+  max-height:none;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+}
