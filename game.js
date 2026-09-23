@@ -3254,10 +3254,8 @@
           this.matter.world.engine.gravity.y=this.baseGravityY;
         }
         this.matter.world.pause();
-        this.tweens.pauseAll();
       }else if(!this.metaPaused){
         this.matter.world.resume();
-        this.tweens.resumeAll();
       }
     }
 
@@ -3268,10 +3266,8 @@
       this.updatePowerButtons();
       if(this.metaPaused){
         this.matter.world.pause();
-        this.tweens.pauseAll();
       }else if(!this.paused){
         this.matter.world.resume();
-        this.tweens.resumeAll();
       }
     }
 
