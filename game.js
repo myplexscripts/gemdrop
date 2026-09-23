@@ -759,8 +759,13 @@
     'uniform float uLightAngle;',
     'uniform float uTime;',
     'uniform float uStepCut;',
+    'uniform float uSpecial;',
+    'uniform float uSpecialOffset;',
     'varying vec2 outTexCoord;',
     'varying vec4 outTint;',
+    'vec3 prismRainbow(float h){',
+    '  return .5+.5*cos(6.2831853*(h+vec3(0.0,.6666667,.3333333)));',
+    '}',
     'void main(){',
     '  vec4 src=texture2D(uMainSampler,outTexCoord);',
     '  if(src.a<.015) discard;',
@@ -779,6 +784,14 @@
     '  float high=smoothstep(.55,.88,energy);',
     '  vec3 material=mix(uDeepColor,uGemColor,low);',
     '  material=mix(material,uAccentColor,high*.72);',
+    '  if(uSpecial>.5){',
+    '    float prismPhase=fract(outTexCoord.x*.62+outTexCoord.y*.24+uTime*.045+uSpecialOffset+style*.11);',
+    '    vec3 spectrum=prismRainbow(prismPhase);',
+    '    spectrum=mix(vec3(.94),spectrum,.74);',
+    '    float facetWave=.82+.18*sin((style+outTexCoord.x*.31-outTexCoord.y*.21+uTime*.065+uSpecialOffset)*6.2831853);',
+    '    vec3 prismMaterial=spectrum*(.66+low*.28+high*.12)*facetWave;',
+    '    material=mix(material,prismMaterial,.84);',
+    '  }',
     '  vec3 viewDir=vec3(0.0,0.0,1.0);',
     '  vec3 reflected=reflect(-lightDir,normal);',
     '  float spec=pow(max(dot(reflected,viewDir),0.0),mix(18.0,16.0,uStepCut));',
@@ -810,6 +823,8 @@
       this.set1f('uLightAngle',GEM_WORLD_LIGHT_ANGLE-(gameObject.rotation||0));
       this.set1f('uTime',this.game.loop.time*.001);
       this.set1f('uStepCut',d.stepCut?1:0);
+      this.set1f('uSpecial',d.special?1:0);
+      this.set1f('uSpecialOffset',d.specialOffset||0);
     }
 
     onBind(gameObject) {
@@ -1537,6 +1552,8 @@
         deepColor:hexToUnitRgb(t.dark),
         accentColor:hexToUnitRgb(t.accent),
         stepCut:window.ReactiveGemSystem.isStepCut(t.reactiveCut),
+        special:!!gameObject.specialType,
+        specialOffset:Number.isFinite(gameObject.specialHueOffset)?gameObject.specialHueOffset:0,
         texelX:1/w,
         texelY:1/h
       };
@@ -1845,16 +1862,6 @@
     destroySpecialVisuals(gameObject) {
       if(!gameObject) return;
 
-      if(gameObject.specialHalo&&gameObject.specialHalo.active){
-        gameObject.specialHalo.destroy();
-      }
-      gameObject.specialHalo=null;
-
-      if(gameObject.specialIridescence&&gameObject.specialIridescence.active){
-        gameObject.specialIridescence.destroy();
-      }
-      gameObject.specialIridescence=null;
-
       if(Array.isArray(gameObject.specialSparkles)){
         for(const sparkle of gameObject.specialSparkles){
           if(sparkle&&sparkle.active) sparkle.destroy();
@@ -1891,121 +1898,74 @@
       return (r<<16)|(g<<8)|b;
     }
 
-    createSpecialHalo(gameObject,specialType,tier,preview=false) {
+    createSpecialVisuals(gameObject,specialType,tier,preview=false) {
       const special=SPECIAL_DROPS[specialType];
       const t=tiers[tier];
       if(!gameObject||!special||!t) return;
 
       this.destroySpecialVisuals(gameObject);
 
-      const overlay=this.add.image(
-        gameObject.x,
-        gameObject.y,
-        gemTextureKey(tier)
-      )
-        .setDepth((gameObject.depth||10)+.055)
-        .setScale(gameObject.scaleX,gameObject.scaleY)
-        .setAlpha(preview ? .24 : .20)
-        .setBlendMode(Phaser.BlendModes.ADD);
-
-      if(this.gemMask) overlay.setMask(this.gemMask);
-
-      const halo=this.add.circle(
-        gameObject.x,
-        gameObject.y,
-        t.r*(preview?1.10:1.075),
-        special.color,
-        .018
-      )
-        .setStrokeStyle(preview?4:3,special.color,.88)
-        .setDepth((gameObject.depth||10)+.06)
-        .setBlendMode(Phaser.BlendModes.ADD);
-
-      if(this.gemMask) halo.setMask(this.gemMask);
+      if(!Number.isFinite(gameObject.specialHueOffset)){
+        gameObject.specialHueOffset=Math.random();
+      }
 
       const sparkles=[];
-      const sparkleCount=preview?3:3;
+      const sparkleCount=preview?3:2;
       for(let i=0;i<sparkleCount;i++){
         const sparkle=this.add.image(gameObject.x,gameObject.y,'gem-sparkle')
           .setDepth((gameObject.depth||10)+.075+i*.001)
           .setBlendMode(Phaser.BlendModes.ADD)
           .setAlpha(0)
-          .setScale(.07);
+          .setScale(.06);
+
         if(this.gemMask) sparkle.setMask(this.gemMask);
         sparkle.specialPhase=(Math.PI*2*i)/sparkleCount+Math.random()*.55;
         sparkles.push(sparkle);
       }
 
-      gameObject.specialHalo=halo;
-      gameObject.specialIridescence=overlay;
       gameObject.specialSparkles=sparkles;
       gameObject.specialPulseOffset=Math.random()*Math.PI*2;
-      gameObject.specialHueOffset=Math.random();
       gameObject.specialPreview=!!preview;
       gameObject.specialTier=tier;
+
+      if(gameObject.pipelineData){
+        gameObject.pipelineData.special=true;
+        gameObject.pipelineData.specialOffset=gameObject.specialHueOffset;
+      }
     }
 
-    syncSpecialHalo(gameObject,time) {
-      if(!gameObject||!gameObject.active) return;
-
-      const halo=gameObject.specialHalo;
-      const overlay=gameObject.specialIridescence;
-      if(!halo||!halo.active||!overlay||!overlay.active) return;
+    syncSpecialVisuals(gameObject,time) {
+      if(!gameObject||!gameObject.active||!gameObject.specialType) return;
 
       const t=tiers[gameObject.specialTier??gameObject.tier];
       if(!t) return;
 
+      if(gameObject.pipelineData){
+        gameObject.pipelineData.special=true;
+        gameObject.pipelineData.specialOffset=gameObject.specialHueOffset||0;
+      }
+
       const baseAlpha=gameObject.alpha===undefined?1:gameObject.alpha;
-      const pulse=(time*.0048)+(gameObject.specialPulseOffset||0);
       const hue=(time*.000075)+(gameObject.specialHueOffset||0);
-      const rainbowA=this.rainbowTint(hue);
-      const rainbowB=this.rainbowTint(hue+.19);
-      const rainbowC=this.rainbowTint(hue+.43);
-      const rainbowD=this.rainbowTint(hue+.69);
-
-      overlay.x=gameObject.x;
-      overlay.y=gameObject.y;
-      overlay.rotation=gameObject.rotation;
-      overlay.setScale(
-        gameObject.scaleX*(1+Math.sin(pulse)*.008),
-        gameObject.scaleY*(1+Math.sin(pulse)*.008)
-      );
-      overlay.setTint(rainbowA,rainbowB,rainbowC,rainbowD);
-      overlay.setAlpha(
-        baseAlpha*
-        (gameObject.specialPreview ? .25 : .21)*
-        (.88+Math.sin(pulse)*.12)
-      );
-
-      halo.x=gameObject.x;
-      halo.y=gameObject.y;
-      halo.setScale(1+Math.sin(pulse)*.045);
-      halo.setFillStyle(this.rainbowTint(hue+.32),.018);
-      halo.setStrokeStyle(
-        gameObject.specialPreview?4:3,
-        this.rainbowTint(hue+.08),
-        .78+Math.sin(pulse)*.10
-      );
-      halo.setAlpha(baseAlpha);
-
       const sparkles=gameObject.specialSparkles||[];
-      const radius=t.r*(gameObject.specialPreview ? .62 : .58);
+      const radius=t.r*(gameObject.specialPreview?.48:.44);
 
       sparkles.forEach((sparkle,index)=>{
         if(!sparkle||!sparkle.active) return;
-        const phase=(sparkle.specialPhase||0)+time*.00048*(index%2?-.86:1);
-        const flicker=.5+.5*Math.sin(time*.0065+(index*2.1)+(gameObject.specialPulseOffset||0));
+
+        const phase=(sparkle.specialPhase||0)+time*.00038*(index%2?-.82:1);
+        const flicker=.5+.5*Math.sin(time*.0055+(index*2.25)+(gameObject.specialPulseOffset||0));
         const localX=Math.cos(phase)*radius;
-        const localY=Math.sin(phase)*radius*.78;
+        const localY=Math.sin(phase)*radius*.74;
         const cos=Math.cos(gameObject.rotation);
         const sin=Math.sin(gameObject.rotation);
 
         sparkle.x=gameObject.x+localX*cos-localY*sin;
         sparkle.y=gameObject.y+localX*sin+localY*cos;
-        sparkle.rotation=-gameObject.rotation*.2+phase*.12;
-        sparkle.setTint(this.rainbowTint(hue+index*.27));
-        sparkle.setScale((gameObject.specialPreview?.065:.06)+flicker*.025);
-        sparkle.setAlpha(baseAlpha*(.10+flicker*.40));
+        sparkle.rotation=-gameObject.rotation*.18+phase*.10;
+        sparkle.setTint(this.rainbowTint(hue+index*.31));
+        sparkle.setScale((gameObject.specialPreview?.055:.05)+flicker*.018);
+        sparkle.setAlpha(baseAlpha*(.06+flicker*.26));
       });
     }
 
@@ -2020,13 +1980,14 @@
 
       this.preview=this.add.image(x,DROP_Y,gemTextureKey(this.currentTier)).setDepth(32);
       this.preview.tier=this.currentTier;
+      this.preview.specialType=this.currentSpecial||null;
+      this.preview.specialHueOffset=this.preview.specialType?Math.random():0;
       this.sizeGemSprite(this.preview,this.currentTier);
       this.applyGemLighting(this.preview,this.currentTier);
       this.preview.setAlpha(1);
-      this.preview.specialType=this.currentSpecial||null;
       if(this.gemMask) this.preview.setMask(this.gemMask);
       if(this.preview.specialType){
-        this.createSpecialHalo(this.preview,this.preview.specialType,this.currentTier,true);
+        this.createSpecialVisuals(this.preview,this.preview.specialType,this.currentTier,true);
       }
 
       if(animate){
@@ -2099,6 +2060,7 @@
       gem.isGem=true;
       gem.tier=tier;
       gem.specialType=specialType||null;
+      gem.specialHueOffset=gem.specialType?Math.random():0;
       gem.specialTriggered=false;
       gem.merging=false;
       gem.born=this.time.now;
@@ -2113,7 +2075,7 @@
       this.createGemShadow(gem);
       this.createGemGlint(gem);
       if(gem.specialType){
-        this.createSpecialHalo(gem,gem.specialType,tier,false);
+        this.createSpecialVisuals(gem,gem.specialType,tier,false);
       }
       return gem;
     }
@@ -3321,7 +3283,7 @@
       haptic([36,26,36]);
     }
 
-    updateNextPreview() {
+    updateNextPreview(time=performance.now()) {
       const c=nextPreview.getContext('2d');
       c.clearRect(0,0,nextPreview.width,nextPreview.height);
       if(!window.ReactiveGemSystem) return;
@@ -3333,23 +3295,33 @@
       const scale=Math.min(maxW/source.width,maxH/source.height);
       const w=source.width*scale;
       const h=source.height*scale;
+      const x=(nextPreview.width-w)/2;
+      const y=(nextPreview.height-h)/2;
 
-      c.drawImage(source,(nextPreview.width-w)/2,(nextPreview.height-h)/2,w,h);
+      c.drawImage(source,x,y,w,h);
 
       if(this.nextSpecial&&SPECIAL_DROPS[this.nextSpecial]){
-        const special=SPECIAL_DROPS[this.nextSpecial];
-        const cx=nextPreview.width/2;
-        const cy=nextPreview.height/2;
-        const radius=Math.min(w,h)*.47;
+        const phase=((time*.018)%360+360)%360;
+        const gradient=c.createLinearGradient(x,y,x+w,y+h);
+
+        for(let i=0;i<=6;i++){
+          gradient.addColorStop(
+            i/6,
+            'hsl('+((phase+i*60)%360)+' 88% 72%)'
+          );
+        }
+
         c.save();
-        c.strokeStyle=special.css;
-        c.lineWidth=7;
-        c.globalAlpha=.92;
-        c.shadowColor=special.css;
-        c.shadowBlur=12;
-        c.beginPath();
-        c.arc(cx,cy,radius,0,Math.PI*2);
-        c.stroke();
+        c.globalCompositeOperation='source-atop';
+        c.globalAlpha=.82;
+        c.fillStyle=gradient;
+        c.fillRect(x,y,w,h);
+        c.restore();
+
+        c.save();
+        c.globalCompositeOperation='screen';
+        c.globalAlpha=.20;
+        c.drawImage(source,x,y,w,h);
         c.restore();
       }
     }
@@ -3393,6 +3365,11 @@
       }
 
       if(this.running&&!this.paused&&!this.metaPaused){
+        if(this.nextSpecial&&time-(this.nextSpecialPreviewPaintAt||0)>=90){
+          this.nextSpecialPreviewPaintAt=time;
+          this.updateNextPreview(time);
+        }
+
         this.scanForRestingMatches();
         this.processMerges();
 
@@ -3400,7 +3377,7 @@
         if(this.mergeWindow<=0) this.mergeChain=0;
 
         if(this.preview){
-          this.syncSpecialHalo(this.preview,time);
+          this.syncSpecialVisuals(this.preview,time);
           const t=tiers[this.currentTier];
           const min=WALL+t.r*COLLIDER_SCALE;
           const max=W-WALL-t.r*COLLIDER_SCALE;
@@ -3420,7 +3397,7 @@
 
           this.syncGemOptics(gem,time);
           this.syncGemShadow(gem);
-          this.syncSpecialHalo(gem,time);
+          this.syncSpecialVisuals(gem,time);
 
           if(gem.body.isSleeping){
             Phaser.Physics.Matter.Matter.Sleeping.set(gem.body,false);
