@@ -4,30 +4,31 @@ let music: Tone.Player | null = null;
 let started = false;
 let muted = false;
 let gemVolume = .75;
+let loading:Promise<void>|null=null;
 
 export async function unlockAudio(){
   try{
     await Tone.start();
+    started=true;
+
     if(!music){
-      music = new Tone.Player({
-        url: './assets/audio/main-loop.ogg',
-        loop: true,
-        autostart: false,
-        fadeIn: .18,
-        fadeOut: .18,
-        volume: -10
+      music=new Tone.Player({
+        loop:true,
+        fadeIn:.18,
+        fadeOut:.18,
+        volume:-10
       }).toDestination();
 
-      music.onload = () => {
-        if(music && music.buffer.duration > 1){
-          music.loopStart = 0;
-          music.loopEnd = Math.max(.1,music.buffer.duration - 1);
+      loading=music.load('./assets/audio/main-loop.ogg').then(player=>{
+        if(player.buffer.duration>1){
+          player.loopStart=0;
+          player.loopEnd=Math.max(.1,player.buffer.duration-1);
         }
-        if(started && music && !music.state.includes('started')) music.start();
-      };
+      }).then(()=>{});
     }
-    started = true;
-    if(music && music.loaded && music.state !== 'started') music.start();
+
+    if(loading) await loading;
+    if(music&&started&&music.state!=='started') music.start();
     applyMute();
   }catch{}
 }
@@ -55,8 +56,8 @@ export function gemTone(tier:number,intensity=.7){
       envelope:{attack:.002,decay:.07,sustain:0,release:.08},
       volume:-18 + (gemVolume-1)*12
     }).toDestination();
-    const note=Tone.Frequency(220*Math.pow(2,tier/12));
-    synth.triggerAttackRelease(note,.055,undefined,Math.max(.12,Math.min(.75,intensity)));
+    const frequency=220*Math.pow(2,tier/12);
+    synth.triggerAttackRelease(frequency,.055,undefined,Math.max(.12,Math.min(.75,intensity)));
     setTimeout(()=>synth.dispose(),220);
   }catch{}
 }
