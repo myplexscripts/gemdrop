@@ -7363,3 +7363,384 @@ body,
 
   .treasure-chest-rays{rotate:0deg!important}
 }
+
+
+/* === ANIMATION STUDIO STOCK REVEAL 2026-09-23 === */
+/* This is the stock timeline from test/animation-studio.html, implemented
+   directly in the game. Each visual layer shares one centre point. Position,
+   scale, rotation and opacity are animated independently so alignment cannot
+   drift when another phase starts. */
+
+.treasure-reward-card::before,
+.treasure-reward-sparkles{
+  display:none!important;
+}
+
+.treasure-chest-reveal{
+  position:relative!important;
+  width:min(350px,86vw,43dvh)!important;
+  height:auto!important;
+  aspect-ratio:1 / 1!important;
+  flex:0 0 auto!important;
+  margin:0 auto!important;
+  display:block!important;
+  overflow:visible!important;
+  transform:none!important;
+  filter:none!important;
+  isolation:isolate;
+}
+
+.treasure-chest-aura,
+.treasure-chest-rays,
+.treasure-chest-shockwave,
+.treasure-chest-image,
+.treasure-reward-art{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  inset:auto!important;
+  margin:0!important;
+  transform:translate(-50%,-50%)!important;
+  transform-origin:50% 50%!important;
+  translate:0 0!important;
+  rotate:0deg;
+  pointer-events:none!important;
+  will-change:translate,scale,rotate,opacity;
+}
+
+/* Studio asset sizes */
+.treasure-chest-image{
+  z-index:6!important;
+  width:72%!important;
+  height:72%!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))!important;
+}
+
+.treasure-reward-art{
+  z-index:7!important;
+  width:42%!important;
+  height:34%!important;
+  aspect-ratio:auto!important;
+  filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))!important;
+}
+
+.treasure-reward-art svg{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  filter:none!important;
+}
+
+.treasure-chest-rays{
+  z-index:2!important;
+  width:108%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  border-radius:50%!important;
+  background:repeating-conic-gradient(
+    from 0deg,
+    rgba(255,239,190,.32) 0deg 3deg,
+    rgba(220,174,255,.18) 3deg 7deg,
+    transparent 7deg 19deg
+  )!important;
+  -webkit-mask:radial-gradient(circle,transparent 0 18%,#000 31% 67%,transparent 82%)!important;
+  mask:radial-gradient(circle,transparent 0 18%,#000 31% 67%,transparent 82%)!important;
+}
+
+.treasure-chest-aura{
+  z-index:1!important;
+  width:72%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  border-radius:50%!important;
+  background:radial-gradient(
+    circle,
+    rgba(255,239,190,.42) 0 7%,
+    rgba(210,125,255,.28) 22%,
+    rgba(134,61,199,.12) 49%,
+    transparent 72%
+  )!important;
+  filter:blur(12px)!important;
+}
+
+.treasure-chest-shockwave{
+  z-index:5!important;
+  width:42%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  border-radius:50%!important;
+  border:2px solid rgba(255,237,186,.78)!important;
+  box-shadow:0 0 26px rgba(213,128,255,.42)!important;
+  background:transparent!important;
+}
+
+/* One 1600 ms master timeline, matching the editor's stock recipe. */
+.treasure-modal.visible .treasure-chest-closed{
+  animation:gemdropStudioClosed 1600ms linear both!important;
+}
+
+@keyframes gemdropStudioClosed{
+  0%{
+    translate:0 0;
+    scale:.34;
+    rotate:0deg;
+    opacity:0;
+    animation-timing-function:cubic-bezier(.175,.885,.32,1.275);
+  }
+  11.25%{
+    translate:0 0;
+    scale:.84;
+    rotate:0deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  18.75%{
+    translate:0 0;
+    scale:.76;
+    rotate:0deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  23.75%{
+    translate:-8px 0;
+    scale:.79;
+    rotate:-4deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  28.75%{
+    translate:9px 0;
+    scale:.82;
+    rotate:4.5deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  33.75%{
+    translate:-7px 0;
+    scale:.84;
+    rotate:-3deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  38.75%{
+    translate:6px 0;
+    scale:.86;
+    rotate:2deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  47.5%{
+    translate:0 0;
+    scale:.88;
+    rotate:0deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  58.75%,100%{
+    translate:0 0;
+    scale:1.12;
+    rotate:0deg;
+    opacity:0;
+  }
+}
+
+.treasure-modal.visible .treasure-chest-open{
+  animation:gemdropStudioOpen 1600ms linear both!important;
+}
+
+@keyframes gemdropStudioOpen{
+  0%,47.5%{
+    translate:0 0;
+    scale:.46;
+    rotate:0deg;
+    opacity:0;
+    animation-timing-function:cubic-bezier(.175,.885,.32,1.275);
+  }
+  56.875%{
+    translate:0 0;
+    scale:.84;
+    rotate:0deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  65%{
+    translate:0 0;
+    scale:.78;
+    rotate:0deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  74.375%,100%{
+    translate:0 0;
+    scale:1.10;
+    rotate:0deg;
+    opacity:0;
+  }
+}
+
+.treasure-modal.visible .treasure-reward-art{
+  animation:gemdropStudioTreasure 1600ms linear both!important;
+}
+
+@keyframes gemdropStudioTreasure{
+  0%,74.375%{
+    translate:0 0;
+    scale:.34;
+    rotate:0deg;
+    opacity:0;
+    animation-timing-function:cubic-bezier(.175,.885,.32,1.275);
+  }
+  86.25%{
+    translate:0 0;
+    scale:1.08;
+    rotate:0deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  93.75%{
+    translate:0 0;
+    scale:.97;
+    rotate:0deg;
+    opacity:1;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  100%{
+    translate:0 0;
+    scale:1;
+    rotate:0deg;
+    opacity:1;
+  }
+}
+
+/* The editor's stock ray layer has a 36 degree-per-second continuous spin.
+   Pose changes finish at 1600 ms; spin continues after the reveal. */
+.treasure-modal.visible .treasure-chest-rays{
+  animation:
+    gemdropStudioRaysPose 1600ms linear both!important,
+    gemdropStudioRaysSpin 10s linear infinite!important;
+}
+
+@keyframes gemdropStudioRaysPose{
+  0%{
+    scale:.96;
+    opacity:.42;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  47.5%{
+    scale:1.04;
+    opacity:.76;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  77.5%{
+    scale:1;
+    opacity:.68;
+    animation-timing-function:linear;
+  }
+  100%{
+    scale:1;
+    opacity:.68;
+  }
+}
+
+@keyframes gemdropStudioRaysSpin{
+  from{rotate:0deg}
+  to{rotate:360deg}
+}
+
+.treasure-modal.visible .treasure-chest-aura{
+  animation:gemdropStudioAura 1600ms linear both!important;
+}
+
+@keyframes gemdropStudioAura{
+  0%{
+    scale:.90;
+    opacity:.36;
+    animation-timing-function:cubic-bezier(.65,0,.35,1);
+  }
+  50%{
+    scale:1.06;
+    opacity:.62;
+    animation-timing-function:cubic-bezier(.65,0,.35,1);
+  }
+  100%{
+    scale:.94;
+    opacity:.45;
+  }
+}
+
+.treasure-modal.visible .treasure-chest-shockwave{
+  animation:gemdropStudioShock 1600ms linear both!important;
+}
+
+@keyframes gemdropStudioShock{
+  0%,47.5%{
+    scale:.42;
+    opacity:0;
+    animation-timing-function:linear;
+  }
+  47.501%{
+    scale:.42;
+    opacity:.82;
+    animation-timing-function:cubic-bezier(.33,1,.68,1);
+  }
+  70%,100%{
+    scale:2.18;
+    opacity:0;
+  }
+}
+
+/* Existing phase classes still control vibration and when the text result
+   becomes available, but they no longer replace the studio's layer motion. */
+.treasure-modal.burst .treasure-chest-closed,
+.treasure-modal.burst:not(.open-burst) .treasure-chest-open,
+.treasure-modal.open-burst .treasure-chest-open,
+.treasure-modal.revealed .treasure-chest-closed,
+.treasure-modal.revealed .treasure-chest-open,
+.treasure-modal.revealed .treasure-reward-art,
+.treasure-modal.revealed .treasure-chest-rays,
+.treasure-modal.revealed .treasure-chest-aura,
+.treasure-modal.revealed .treasure-chest-shockwave{
+  animation-play-state:running!important;
+}
+
+@media(max-height:720px){
+  .treasure-chest-reveal{
+    width:min(300px,80vw,41dvh)!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .treasure-modal.visible .treasure-chest-closed,
+  .treasure-modal.visible .treasure-chest-open,
+  .treasure-modal.visible .treasure-reward-art,
+  .treasure-modal.visible .treasure-chest-rays,
+  .treasure-modal.visible .treasure-chest-aura,
+  .treasure-modal.visible .treasure-chest-shockwave{
+    animation:none!important;
+  }
+
+  .treasure-chest-closed,
+  .treasure-chest-open,
+  .treasure-chest-shockwave{
+    opacity:0!important;
+  }
+
+  .treasure-reward-art{
+    opacity:1!important;
+    scale:1!important;
+  }
+
+  .treasure-chest-rays{
+    opacity:.68!important;
+    scale:1!important;
+  }
+
+  .treasure-chest-aura{
+    opacity:.45!important;
+    scale:.94!important;
+  }
+}
