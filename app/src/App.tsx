@@ -56,12 +56,21 @@ function CollectionGems({snapshot}:{snapshot:GameSnapshot}){
   </>;
 }
 
-function LegacyMetaOverlays({snapshot}:{snapshot:GameSnapshot}){
+function LegacyMetaOverlays({snapshot,engine}:{snapshot:GameSnapshot;engine:GemDropEngine|null}){
   return <>
     <section id="collectionOverlay" className="collection-overlay" aria-modal="true" role="dialog" aria-labelledby="collectionTitle">
       <div className="collection-screen">
         <header className="collection-header">
-          <button id="collectionBack" className="collection-back" type="button" aria-label="Back to home">
+          <button
+            id="collectionBack"
+            className="collection-back"
+            type="button"
+            aria-label="Back to home"
+            onClick={()=>{
+              document.getElementById('collectionOverlay')?.classList.remove('visible');
+              engine?.setMetaPaused(false);
+            }}
+          >
             <Icon name="chevron-left"/>
           </button>
           <div><p className="eyebrow">YOUR COLLECTION</p><h2 id="collectionTitle">Gem Showcase</h2></div>
@@ -262,13 +271,10 @@ export default function App(){
       setSnapshot(instance.getSnapshot());
       if(!metaLoaded.current&&!window.GemdropMeta){
         metaLoaded.current=true;
-        const script=document.createElement('script');
-        script.src='./meta.js?v=react09';
-        script.onload=()=>{
+        void import('./meta/meta').then(()=>{
           window.lucide?.createIcons({attrs:{'stroke-width':1.9}});
           setSnapshot(instance.getSnapshot());
-        };
-        document.body.appendChild(script);
+        });
       }
     });
 
@@ -371,7 +377,7 @@ export default function App(){
       </motion.section>}
     </AnimatePresence>
 
-    <LegacyMetaOverlays snapshot={snapshot}/>
+    <LegacyMetaOverlays snapshot={snapshot} engine={engine}/>
 
     <AnimatePresence>
       {snapshot.running&&snapshot.paused&&<motion.section id="pauseOverlay" className="overlay visible" aria-modal="true" role="dialog" aria-labelledby="pauseTitle" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
