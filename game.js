@@ -49,7 +49,7 @@
   const LIMIT_Y = 146;
   const LIMIT_OPTICAL_X = 6;
   const DROP_DELAY = 300;
-  const AUTO_FIRE_DELAY = 820;
+  const AUTO_FIRE_DELAY = DROP_DELAY;
   const DROP_GATE_CLEARANCE = 12;
   const AIM_CONTROL_GAIN = 1.25;
   const COLLIDER_SCALE = 0.97;
@@ -1212,6 +1212,7 @@
         e.preventDefault();
         this.pointerHeld=true;
         aimFromEvent(e);
+        if(this.autoFireEnabled) this.dropCurrent();
         try{this.aimStrip.setPointerCapture(e.pointerId)}catch{}
       });
 
@@ -3437,6 +3438,7 @@
 
       if(
         this.autoFireEnabled&&
+        this.pointerHeld&&
         this.running&&
         !this.paused&&
         !this.metaPaused&&
