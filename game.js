@@ -74,6 +74,49 @@
   const homeCrownProgressText = $('homeCrownProgressText');
   const homeCrownProgressFill = $('homeCrownProgressFill');
 
+  const backgroundParticles = $('backgroundParticles');
+
+  function initBackgroundParticles(){
+    if(!backgroundParticles) return;
+
+    backgroundParticles.innerHTML='';
+    const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const count=reduced?14:26;
+
+    for(let i=0;i<count;i++){
+      const particle=document.createElement('span');
+      particle.className='background-particle';
+
+      const angle=Math.random()*Math.PI*2;
+      const distance=Phaser.Math.Between(32,118);
+      const size=Phaser.Math.FloatBetween(1.4,3.5);
+      const duration=Phaser.Math.FloatBetween(8.5,20);
+      const delay=-Phaser.Math.FloatBetween(0,duration);
+      const x=Phaser.Math.FloatBetween(3,97);
+      const y=Phaser.Math.FloatBetween(3,97);
+      const opacity=Phaser.Math.FloatBetween(.24,.72);
+
+      particle.style.setProperty('--particle-left',x+'%');
+      particle.style.setProperty('--particle-top',y+'%');
+      particle.style.setProperty('--particle-size',size.toFixed(2)+'px');
+      particle.style.setProperty('--particle-dx',(Math.cos(angle)*distance).toFixed(1)+'px');
+      particle.style.setProperty('--particle-dy',(Math.sin(angle)*distance).toFixed(1)+'px');
+      particle.style.setProperty('--particle-duration',duration.toFixed(2)+'s');
+      particle.style.setProperty('--particle-delay',delay.toFixed(2)+'s');
+      particle.style.setProperty('--particle-opacity',opacity.toFixed(2));
+      particle.style.setProperty('--particle-twinkle',(Phaser.Math.FloatBetween(.8,2.2)).toFixed(2)+'s');
+
+      if(reduced) particle.classList.add('is-static');
+      backgroundParticles.appendChild(particle);
+    }
+  }
+
+  initBackgroundParticles();
+  window.addEventListener('orientationchange',()=>{
+    window.setTimeout(initBackgroundParticles,120);
+  },{passive:true});
+
+
   const CUTS = {
     rose: {
       label:'Rose',
@@ -534,7 +577,7 @@
     if(!audioCtx||dingBuffer) return Promise.resolve(dingBuffer);
     if(dingLoadPromise) return dingLoadPromise;
 
-    dingLoadPromise=fetch('ding.ogg')
+    dingLoadPromise=fetch('assets/audio/ding.ogg?v=20260923-assets1')
       .then(response=>{
         if(!response.ok) throw new Error('Could not load ding.ogg');
         return response.arrayBuffer();
