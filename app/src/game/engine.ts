@@ -121,6 +121,7 @@ export class GemDropEngine{
   private runPauseStartedAt=0;
   private result:RunResult|null=null;
   private tumble:{started:number;duration:number;nextKick:number;kick:number}|null=null;
+  private resizeObserver:ResizeObserver|null=null;
   private particles=Array.from({length:28},(_,i)=>({
     x:(i*173.7)%W,
     y:(i*109.3)%H,
@@ -154,6 +155,10 @@ export class GemDropEngine{
     Events.on(this.engine,'collisionStart',(event:any)=>this.onCollisionStart(event));
 
     this.resizeCanvas();
+    if('ResizeObserver' in window&&this.canvas.parentElement){
+      this.resizeObserver=new ResizeObserver(()=>this.resizeCanvas());
+      this.resizeObserver.observe(this.canvas.parentElement);
+    }
     window.addEventListener('resize',this.resizeCanvas,{passive:true});
     window.visualViewport?.addEventListener('resize',this.resizeCanvas,{passive:true});
   }
@@ -169,6 +174,8 @@ export class GemDropEngine{
     cancelAnimationFrame(this.raf);
     window.removeEventListener('resize',this.resizeCanvas);
     window.visualViewport?.removeEventListener('resize',this.resizeCanvas);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver=null;
     Events.off(this.engine,'collisionStart');
     Composite.clear(this.world,false,true);
     Engine.clear(this.engine);
@@ -232,6 +239,16 @@ export class GemDropEngine{
     this.canvas.width=Math.round(W*dpr);
     this.canvas.height=Math.round(H*dpr);
     this.canvas.style.aspectRatio=W+'/'+H;
+
+    const parent=this.canvas.parentElement;
+    if(parent){
+      const rect=parent.getBoundingClientRect();
+      if(rect.width>0&&rect.height>0){
+        const scale=Math.min(rect.width/W,rect.height/H);
+        this.canvas.style.width=Math.max(1,Math.floor(W*scale))+'px';
+        this.canvas.style.height=Math.max(1,Math.floor(H*scale))+'px';
+      }
+    }
   };
 
   private createWalls(){
