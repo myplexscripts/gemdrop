@@ -235,7 +235,7 @@ function loadDing(){
  if(dingBuffer) return Promise.resolve(dingBuffer);
  if(dingLoading) return dingLoading;
  document.querySelector("#audioStatus").textContent="Loading ding.ogg...";
- dingLoading=fetch("../ding.ogg")
+ dingLoading=fetch("../assets/audio/ding.ogg")
   .then(r=>{
    if(!r.ok) throw new Error("ding.ogg failed to load");
    return r.arrayBuffer();
