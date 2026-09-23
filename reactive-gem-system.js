@@ -416,6 +416,15 @@
     };
   }
 
+  function richRgb(rgb,saturation=1.25,brightness=1){
+    const l=rgb.r*.299+rgb.g*.587+rgb.b*.114;
+    return {
+      r:clamp((l+(rgb.r-l)*saturation)*brightness,0,1),
+      g:clamp((l+(rgb.g-l)*saturation)*brightness,0,1),
+      b:clamp((l+(rgb.b-l)*saturation)*brightness,0,1)
+    };
+  }
+
   function rgbCss(c){
     return 'rgb('+
       Math.round(clamp(c.r,0,1)*255)+' '+
@@ -442,6 +451,9 @@
     const gemColor=parseHex((palette&&palette.color)||color)||parseHex(color);
     const deepColor=parseHex((palette&&palette.dark)||color)||gemColor;
     const accentColor=parseHex((palette&&palette.accent)||color)||gemColor;
+    const richGem=richRgb(gemColor,1.30,.98);
+    const richDeep=richRgb(deepColor,1.36,.76);
+    const richAccent=richRgb(mixRgb(gemColor,accentColor,.42),1.24,1.06);
 
     const lightAngle=Number.isFinite(lightAngleOverride)?lightAngleOverride:-Math.PI*.32;
     const light=norm3(Math.cos(lightAngle)*.67,Math.sin(lightAngle)*.67,.74);
@@ -459,7 +471,7 @@
       ctx.translate(-256,-256);
     }
 
-    fillOuter(ctx,model.outer,1,rgbCss(deepColor));
+    fillOuter(ctx,model.outer,1,rgbCss(richDeep));
 
     const rad=angle*Math.PI/180;
     const cos=Math.cos(rad),sin=Math.sin(rad);
@@ -478,8 +490,8 @@
       const low=smoothstep(.18,.56,energy);
       const high=smoothstep(.55,.88,energy);
 
-      let material=mixRgb(deepColor,gemColor,low);
-      material=mixRgb(material,accentColor,high*.72);
+      let material=mixRgb(richDeep,richGem,low);
+      material=mixRgb(material,richAccent,high*.56);
 
       const incoming=[-light[0],-light[1],-light[2]];
       const ndot=dot3(incoming,normal);
@@ -491,13 +503,13 @@
 
       const spec=Math.pow(Math.max(dot3(reflected,view),0),model.stepCut?16:18);
       const caustic=Math.pow(transmission,model.stepCut?2.8:3.0)*.18;
-      const flash=clamp(spec*1.15+caustic+diffuse*.03,0,model.stepCut?.28:.34);
+      const flash=clamp(spec*1.15+caustic+diffuse*.03,0,model.stepCut?.24:.30);
 
-      let final=mixRgb(material,accentColor,flash*.72);
+      let final=mixRgb(material,richAccent,flash*.56);
       final={
-        r:(final.r+accentColor.r*flash*.34)*(.92+style*.16),
-        g:(final.g+accentColor.g*flash*.34)*(.92+style*.16),
-        b:(final.b+accentColor.b*flash*.34)*(.92+style*.16)
+        r:(final.r+richAccent.r*flash*.18)*(.86+style*.24),
+        g:(final.g+richAccent.g*flash*.18)*(.86+style*.24),
+        b:(final.b+richAccent.b*flash*.18)*(.86+style*.24)
       };
 
       polygonPath(ctx,facet.points,1);
@@ -542,6 +554,9 @@
     const gemColor=parseHex((palette&&palette.color)||color)||parseHex(color);
     const deepColor=parseHex((palette&&palette.dark)||color)||gemColor;
     const accentColor=parseHex((palette&&palette.accent)||color)||gemColor;
+    const richGem=richRgb(gemColor,1.30,.98);
+    const richDeep=richRgb(deepColor,1.36,.76);
+    const richAccent=richRgb(mixRgb(gemColor,accentColor,.42),1.24,1.06);
 
     const lightAngle=Number.isFinite(lightAngleOverride)?lightAngleOverride:-Math.PI*.32;
     const light=norm3(Math.cos(lightAngle)*.67,Math.sin(lightAngle)*.67,.74);
@@ -554,7 +569,7 @@
     ctx.scale(sx,sy);
     ctx.translate(-metrics.minX,-metrics.minY);
 
-    fillOuter(ctx,model.outer,1,rgbCss(deepColor));
+    fillOuter(ctx,model.outer,1,rgbCss(richDeep));
 
     for(const facet of model.facets){
       // A non-uniformly scaled surface needs its normal transformed by the
@@ -575,8 +590,8 @@
       const low=smoothstep(.18,.56,energy);
       const high=smoothstep(.55,.88,energy);
 
-      let material=mixRgb(deepColor,gemColor,low);
-      material=mixRgb(material,accentColor,high*.72);
+      let material=mixRgb(richDeep,richGem,low);
+      material=mixRgb(material,richAccent,high*.56);
 
       const incoming=[-light[0],-light[1],-light[2]];
       const ndot=dot3(incoming,normal);
@@ -588,13 +603,13 @@
 
       const spec=Math.pow(Math.max(dot3(reflected,view),0),model.stepCut?16:18);
       const caustic=Math.pow(transmission,model.stepCut?2.8:3.0)*.18;
-      const flash=clamp(spec*1.15+caustic+diffuse*.03,0,model.stepCut?.28:.34);
+      const flash=clamp(spec*1.15+caustic+diffuse*.03,0,model.stepCut?.24:.30);
 
-      let final=mixRgb(material,accentColor,flash*.72);
+      let final=mixRgb(material,richAccent,flash*.56);
       final={
-        r:(final.r+accentColor.r*flash*.34)*(.92+style*.16),
-        g:(final.g+accentColor.g*flash*.34)*(.92+style*.16),
-        b:(final.b+accentColor.b*flash*.34)*(.92+style*.16)
+        r:(final.r+richAccent.r*flash*.18)*(.86+style*.24),
+        g:(final.g+richAccent.g*flash*.18)*(.86+style*.24),
+        b:(final.b+richAccent.b*flash*.18)*(.86+style*.24)
       };
 
       polygonPath(ctx,facet.points,1);
