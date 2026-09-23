@@ -1060,18 +1060,16 @@
         this.collectionPointerLightUntil=0;
       });
 
-      $('homeButton').addEventListener('click',()=>this.returnToMenu());
+      $('menuButton').addEventListener('click',()=>this.setPaused(true));
+      $('menuCloseButton').addEventListener('click',()=>this.setPaused(false));
+      $('menuMainButton').addEventListener('click',()=>this.returnToMenu());
+      $('menuHowToButton').addEventListener('click',()=>{});
+
       $('muteButton').addEventListener('click',()=>{
         unlockAudio();
         setGameMuted(!gameMuted);
       });
       syncMuteButton();
-      $('resumeButton').addEventListener('click',()=>this.setPaused(false));
-
-      $('restartFromPause').addEventListener('click',()=>{
-        pauseOverlay.classList.remove('visible');
-        this.startRun();
-      });
 
       $('resultMenuButton').addEventListener('click',()=>this.returnToMenu());
 
@@ -2850,12 +2848,18 @@
         cascade:$('powerCascade'),
         prism:$('powerPrism')
       };
+      const labels={
+        tumble:'Tumble',
+        cascade:'Merge',
+        prism:'Upgrade'
+      };
 
       for(const [key,button] of Object.entries(buttons)){
         const charge=clamp(this.powerCharge[key]??1,0,1);
         button.style.setProperty('--charge',charge.toFixed(3));
         button.dataset.charge=Math.round(charge*100);
-        button.setAttribute('aria-label',button.textContent.trim()+' '+Math.round(charge*100)+'% charged');
+        button.setAttribute('aria-label',labels[key]+' '+Math.round(charge*100)+'% charged');
+        button.title=labels[key]+' '+Math.round(charge*100)+'%';
         button.classList.toggle('charged',charge>=.999);
       }
 
