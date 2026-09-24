@@ -1301,7 +1301,7 @@
 
       if(notify){
         const t=tiers[tier];
-        this.showStatus(t.name+' '+t.cut+' unlocked','reward',1500,'gem',tier);
+        this.showStatus('NEW GEM · '+t.name.toUpperCase(),'reward',1650,'gem',tier);
       }
 
       return true;
@@ -1519,7 +1519,11 @@
         }
       });
 
-      collectionProgress.textContent=this.unlockedTiers.size+' / '+tiers.length;
+      const collectionComplete=this.unlockedTiers.size>=tiers.length;
+      collectionProgress.textContent=collectionComplete
+        ? tiers.length+' / '+tiers.length+' · COMPLETE'
+        : this.unlockedTiers.size+' / '+tiers.length;
+      collectionProgress.classList.toggle('complete',collectionComplete);
       if(window.GemdropMeta) window.GemdropMeta.updateGemBadges();
     }
 
@@ -1880,6 +1884,11 @@
       this.clearRun();
 
       this.runStartUnlocked=new Set(this.unlockedTiers);
+      this.runStartTreasures=new Set(
+        window.GemdropMeta&&window.GemdropMeta.getState
+          ? window.GemdropMeta.getState().discoveredTreasures||[]
+          : []
+      );
       this.runStartBest=this.best;
       this.runMerges=0;
       this.runBestChain=0;
@@ -2534,12 +2543,11 @@
         this.mergeWindow=.70;
         this.runMerges++;
         this.runBestChain=Math.max(this.runBestChain,this.mergeChain);
-        if(Number.isInteger(tier)&&tier>=0&&tier<this.runGemGains.length){
-          this.runGemGains[tier]++;
-        }
-
         if(next>=tiers.length){
           const masterValue=tiers[tier].score*2;
+          if(Number.isInteger(tier)&&tier>=0&&tier<this.runGemGains.length){
+            this.runGemGains[tier]++;
+          }
           this.addScore(masterValue);
           this.mergeBurst(x,y,tiers[tier],4);
           this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',30,{big:true,impact:4});
@@ -2554,6 +2562,10 @@
           }
           if(gateInMerge) this.dropGateGem=null;
           continue;
+        }
+
+        if(Number.isInteger(next)&&next>=0&&next<this.runGemGains.length){
+          this.runGemGains[next]++;
         }
 
         const gem=this.createGem(x,y,next);
@@ -3461,6 +3473,8 @@
       const haul=$('runGemHaul');
       const treasureTotal=$('runTreasureTotal');
       const treasureHaul=$('runTreasureHaul');
+      const gemProgress=$('runGemProgress');
+      const treasureProgress=$('runTreasureProgress');
 
       if(mergesEl) mergesEl.textContent=String(this.runMerges);
       if(chainEl) chainEl.textContent=Math.max(1,this.runBestChain)+'×';
@@ -3474,6 +3488,24 @@
 
       if(totalEl) totalEl.textContent=String(totalGems);
 
+      if(gemProgress){
+        const complete=this.unlockedTiers.size>=tiers.length;
+        gemProgress.textContent=complete
+          ? tiers.length+' / '+tiers.length+' · COMPLETE'
+          : this.unlockedTiers.size+' / '+tiers.length;
+        gemProgress.classList.toggle('complete',complete);
+      }
+
+      if(treasureProgress&&window.GemdropMeta&&window.GemdropMeta.getState){
+        const state=window.GemdropMeta.getState();
+        const discovered=(state.discoveredTreasures||[]).length;
+        const total=Number(state.treasureTotalCount)||0;
+        treasureProgress.textContent=total&&discovered>=total
+          ? total+' / '+total+' · COMPLETE'
+          : discovered+' / '+(total||'?');
+        treasureProgress.classList.toggle('complete',!!total&&discovered>=total);
+      }
+
       if(haul){
         haul.innerHTML='';
 
@@ -3486,7 +3518,14 @@
           earned.forEach(item=>{
             const t=tiers[item.tier];
             const chip=document.createElement('div');
-            chip.className='run-gem-chip';
+            const isNew=!this.runStartUnlocked.has(item.tier);
+            chip.className='run-gem-chip'+(isNew?' is-new':'');
+            if(isNew){
+              const badge=document.createElement('em');
+              badge.className='run-new-badge';
+              badge.textContent='NEW';
+              chip.appendChild(badge);
+            }
 
             const canvas=document.createElement('canvas');
             canvas.width=72;
@@ -3531,7 +3570,14 @@
               : null;
 
             const chip=document.createElement('div');
-            chip.className='run-treasure-chip';
+            const isNew=!this.runStartTreasures.has(id);
+            chip.className='run-treasure-chip'+(isNew?' is-new':'');
+            if(isNew){
+              const badge=document.createElement('em');
+              badge.className='run-new-badge';
+              badge.textContent='NEW';
+              chip.appendChild(badge);
+            }
 
             if(info&&info.art){
               const image=document.createElement('img');
