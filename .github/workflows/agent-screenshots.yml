@@ -1,0 +1,40 @@
+name: Agent screenshots
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Selenium
+        run: python -m pip install --quiet selenium
+
+      - name: Capture screenshots
+        run: |
+          python -m http.server 8000 >/tmp/gemdrop-http.log 2>&1 &
+          SERVER_PID=$!
+          sleep 2
+          python test/capture-agent-screenshots.py
+          kill $SERVER_PID || true
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemdrop-agent-screenshots
+          path: screenshots/*.png
+          if-no-files-found: error
+          retention-days: 7
