@@ -742,7 +742,12 @@
     $('treasureCollection').hidden=gems;
     $('collectionTitle').textContent=gems?'Gem Showcase':'Treasure Vault';
     if(gems){
-      $('collectionProgress').textContent=(window.GemdropGameScene?window.GemdropGameScene.unlockedTiers.size:1)+' / '+GEMS.length;
+      const unlocked=window.GemdropGameScene?window.GemdropGameScene.unlockedTiers.size:1;
+      const complete=unlocked>=GEMS.length;
+      $('collectionProgress').textContent=complete
+        ? GEMS.length+' / '+GEMS.length+' · COMPLETE'
+        : unlocked+' / '+GEMS.length;
+      $('collectionProgress').classList.toggle('complete',complete);
       updateGemBadges();
     }else{
       renderTreasureCollection();
@@ -792,7 +797,11 @@
     grid.className='treasure-grid';
     TREASURES.forEach(t=>grid.appendChild(treasureCollectionCard(t)));
     root.appendChild(grid);
-    $('collectionProgress').textContent=state.discoveredTreasures.length+' / '+TREASURES.length;
+    const complete=state.discoveredTreasures.length>=TREASURES.length;
+    $('collectionProgress').textContent=complete
+      ? TREASURES.length+' / '+TREASURES.length+' · COMPLETE'
+      : state.discoveredTreasures.length+' / '+TREASURES.length;
+    $('collectionProgress').classList.toggle('complete',complete);
     root.querySelectorAll('.vault-theme').forEach(button=>{
       button.addEventListener('click',()=>handleTheme(button.dataset.themeId));
     });
@@ -1195,6 +1204,7 @@
     recordRun,
     getProgressSnapshot,
     getChestTarget:()=>CHEST_TARGET,
+    getTreasureCount:()=>TREASURES.length,
     getGemCount:tier=>state.gemCounts[tier]||0,
     updateGemBadges,
     showCollection,
