@@ -3499,7 +3499,9 @@
       if(treasureProgress&&window.GemdropMeta&&window.GemdropMeta.getState){
         const state=window.GemdropMeta.getState();
         const discovered=(state.discoveredTreasures||[]).length;
-        const total=Number(state.treasureTotalCount)||0;
+        const total=window.GemdropMeta.getTreasureCount
+          ? Number(window.GemdropMeta.getTreasureCount())||0
+          : 0;
         treasureProgress.textContent=total&&discovered>=total
           ? total+' / '+total+' · COMPLETE'
           : discovered+' / '+(total||'?');
