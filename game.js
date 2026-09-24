@@ -282,9 +282,30 @@
   const POWER_CHARGE_PER_MERGE={tumble:1/40,cascade:1/64,prism:1/52};
 
   const SPECIAL_DROPS={
-    scatter:{label:'Scatter',hint:'SHAKES THE BOARD',color:0xe06cff,css:'#E06CFF'},
-    fusion:{label:'Fusion',hint:'UPGRADES FIRST GEM',color:0x5ce5ff,css:'#5CE5FF'},
-    charge:{label:'Charge',hint:'REFILLS POWERS',color:0xffd45c,css:'#FFD45C'}
+    scatter:{
+      label:'Scatter',
+      hint:'SHAKES THE BOARD',
+      color:0xe06cff,
+      css:'#E06CFF',
+      weight:58,
+      cooldown:16
+    },
+    fusion:{
+      label:'Fusion',
+      hint:'UPGRADES FIRST GEM',
+      color:0x5ce5ff,
+      css:'#5CE5FF',
+      weight:29,
+      cooldown:24
+    },
+    charge:{
+      label:'Charge',
+      hint:'REFILLS POWERS',
+      color:0xffd45c,
+      css:'#FFD45C',
+      weight:13,
+      cooldown:40
+    }
   };
 
   function gemTextureKey(tier) {
@@ -980,6 +1001,7 @@
       this.spawnRepeat=0;
       this.specialGenerated=0;
       this.specialCountdown=6;
+      this.specialTypeCooldown={scatter:0,fusion:0,charge:0};
       this.currentSpecial=null;
       this.nextSpecial=null;
       this.runDrops=0;
@@ -1080,6 +1102,7 @@
         144,
         wallOptions
       );
+      this.floorBody.gemdropSurface='floor';
 
       this.leftWallBody=this.matter.add.rectangle(
         WALL-54,
@@ -1088,6 +1111,7 @@
         H*2,
         wallOptions
       );
+      this.leftWallBody.gemdropSurface='side';
 
       this.rightWallBody=this.matter.add.rectangle(
         W-WALL+54,
@@ -1096,6 +1120,7 @@
         H*2,
         wallOptions
       );
+      this.rightWallBody.gemdropSurface='side';
     }
 
     createGemMask() {
@@ -1873,16 +1898,42 @@
 
     rollSpecialDrop() {
       this.specialGenerated=(this.specialGenerated||0)+1;
+
+      if(!this.specialTypeCooldown){
+        this.specialTypeCooldown={scatter:0,fusion:0,charge:0};
+      }
+      for(const key of Object.keys(this.specialTypeCooldown)){
+        this.specialTypeCooldown[key]=Math.max(0,(this.specialTypeCooldown[key]||0)-1);
+      }
+
       if(this.specialGenerated<=8) return null;
 
       this.specialCountdown=Math.max(0,(this.specialCountdown||0)-1);
       if(this.specialCountdown>0) return null;
 
-      this.specialCountdown=Phaser.Math.Between(14,22);
-      const r=Math.random();
-      if(r<.52) return 'scatter';
-      if(r<.82) return 'fusion';
-      return 'charge';
+      const eligible=Object.entries(SPECIAL_DROPS)
+        .filter(([key])=>(this.specialTypeCooldown[key]||0)<=0);
+
+      if(!eligible.length){
+        this.specialCountdown=4;
+        return null;
+      }
+
+      const total=eligible.reduce((sum,[,special])=>sum+(special.weight||1),0);
+      let pick=Math.random()*total;
+      let selected=eligible[0][0];
+
+      for(const [key,special] of eligible){
+        pick-=special.weight||1;
+        if(pick<=0){
+          selected=key;
+          break;
+        }
+      }
+
+      this.specialTypeCooldown[selected]=SPECIAL_DROPS[selected].cooldown||18;
+      this.specialCountdown=Phaser.Math.Between(16,24);
+      return selected;
     }
 
     announceCurrentSpecial() {
@@ -1934,6 +1985,7 @@
       this.spawnRepeat=0;
       this.specialGenerated=0;
       this.specialCountdown=Phaser.Math.Between(5,8);
+      this.specialTypeCooldown={scatter:0,fusion:0,charge:0};
       this.currentSpecial=null;
       this.nextSpecial=null;
       this.runDrops=0;
@@ -2374,12 +2426,23 @@
           this.removeGem(gem);
 
           for(const key of Object.keys(this.powerCharge)){
-            this.powerCharge[key]=clamp((this.powerCharge[key]||0)+.08,0,1);
+            const before=clamp(this.powerCharge[key]||0,0,1);
+            const after=clamp(before+.16,0,1);
+            this.powerCharge[key]=after;
+            if(before<.999&&after>=.999){
+              if(this.runPowerupsEarned){
+                this.runPowerupsEarned[key]=(this.runPowerupsEarned[key]||0)+1;
+              }
+              if(this.runFirstPowerupMs===null) this.runFirstPowerupMs=this.runElapsedMs();
+              this.pulsePowerButton(key,true);
+            }else{
+              this.pulsePowerButton(key,false);
+            }
           }
 
-          this.mergeBurst(x,y,tiers[4],true);
+          this.mergeBurst(x,y,tiers[4],1);
           this.updatePowerButtons();
-          this.showStatus('CHARGE GEM +8%','reward',1150,'zap');
+          this.showStatus('CHARGE GEM +16%','reward',1250,'zap');
           tone(640,.13,.03,'sine');
           haptic([8,12,8]);
           return;
@@ -2483,7 +2546,14 @@
 
         if(!otherBody||otherBody.label!=='vault-wall') continue;
 
-        if(gem.specialType&&gem.specialType!=='fusion'){
+        if(
+          gem.specialType&&
+          gem.specialType!=='fusion'&&
+          (
+            otherBody.gemdropSurface==='floor'||
+            this.time.now-gem.born>900
+          )
+        ){
           this.activateSpecialGem(gem,null);
           continue;
         }
@@ -4037,6 +4107,28 @@
           this.syncGemOptics(gem,time);
           this.syncGemShadow(gem);
           this.syncSpecialVisuals(gem,time);
+
+          if(
+            gem.specialType==='fusion' &&
+            !gem.specialTriggered &&
+            time-gem.born>1350
+          ){
+            const target=this.gems
+              .filter(other=>
+                other&&
+                other!==gem&&
+                other.active&&
+                other.body&&
+                !other.specialType&&
+                !other.merging
+              )
+              .sort((a,b)=>
+                Phaser.Math.Distance.Squared(gem.x,gem.y,a.x,a.y)-
+                Phaser.Math.Distance.Squared(gem.x,gem.y,b.x,b.y)
+              )[0];
+
+            if(target) this.activateSpecialGem(gem,target);
+          }
 
           if(gem.dropTransit){
             const age=time-gem.born;
