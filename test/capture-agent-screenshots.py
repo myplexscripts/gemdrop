@@ -29,6 +29,7 @@ def load_game(driver):
     WebDriverWait(driver, 20).until(
         lambda d: d.execute_script("return !!window.GemdropGameScene && !!window.Phaser")
     )
+    driver.execute_script("localStorage.setItem('gemdrop-tutorial-seen-v1','1')")
     WebDriverWait(driver, 20).until(
         EC.element_to_be_clickable((By.ID, "startButton"))
     ).click()
@@ -151,6 +152,55 @@ def run_summary(driver):
     time.sleep(0.35)
     save(driver, "04-run-progression-summary.png")
 
+def performance_stress(driver):
+    driver.get(ROOT + "/index.html")
+    load_game(driver)
+    result=driver.execute_script("""
+      const s=window.GemdropGameScene;
+      return s.runStressScenario();
+    """)
+    time.sleep(2.5)
+
+    stats=driver.execute_script("""
+      const s=window.GemdropGameScene;
+      const invalid=s.gems.filter(g=>
+        !g || !g.active || !g.body ||
+        !Number.isFinite(g.x) || !Number.isFinite(g.y) ||
+        !Number.isFinite(g.body.velocity.x) || !Number.isFinite(g.body.velocity.y)
+      ).length;
+      return {
+        running:s.running,
+        gems:s.gems.length,
+        transientFx:s.transientFx.size,
+        invalid
+      };
+    """)
+
+    assert result["cap"] == 140
+    assert stats["running"] is True
+    assert stats["transientFx"] <= 140
+    assert stats["invalid"] == 0
+    save(driver, "05-performance-stress.png")
+
+def tutorial_screen(driver):
+    driver.get(ROOT + "/index.html")
+    WebDriverWait(driver, 20).until(
+        lambda d: d.execute_script("return !!window.GemdropGameScene")
+    )
+    driver.execute_script("localStorage.removeItem('gemdrop-tutorial-seen-v1')")
+    driver.refresh()
+    WebDriverWait(driver, 20).until(
+        lambda d: d.execute_script("return !!window.GemdropGameScene")
+    )
+    WebDriverWait(driver, 20).until(
+        EC.element_to_be_clickable((By.ID, "startButton"))
+    ).click()
+    WebDriverWait(driver, 10).until(
+        lambda d: "visible" in d.find_element(By.ID, "tutorialOverlay").get_attribute("class")
+    )
+    time.sleep(0.25)
+    save(driver, "06-first-run-tutorial.png")
+
 def main():
     driver=make_driver()
     try:
@@ -158,6 +208,8 @@ def main():
         special_gem(driver)
         high_tier_merge(driver)
         run_summary(driver)
+        performance_stress(driver)
+        tutorial_screen(driver)
     finally:
         driver.quit()
 
