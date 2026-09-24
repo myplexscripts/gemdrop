@@ -51,6 +51,7 @@
   const DROP_DELAY = 300;
   const AUTO_FIRE_DELAY = DROP_DELAY;
   const DROP_GATE_CLEARANCE = 12;
+  const MAX_TRANSIENT_FX = 140;
   const AIM_CONTROL_GAIN = 1.25;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
@@ -1016,6 +1017,7 @@
       this.gemPipeline=null;
       this.activeGemGlints=0;
       this.transientFx=new Set();
+      this.nextRestingScanAt=0;
       this.collectionLightAngle=GEM_WORLD_LIGHT_ANGLE;
       this.collectionPointerLightAngle=null;
       this.collectionPointerLightUntil=0;
@@ -2044,7 +2046,14 @@
     }
 
     trackTransientFx(gameObject) {
-      if(gameObject) this.transientFx.add(gameObject);
+      if(!gameObject) return gameObject;
+
+      this.transientFx.add(gameObject);
+      while(this.transientFx.size>MAX_TRANSIENT_FX){
+        const oldest=this.transientFx.values().next().value;
+        if(!oldest||oldest===gameObject) break;
+        this.destroyTransientFx(oldest);
+      }
       return gameObject;
     }
 
@@ -2831,7 +2840,9 @@
     }
 
     contactSpark(x,y,colorHex,speed) {
-      const count=Math.min(4,1+Math.floor(speed/2));
+      if(this.transientFx.size>112) return;
+      const pressure=this.transientFx.size>72?1:0;
+      const count=Math.max(1,Math.min(4-pressure,1+Math.floor(speed/2)));
       const color=hexToInt(colorHex);
 
       for(let i=0;i<count;i++){
@@ -3754,6 +3765,46 @@
       }
     }
 
+    runStressScenario() {
+      if(!this.running) this.startRun();
+
+      const M=Phaser.Physics.Matter.Matter;
+      const columns=7;
+      const rows=6;
+      const startY=FLOOR-52;
+
+      for(let row=0;row<rows;row++){
+        for(let col=0;col<columns;col++){
+          const tier=(row*2+col)%10;
+          const x=70+col*82+(row%2?18:0);
+          const y=startY-row*82;
+          const gem=this.createGem(x,y,tier);
+          M.Body.setVelocity(gem.body,{
+            x:Phaser.Math.FloatBetween(-1.2,1.2),
+            y:Phaser.Math.FloatBetween(-.8,.4)
+          });
+          M.Body.setAngularVelocity(gem.body,Phaser.Math.FloatBetween(-.03,.03));
+        }
+      }
+
+      for(let i=0;i<14;i++){
+        const tier=tiers[Phaser.Math.Between(4,14)];
+        this.mergeBurst(
+          Phaser.Math.Between(90,W-90),
+          Phaser.Math.Between(260,FLOOR-120),
+          tier,
+          Phaser.Math.Between(1,4)
+        );
+      }
+
+      this.showStatus('STRESS TEST','info',1200,'gauge');
+      return {
+        gems:this.gems.length,
+        transientFx:this.transientFx.size,
+        cap:MAX_TRANSIENT_FX
+      };
+    }
+
     formatBalanceTime(ms) {
       const total=Math.max(0,Math.round((Number(ms)||0)/1000));
       const minutes=Math.floor(total/60);
@@ -4078,7 +4129,10 @@
           this.updateNextPreview(time);
         }
 
-        this.scanForRestingMatches();
+        if(time>=this.nextRestingScanAt){
+          this.scanForRestingMatches();
+          this.nextRestingScanAt=time+(this.gems.length>36?90:58);
+        }
         this.processMerges();
 
         this.mergeWindow=Math.max(0,this.mergeWindow-dt);
@@ -4103,6 +4157,21 @@
 
         for(const gem of this.gems){
           if(!gem||!gem.active||!gem.body) continue;
+
+          if(
+            gem.x<WALL-120||
+            gem.x>W-WALL+120||
+            gem.y>FLOOR+180||
+            gem.y<-180
+          ){
+            const M=Phaser.Physics.Matter.Matter;
+            M.Body.setPosition(gem.body,{
+              x:clamp(gem.x,WALL+24,W-WALL-24),
+              y:clamp(gem.y,80,FLOOR-36)
+            });
+            M.Body.setVelocity(gem.body,{x:0,y:0});
+            M.Body.setAngularVelocity(gem.body,0);
+          }
 
           this.syncGemOptics(gem,time);
           this.syncGemShadow(gem);
