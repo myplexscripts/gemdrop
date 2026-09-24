@@ -3132,7 +3132,7 @@
 
       for(let tier=0;tier<tiers.length;tier++){
         const same=this.gems
-          .filter(g=>g&&g.active&&!g.merging&&!g.specialType&&g.tier===tier)
+          .filter(g=>g&&g.active&&!g.merging&&!g.specialType&&!g.dropTransit&&g.body&&g.tier===tier)
           .sort((a,b)=>b.y-a.y);
 
         for(let i=0;i+1<same.length;i+=2){
@@ -3146,6 +3146,30 @@
       }
 
       return pairs;
+    }
+
+    pulsePowerButton(key,ready=false) {
+      const ids={tumble:'powerTumble',cascade:'powerCascade',prism:'powerPrism'};
+      const button=$(ids[key]);
+      if(!button) return;
+
+      button.classList.remove('power-charge-step','power-ready-pop','power-activated');
+      void button.offsetWidth;
+      button.classList.add(ready?'power-ready-pop':'power-charge-step');
+      window.setTimeout(()=>{
+        button.classList.remove('power-charge-step','power-ready-pop');
+      },ready?720:360);
+    }
+
+    activatePowerFeedback(key) {
+      const ids={tumble:'powerTumble',cascade:'powerCascade',prism:'powerPrism'};
+      const button=$(ids[key]);
+      if(button){
+        button.classList.remove('power-activated');
+        void button.offsetWidth;
+        button.classList.add('power-activated');
+        window.setTimeout(()=>button.classList.remove('power-activated'),520);
+      }
     }
 
     rechargePowers(mergeTier=0) {
@@ -3163,6 +3187,12 @@
         this.powerCharge[key]=after;
         if(after>before+.0005) charged.push(key);
 
+        const beforeStep=Math.floor(before*4);
+        const afterStep=Math.floor(after*4);
+        if(afterStep>beforeStep&&after<.999){
+          this.pulsePowerButton(key,false);
+        }
+
         if(
           this.runPowerupsEarned &&
           before<.999 &&
@@ -3172,6 +3202,7 @@
           if(this.runFirstPowerupMs===null){
             this.runFirstPowerupMs=this.runElapsedMs();
           }
+          this.pulsePowerButton(key,true);
         }
       }
 
@@ -3229,6 +3260,7 @@
 
       this.powerCharge.tumble=0;
       if(this.runPowerupsUsed) this.runPowerupsUsed.tumble++;
+      this.activatePowerFeedback('tumble');
       this.tumbleState={
         started:this.time.now,
         duration:1950,
@@ -3271,6 +3303,7 @@
       }
 
       this.cameras.main.shake(1850,.0135);
+      this.cameras.main.flash(120,255,177,76,false);
       this.showStatus('TUMBLE!','reward',1050,'rotate-cw');
       tone(210,.12,.028,'triangle');
       haptic([10,18,10,18,12]);
@@ -3301,12 +3334,18 @@
           if(!gem||!gem.active||!gem.body) continue;
           M.Sleeping.set(gem.body,false);
 
+          const sideBias=clamp((gem.x-W/2)/(W/2),-1,1);
+          const heightBias=clamp((FLOOR-gem.y)/(FLOOR-LIMIT_Y),0,1);
+          const reshufflePulse=state.kick%3===0?1:.45;
+
           const horizontal=
-            direction*Phaser.Math.FloatBetween(1.2,2.55)*envelope+
-            Phaser.Math.FloatBetween(-1.05,1.05);
+            direction*Phaser.Math.FloatBetween(1.15,2.35)*envelope+
+            sideBias*1.15*reshufflePulse*envelope+
+            Phaser.Math.FloatBetween(-1.15,1.15);
 
           const vertical=
-            Phaser.Math.FloatBetween(-1.75,.65)*envelope;
+            Phaser.Math.FloatBetween(-1.55,.55)*envelope-
+            heightBias*.72*reshufflePulse*envelope;
 
           M.Body.setVelocity(gem.body,{
             x:clamp(gem.body.velocity.x+horizontal,-10.0,10.0),
@@ -3344,15 +3383,18 @@
 
       this.powerCharge.cascade=0;
       if(this.runPowerupsUsed) this.runPowerupsUsed.cascade++;
+      this.activatePowerFeedback('cascade');
 
       for(const pair of pairs){
         this.queueMerge(pair[0],pair[1]);
       }
 
       this.showStatus('MERGE ×'+pairs.length,'reward',1050,'sparkles');
-      this.cameras.main.shake(75,.002);
+      this.cameras.main.shake(105,.0026);
+      this.cameras.main.flash(105,224,132,255,false);
       tone(520,.11,.03,'sine');
-      haptic([8,20,8]);
+      if(pairs.length>=3) window.setTimeout(()=>tone(660,.09,.022,'sine'),65);
+      haptic(pairs.length>=3?[8,16,8,20]:[8,20,8]);
       this.updatePowerButtons();
     }
 
@@ -3368,7 +3410,11 @@
 
       this.powerCharge.prism=0;
       if(this.runPowerupsUsed) this.runPowerupsUsed.prism++;
-      this.currentTier=Math.min(this.currentTier+1,tiers.length-1);
+      this.activatePowerFeedback('prism');
+
+      const previousTier=this.currentTier;
+      const boost=previousTier<tiers.length-2?2:1;
+      this.currentTier=Math.min(previousTier+boost,tiers.length-1);
       this.unlockTier(this.currentTier,true);
 
       if(this.preview){
@@ -3379,9 +3425,12 @@
       }
 
       this.updateAimHandle();
-      this.showStatus('UPGRADE!','reward',1100,'gem',this.currentTier);
+      const gained=this.currentTier-previousTier;
+      this.showStatus('UPGRADE +'+gained,'reward',1200,'gem',this.currentTier);
+      this.cameras.main.flash(150,103,212,255,false);
       tone(680,.11,.03,'sine');
-      haptic([7,13,7]);
+      if(gained>1) window.setTimeout(()=>tone(880,.10,.024,'sine'),72);
+      haptic(gained>1?[8,12,10,16]:[7,13,7]);
       this.updatePowerButtons();
     }
 
