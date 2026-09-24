@@ -2517,6 +2517,7 @@
 
         const tier=a.tier;
         const next=tier+1;
+        const impact=next>=tiers.length?4:this.mergeImpactLevel(next);
         const gateInMerge=this.dropGateGem===a||this.dropGateGem===b;
         const x=(a.x+b.x)/2;
         const y=(a.y+b.y)/2;
@@ -2540,8 +2541,8 @@
         if(next>=tiers.length){
           const masterValue=tiers[tier].score*2;
           this.addScore(masterValue);
-          this.mergeBurst(x,y,tiers[tier],true);
-          this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',28,{big:true});
+          this.mergeBurst(x,y,tiers[tier],4);
+          this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',30,{big:true,impact:4});
           this.emitMergeRewardTrails(x,y,masterValue,chargedPowerups,this.mergeChain,true,tiers[tier].color);
           this.showStatus('MASTER CUT +$'+masterValue,'reward',1450,'gem',tier);
           this.cameras.main.shake(100,.0038);
@@ -2562,7 +2563,7 @@
 
         this.bestTierReached=Math.max(this.bestTierReached,next);
         this.addScore(tiers[next].score);
-        this.mergeBurst(x,y,tiers[next],next>=6);
+        this.mergeBurst(x,y,tiers[next],impact);
 
         const label=this.mergeChain>=2
           ? this.mergeChain+'× CHAIN  +$'+tiers[next].score
@@ -2574,7 +2575,7 @@
           label,
           this.mergeChain>=2?'#ffd86f':'#ffe7c5',
           this.mergeChain>=2?25:19,
-          {big:this.mergeChain>=2}
+          {big:this.mergeChain>=2||impact>=3,impact}
         );
         this.emitMergeRewardTrails(
           x,
@@ -2599,9 +2600,34 @@
           haptic([18,35,18,55]);
         }
 
-        this.cameras.main.shake(70,next>=7?.0028:.0015);
-        tone(270+next*43,.07+next*.004,.022+Math.min(.017,next*.0018),'sine');
-        haptic(next>=8?15:8);
+        const shakeDuration=62+impact*34;
+        const shakeStrength=.0012+impact*.00085;
+        this.cameras.main.shake(shakeDuration,shakeStrength);
+
+        const baseTone=270+next*43;
+        tone(
+          baseTone,
+          .07+next*.004+impact*.012,
+          .022+Math.min(.017,next*.0018)+impact*.003,
+          impact>=3?'triangle':'sine'
+        );
+
+        if(impact>=2){
+          window.setTimeout(
+            ()=>tone(baseTone*(impact>=4?1.5:1.25),.08+impact*.012,.018+impact*.003,'sine'),
+            44
+          );
+        }
+
+        if(impact>=4){
+          window.setTimeout(()=>tone(baseTone*2,.10,.020,'sine'),92);
+        }
+
+        if(impact===0) haptic(7);
+        else if(impact===1) haptic(11);
+        else if(impact===2) haptic([9,14,9]);
+        else if(impact===3) haptic([11,16,12,20]);
+        else haptic([14,20,14,28]);
 
         if(!this.unlockedTiers.has(next)){
           this.unlockTier(next,true);
@@ -2611,20 +2637,33 @@
       this.updatePowerButtons();
     }
 
-    mergeBurst(x,y,tier,big=false) {
+    mergeImpactLevel(resultTier) {
+      if(resultTier>=18) return 4;
+      if(resultTier>=15) return 3;
+      if(resultTier>=11) return 2;
+      if(resultTier>=7) return 1;
+      return 0;
+    }
+
+    mergeBurst(x,y,tier,intensity=0) {
+      const level=typeof intensity==='number'
+        ? clamp(Math.round(intensity),0,4)
+        : intensity?1:0;
       const color=hexToInt(tier.accent);
-      const count=big?18:12;
+      const count=10+level*4;
+      const minDist=26+level*7;
+      const maxDist=62+level*17;
 
       for(let i=0;i<count;i++){
         const angle=Math.random()*Math.PI*2;
-        const dist=Phaser.Math.Between(big?45:28,big?96:68);
+        const dist=Phaser.Math.Between(minDist,maxDist);
 
         const shard=this.trackTransientFx(
           this.add.triangle(
             x,y,
-            0,-3,
-            2.7,2.5,
-            -2.7,2.5,
+            0,-(3+level*.42),
+            2.7+level*.30,2.5+level*.25,
+            -(2.7+level*.30),2.5+level*.25,
             i%3===0?0xffffff:color,
             .90
           ).setDepth(40).setRotation(angle)
@@ -2644,17 +2683,38 @@
       }
 
       const ring=this.trackTransientFx(
-        this.add.circle(x,y,14,color,.08).setStrokeStyle(2,color,.68).setDepth(39)
+        this.add.circle(x,y,14+level*2,color,.08)
+          .setStrokeStyle(2+level*.35,color,.66+level*.05)
+          .setDepth(39)
       );
 
       this.tweens.add({
         targets:ring,
-        scale:big?4.4:3.1,
+        scale:3.0+level*.55,
         alpha:0,
-        duration:big?400:300,
+        duration:290+level*45,
         ease:'Quad.Out',
         onComplete:()=>this.destroyTransientFx(ring)
       });
+
+      if(level>=2){
+        const inner=this.trackTransientFx(
+          this.add.circle(x,y,8,0xffffff,.10)
+            .setStrokeStyle(1.5,0xffffff,.48)
+            .setDepth(40)
+            .setBlendMode(Phaser.BlendModes.ADD)
+        );
+
+        this.tweens.add({
+          targets:inner,
+          scale:2.5+level*.45,
+          alpha:0,
+          duration:230+level*35,
+          delay:35,
+          ease:'Quad.Out',
+          onComplete:()=>this.destroyTransientFx(inner)
+        });
+      }
     }
 
     contactSpark(x,y,colorHex,speed) {
@@ -2691,8 +2751,9 @@
     floatText(x,y,text,color,size,opts={}) {
       const isChain=text.includes('× CHAIN');
       const isMaster=text.startsWith('MASTER CUT');
+      const impact=clamp(Number(opts.impact)||0,0,4);
       const big=!!opts.big||isChain||isMaster;
-      const fontSize=Math.max(big?27:20,size||20);
+      const fontSize=Math.max(big?27:20,size||20)+impact*1.25;
 
       let displayText=text;
       if(isChain){
@@ -2764,7 +2825,7 @@
         .setScale(.58)
         .setBlendMode(Phaser.BlendModes.SCREEN));
 
-      const sparkleCount=big?6:4;
+      const sparkleCount=(big?6:4)+Math.round(impact*1.5);
       for(let i=0;i<sparkleCount;i++){
         const angle=(Math.PI*2*i)/sparkleCount+Phaser.Math.FloatBetween(-.3,.3);
         const sparkle=this.trackTransientFx(
@@ -2792,7 +2853,7 @@
 
       this.tweens.add({
         targets:burst,
-        scale:big?5.6:4.4,
+        scale:(big?5.6:4.4)+impact*.45,
         alpha:0,
         duration:330,
         ease:'Quad.Out',
