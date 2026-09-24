@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY='gemdrop-meta-v1';
-  const CHEST_TARGET=280;
+  const CHEST_TARGET=320;
 
   const GEMS=[
     {name:'Quartz',description:'A pale crystal that catches even the faintest light.',score:1,color:'#D7EBF2',accent:'#EDF6F9',dark:'#859296',cut:'rectangular'},
@@ -120,7 +120,7 @@
 
   function blankState(){
     return {
-      version:2,
+      version:3,
       gemCounts:Array(GEMS.length).fill(0),
       chest:0,
       totalMerges:0,
@@ -167,8 +167,14 @@
     if((Number(base.version)||1)<2){
       const oldTarget=120;
       const oldChest=Math.max(0,Number(base.chest)||0);
-      base.chest=(oldChest/oldTarget)*CHEST_TARGET;
+      base.chest=(oldChest/oldTarget)*280;
       base.version=2;
+    }
+    if((Number(base.version)||1)<3){
+      const oldTarget=280;
+      const oldChest=Math.max(0,Number(base.chest)||0);
+      base.chest=(oldChest/oldTarget)*CHEST_TARGET;
+      base.version=3;
     }
     base.chest=clamp(Number(base.chest)||0,0,CHEST_TARGET);
 
@@ -458,13 +464,24 @@
 
   function randomTreasure(){
     const pool=eligibleTreasures();
-    const total=pool.reduce((sum,t)=>sum+t.weight,0);
+    const weighted=pool.map(treasure=>{
+      const copies=copiesFor(treasure.id).length;
+      const undiscovered=!state.discoveredTreasures.includes(treasure.id);
+      const discoveryBoost=undiscovered?3.4:1;
+      const duplicateDecay=1/(1+copies*.72);
+      return {
+        treasure,
+        weight:Math.max(.08,treasure.weight*discoveryBoost*duplicateDecay)
+      };
+    });
+
+    const total=weighted.reduce((sum,item)=>sum+item.weight,0);
     let roll=Math.random()*total;
-    for(const t of pool){
-      roll-=t.weight;
-      if(roll<=0) return t;
+    for(const item of weighted){
+      roll-=item.weight;
+      if(roll<=0) return item.treasure;
     }
-    return pool[pool.length-1];
+    return weighted[weighted.length-1].treasure;
   }
 
   function addTreasure(treasure){
@@ -473,6 +490,8 @@
       typeId:treasure.id,
       inlays:Array(treasure.sockets.length).fill(null),
       completed:false,
+      completionAwarded:false,
+      completionBonus:0,
       finalValue:null,
       comboId:null,
       acquiredAt:Date.now()
@@ -932,11 +951,31 @@
 
   function updateTreasureRecord(treasure,copy){
     const calc=calculateValue(treasure,copy);
-    if(!calc.full) return calc;
+
+    if(!calc.full){
+      copy.completed=false;
+      copy.finalValue=null;
+      copy.comboId=null;
+      save();
+      return calc;
+    }
+
+    copy.completed=true;
+    copy.finalValue=calc.total;
+    copy.comboId=calc.combo.id;
     state.treasureRecords[treasure.id]=Math.max(state.treasureRecords[treasure.id]||0,calc.total);
+
     if(calc.combo.id!=='none'&&!state.comboDiscoveries.includes(calc.combo.id)){
       state.comboDiscoveries.push(calc.combo.id);
     }
+
+    if(!copy.completionAwarded){
+      const bonus=Math.max(15,Math.round(calc.total*.15));
+      copy.completionAwarded=true;
+      copy.completionBonus=bonus;
+      state.gold+=bonus;
+    }
+
     save();
     return calc;
   }
@@ -961,7 +1000,11 @@
     $('treasureBonusLabel').textContent=known?calc.combo.name:'Mystery setting';
     $('treasureMultiplier').textContent='×'+calc.combo.multiplier.toFixed(2);
     $('treasureTotalValue').textContent=money(calc.total);
-    $('treasureCopyStatus').textContent=calc.full?'Complete · keep it or sell it':'Tap a setting to choose a gem';
+    $('treasureCopyStatus').textContent=calc.full
+      ? 'Complete · '+(copy.completionBonus?money(copy.completionBonus)+' completion bonus earned · ':'')+'keep it or sell it'
+      : copies.length>1
+        ? 'Duplicate copy · fill it, keep it, or salvage it'
+        : 'Tap a setting to choose a gem';
 
     const copyNav=document.querySelector('.treasure-copy-nav');
     if(copyNav) copyNav.hidden=copies.length<2;
@@ -1000,8 +1043,14 @@
     });
 
     const sell=$('sellTreasureButton');
-    sell.hidden=!calc.full;
-    if(calc.full) sell.querySelector('span').textContent='SELL FOR '+money(calc.total);
+    const duplicate=copies.length>1;
+    const salvage=Math.max(10,Math.round(treasure.base*.55));
+    sell.hidden=!calc.full&&!duplicate;
+    if(calc.full){
+      sell.querySelector('span').textContent='SELL FOR '+money(calc.total);
+    }else if(duplicate){
+      sell.querySelector('span').textContent='SALVAGE DUPLICATE · '+money(salvage);
+    }
     refreshIcons();
   }
 
@@ -1128,21 +1177,29 @@
     if(!treasure||!copy) return;
 
     const calc=calculateValue(treasure,copy);
-    if(!calc.full) return;
+    const copies=copiesFor(treasure.id);
+    const duplicate=copies.length>1;
 
-    const needed=Array(GEMS.length).fill(0);
-    copy.inlays.forEach(tier=>needed[tier]++);
-    for(let tier=0;tier<needed.length;tier++){
-      if(needed[tier]>(state.gemCounts[tier]||0)) return;
+    if(!calc.full){
+      if(!duplicate) return;
+      const salvage=Math.max(10,Math.round(treasure.base*.55));
+      state.gold+=salvage;
+      state.lifetimeTreasureSales+=salvage;
+    }else{
+      const needed=Array(GEMS.length).fill(0);
+      copy.inlays.forEach(tier=>needed[tier]++);
+      for(let tier=0;tier<needed.length;tier++){
+        if(needed[tier]>(state.gemCounts[tier]||0)) return;
+      }
+
+      for(let tier=0;tier<needed.length;tier++){
+        state.gemCounts[tier]-=needed[tier];
+      }
+
+      state.gold+=calc.total;
+      state.lifetimeTreasureSales+=calc.total;
+      state.treasureRecords[treasure.id]=Math.max(state.treasureRecords[treasure.id]||0,calc.total);
     }
-
-    for(let tier=0;tier<needed.length;tier++){
-      state.gemCounts[tier]-=needed[tier];
-    }
-
-    state.gold+=calc.total;
-    state.lifetimeTreasureSales+=calc.total;
-    state.treasureRecords[treasure.id]=Math.max(state.treasureRecords[treasure.id]||0,calc.total);
 
     const index=state.treasures.findIndex(t=>t.uid===copy.uid);
     if(index>=0) state.treasures.splice(index,1);
