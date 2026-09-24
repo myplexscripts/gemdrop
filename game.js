@@ -3564,16 +3564,12 @@
           this.ready=true;
           this.createDropPreview(true);
         }else{
-          const nextTier=tiers[this.currentTier];
-          const nextBottom=DROP_Y+(nextTier?nextTier.r*COLLIDER_SCALE:48);
-          const requiredTop=Math.max(
-            LIMIT_Y+DROP_GATE_CLEARANCE,
-            nextBottom+18
-          );
-
+          // The next gem only waits for the previous drop to move a little
+          // beyond the danger line. Requiring a full gem-sized vertical gap
+          // can deadlock a crowded board even when the run should continue.
           if(
             time-this.lastDropAt>=90 &&
-            gate.body.bounds.min.y>requiredTop
+            gate.body.bounds.min.y>LIMIT_Y+DROP_GATE_CLEARANCE
           ){
             this.dropGateGem=null;
             this.ready=true;
@@ -3644,9 +3640,12 @@
             Phaser.Physics.Matter.Matter.Sleeping.set(gem.body,false);
           }
 
+          // A gem that remains above the line is dangerous regardless of
+          // tiny Matter jitter. Requiring a low body speed caused soft locks
+          // where the pile could never settle enough to start game-over.
           if(
-            time-gem.born>800 &&
-            gem.body.speed<.70 &&
+            time-gem.born>650 &&
+            !gem.merging &&
             gem.body.bounds.min.y<LIMIT_Y
           ){
             high=true;
