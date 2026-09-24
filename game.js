@@ -951,6 +951,9 @@
       this.lastDropAt=0;
       this.dropGateGem=null;
       this.dangerTime=0;
+      this.dangerWarned=false;
+      this.dangerCriticalWarned=false;
+      this.dangerWasActive=false;
       this.mergeWindow=0;
       this.mergeChain=0;
       this.runMerges=0;
@@ -1950,6 +1953,9 @@
       this.lastDropAt=0;
       this.dropGateGem=null;
       this.dangerTime=0;
+      this.dangerWarned=false;
+      this.dangerCriticalWarned=false;
+      this.dangerWasActive=false;
       this.mergeWindow=0;
       this.mergeChain=0;
       this.discoveredCuts=new Set(this.unlockedTiers);
@@ -2256,6 +2262,9 @@
 
       if(gem.shadow&&gem.shadow.active) gem.shadow.destroy();
       gem.shadow=null;
+
+      if(gem.dangerGlow&&gem.dangerGlow.active) gem.dangerGlow.destroy();
+      gem.dangerGlow=null;
 
       this.destroySpecialVisuals(gem);
 
@@ -3872,6 +3881,35 @@
       }
     }
 
+    syncDangerGemVisual(gem,active,time) {
+      if(!gem||!gem.active) return;
+
+      if(!active){
+        if(gem.dangerGlow&&gem.dangerGlow.active) gem.dangerGlow.destroy();
+        gem.dangerGlow=null;
+        return;
+      }
+
+      if(!gem.dangerGlow||!gem.dangerGlow.active){
+        const scale=this.gemSpriteScale(gem.tier);
+        gem.dangerGlow=this.add.image(gem.x,gem.y,gemTextureKey(gem.tier))
+          .setTint(0xff335f)
+          .setDepth(8.4+gem.tier*.01)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setScale(scale*1.07)
+          .setAlpha(.14);
+        if(this.gemMask) gem.dangerGlow.setMask(this.gemMask);
+      }
+
+      const danger=clamp(this.dangerTime/1.75,0,1);
+      const pulse=.5+.5*Math.sin(time*.014+gem.tier);
+      gem.dangerGlow.x=gem.x;
+      gem.dangerGlow.y=gem.y;
+      gem.dangerGlow.rotation=gem.rotation;
+      gem.dangerGlow.setScale(this.gemSpriteScale(gem.tier)*(1.055+danger*.035+pulse*.012));
+      gem.dangerGlow.setAlpha(.08+danger*.20+pulse*.055);
+    }
+
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
       this.animateGemLights(time);
@@ -3942,6 +3980,7 @@
         }
 
         let high=false;
+        let dangerGemCount=0;
 
         for(const gem of this.gems){
           if(!gem||!gem.active||!gem.body) continue;
@@ -3968,22 +4007,65 @@
           // A gem that remains above the line is dangerous regardless of
           // tiny Matter jitter. Requiring a low body speed caused soft locks
           // where the pile could never settle enough to start game-over.
-          if(
+          const overLine=
             time-gem.born>650 &&
             !gem.merging &&
-            gem.body.bounds.min.y<LIMIT_Y
-          ){
+            gem.body.bounds.min.y<LIMIT_Y;
+
+          if(overLine){
             high=true;
+            dangerGemCount++;
           }
+          this.syncDangerGemVisual(gem,overLine,time);
         }
 
-        if(high) this.dangerTime+=dt;
-        else this.dangerTime=Math.max(0,this.dangerTime-dt*3.8);
+        if(high){
+          this.dangerTime=Math.min(1.9,this.dangerTime+dt);
+        }else{
+          this.dangerTime=Math.max(0,this.dangerTime-dt*4.6);
+        }
 
-        if(this.dangerTime>=.18){
-          if(this.statusKind!=='danger') this.showStatus('TOO HIGH','danger',0,'triangle-alert');
+        const dangerActive=this.dangerTime>=.12;
+
+        if(dangerActive&&!this.dangerWasActive){
+          this.dangerWasActive=true;
+        }
+
+        if(this.dangerTime>=.18&&!this.dangerWarned){
+          this.dangerWarned=true;
+          tone(235,.07,.016,'triangle');
+          haptic(6);
+        }
+
+        if(this.dangerTime>=.95&&!this.dangerCriticalWarned){
+          this.dangerCriticalWarned=true;
+          tone(176,.10,.020,'triangle');
+          window.setTimeout(()=>tone(154,.10,.016,'triangle'),88);
+          haptic([8,16,8]);
+        }
+
+        if(this.dangerTime>=.26){
+          if(this.statusKind!=='danger'){
+            this.showStatus(
+              dangerGemCount>1?'PILE TOO HIGH':'GEM TOO HIGH',
+              'danger',
+              0,
+              'triangle-alert'
+            );
+          }
         }else if(this.statusKind==='danger'){
           this.clearStatus();
+        }
+
+        if(!high&&this.dangerTime<=.02&&this.dangerWasActive){
+          if(this.dangerWarned){
+            tone(360,.055,.010,'sine');
+            haptic(4);
+          }
+          this.dangerWarned=false;
+          this.dangerCriticalWarned=false;
+          this.dangerWasActive=false;
+          if(this.statusKind==='danger') this.clearStatus();
         }
 
         if(this.dangerTime>=1.75) this.endGame('danger-line');
@@ -3994,20 +4076,34 @@
     }
 
     drawLimitLine(time) {
-      const active=this.dangerTime>.08;
-      const pulse=.60+.20*Math.sin(time*.009);
-      const color=active?0xff5d86:0xffca58;
+      const danger=clamp(this.dangerTime/1.75,0,1);
+      const active=danger>.035;
+      const pulse=.5+.5*Math.sin(time*(.006+danger*.010));
+      const color=mixHex('#ffca58','#ff355f',danger);
+      const alpha=.70+danger*.18+pulse*danger*.10;
+      const width=2+danger*2.2;
 
       this.limitLine.clear();
-      this.limitLine.lineStyle(active?3:2,color,active?pulse:.72);
+
+      if(active){
+        this.limitLine.lineStyle(width+5,color,.035+danger*.12);
+        this.limitLine.beginPath();
+        this.limitLine.moveTo(WALL+18+LIMIT_OPTICAL_X,LIMIT_Y);
+        this.limitLine.lineTo(W-WALL-18+LIMIT_OPTICAL_X,LIMIT_Y);
+        this.limitLine.strokePath();
+      }
+
+      this.limitLine.lineStyle(width,color,alpha);
       this.limitLine.beginPath();
       this.limitLine.moveTo(WALL+18+LIMIT_OPTICAL_X,LIMIT_Y);
       this.limitLine.lineTo(W-WALL-18+LIMIT_OPTICAL_X,LIMIT_Y);
       this.limitLine.strokePath();
 
       for(const j of this.limitJewels){
-        j.setFillStyle(color,active?pulse:.90);
-        j.setAlpha(active?pulse:.90);
+        const jewelPulse=.84+danger*.10+pulse*danger*.10;
+        j.setFillStyle(color,jewelPulse);
+        j.setAlpha(jewelPulse);
+        j.setScale(1+danger*.16+pulse*danger*.05);
       }
     }
 
