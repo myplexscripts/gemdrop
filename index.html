@@ -253,10 +253,52 @@
         <button id="menuHowToButton" class="secondary-button" type="button" disabled>
           <i data-lucide="circle-help" aria-hidden="true"></i><span>HOW TO PLAY</span>
         </button>
+        <button id="menuBalanceButton" class="secondary-button" type="button" hidden>
+          <i data-lucide="gauge" aria-hidden="true"></i><span>BALANCE</span>
+        </button>
         <button id="muteButton" class="secondary-button game-menu-mute" type="button" aria-label="Mute game" aria-pressed="false">
           <i class="mute-icon mute-icon--sound" data-lucide="volume-2" aria-hidden="true"></i>
           <i class="mute-icon mute-icon--muted" data-lucide="volume-x" aria-hidden="true"></i>
           <span class="mute-copy">MUTE</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="balanceOverlay" class="overlay balance-overlay" aria-modal="true" role="dialog" aria-labelledby="balanceTitle">
+    <div class="sheet-card balance-card">
+      <button id="balanceCloseButton" class="game-menu-close" type="button" aria-label="Close balance screen">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+      <p class="eyebrow">LOCAL PLAYTEST DATA</p>
+      <h2 id="balanceTitle">Balance</h2>
+      <p class="balance-note">Last 30 completed runs on this device.</p>
+
+      <div class="balance-grid">
+        <div><span>RUNS</span><strong id="balanceRuns">0</strong></div>
+        <div><span>AVG RUN</span><strong id="balanceRunTime">0:00</strong></div>
+        <div><span>DROPS / MIN</span><strong id="balanceDropsPerMin">0</strong></div>
+        <div><span>MERGES / MIN</span><strong id="balanceMergesPerMin">0</strong></div>
+        <div><span>FIRST POWER</span><strong id="balanceFirstPower">—</strong></div>
+        <div><span>POWERS / RUN</span><strong id="balancePowersPerRun">0</strong></div>
+        <div><span>TREASURES / RUN</span><strong id="balanceTreasuresPerRun">0</strong></div>
+        <div><span>AVG PEAK</span><strong id="balancePeak">Quartz</strong></div>
+      </div>
+
+      <div class="balance-death">
+        <span>USUAL RUN END</span>
+        <strong id="balanceDeathCause">No data yet</strong>
+      </div>
+
+      <div class="balance-power-grid" aria-label="Powerup earning rates">
+        <div><span>TUMBLE</span><strong id="balanceTumbleRate">0 / run</strong></div>
+        <div><span>MERGE</span><strong id="balanceMergeRate">0 / run</strong></div>
+        <div><span>UPGRADE</span><strong id="balanceUpgradeRate">0 / run</strong></div>
+      </div>
+
+      <div class="balance-actions">
+        <button id="balanceClearButton" class="secondary-button" type="button">
+          <i data-lucide="trash-2" aria-hidden="true"></i><span>CLEAR LOCAL DATA</span>
         </button>
       </div>
     </div>
