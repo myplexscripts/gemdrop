@@ -282,6 +282,34 @@
   const POWER_START_CHARGE={tumble:.02,cascade:0,prism:.01};
   const POWER_CHARGE_PER_MERGE={tumble:1/40,cascade:1/64,prism:1/52};
 
+  const TUTORIAL_STEPS=[
+    {
+      key:'drop',
+      title:'Aim. Release. Merge.',
+      copy:'Slide the control, release to drop, and match identical gems.'
+    },
+    {
+      key:'danger',
+      title:'Stay below the line.',
+      copy:'A gem that remains above the glowing line starts the danger countdown.'
+    },
+    {
+      key:'powers',
+      title:'Charge your powers.',
+      copy:'Merges charge Tumble, Merge and Upgrade. Save them for the right moment.'
+    },
+    {
+      key:'special',
+      title:'Prismatic means special.',
+      copy:'Rainbow gems can Scatter the pile, Fuse a gem upward, or Charge your powers.'
+    },
+    {
+      key:'treasure',
+      title:'Fill the treasure chest.',
+      copy:'Merging fills the meter. Unlock treasures, then set collected gems into them.'
+    }
+  ];
+
   const SPECIAL_DROPS={
     scatter:{
       label:'Scatter',
@@ -988,6 +1016,8 @@
       this.runStartedAt=0;
       this.runPausedTotal=0;
       this.runPauseStartedAt=0;
+      this.tutorialIndex=0;
+      this.tutorialContext='';
       this.discoveredCuts=new Set([0]);
       this.unlockedTiers=new Set([0]);
       this.limitLine=null;
@@ -1139,7 +1169,17 @@
       $('startButton').addEventListener('click',()=>{
         unlockAudio();
         startOverlay.classList.remove('visible');
-        this.startRun();
+
+        let tutorialSeen=false;
+        try{
+          tutorialSeen=localStorage.getItem('gemdrop-tutorial-seen-v1')==='1';
+        }catch{}
+
+        if(tutorialSeen){
+          this.startRun();
+        }else{
+          this.openTutorial('first-run');
+        }
       });
 
       document.addEventListener('pointerdown',()=>{
@@ -1178,7 +1218,15 @@
       $('menuButton').addEventListener('click',()=>this.setPaused(true));
       $('menuCloseButton').addEventListener('click',()=>this.setPaused(false));
       $('menuMainButton').addEventListener('click',()=>this.returnToMenu());
-      $('menuHowToButton').addEventListener('click',()=>{});
+      $('menuHowToButton').addEventListener('click',()=>{
+        pauseOverlay.classList.remove('visible');
+        this.openTutorial('pause');
+      });
+
+      const tutorialNext=$('tutorialNext');
+      if(tutorialNext) tutorialNext.addEventListener('click',()=>this.advanceTutorial());
+      const tutorialSkip=$('tutorialSkip');
+      if(tutorialSkip) tutorialSkip.addEventListener('click',()=>this.finishTutorial());
 
       const balanceDebug=
         new URLSearchParams(window.location.search).has('balance')||
@@ -3762,6 +3810,73 @@
             treasureHaul.appendChild(chip);
           });
         }
+      }
+    }
+
+    openTutorial(context='pause') {
+      this.tutorialContext=context;
+      this.tutorialIndex=0;
+      this.renderTutorial();
+      const overlay=$('tutorialOverlay');
+      if(overlay) overlay.classList.add('visible');
+    }
+
+    renderTutorial() {
+      const step=TUTORIAL_STEPS[this.tutorialIndex]||TUTORIAL_STEPS[0];
+      const title=$('tutorialTitle');
+      const copy=$('tutorialCopy');
+      const eyebrow=$('tutorialEyebrow');
+      const visual=$('tutorialVisual');
+      const dots=$('tutorialDots');
+      const next=$('tutorialNext');
+
+      if(title) title.textContent=step.title;
+      if(copy) copy.textContent=step.copy;
+      if(eyebrow) eyebrow.textContent=(this.tutorialIndex+1)+' / '+TUTORIAL_STEPS.length+' · HOW TO PLAY';
+
+      if(visual){
+        visual.className='tutorial-visual tutorial-visual--'+step.key;
+      }
+
+      if(dots){
+        dots.innerHTML='';
+        TUTORIAL_STEPS.forEach((_,index)=>{
+          const dot=document.createElement('span');
+          dot.className=index===this.tutorialIndex?'active':'';
+          dots.appendChild(dot);
+        });
+      }
+
+      if(next){
+        const label=next.querySelector('span');
+        if(label) label.textContent=this.tutorialIndex===TUTORIAL_STEPS.length-1?'PLAY':'NEXT';
+      }
+
+      if(window.lucide) window.lucide.createIcons({attrs:{'stroke-width':1.9}});
+    }
+
+    advanceTutorial() {
+      if(this.tutorialIndex<TUTORIAL_STEPS.length-1){
+        this.tutorialIndex++;
+        this.renderTutorial();
+        haptic(4);
+        return;
+      }
+      this.finishTutorial();
+    }
+
+    finishTutorial() {
+      try{localStorage.setItem('gemdrop-tutorial-seen-v1','1')}catch{}
+      const overlay=$('tutorialOverlay');
+      if(overlay) overlay.classList.remove('visible');
+
+      const context=this.tutorialContext;
+      this.tutorialContext='';
+
+      if(context==='first-run'){
+        this.startRun();
+      }else{
+        pauseOverlay.classList.add('visible');
       }
     }
 
