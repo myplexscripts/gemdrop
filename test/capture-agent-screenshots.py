@@ -64,7 +64,7 @@ def danger_sequence(driver):
         g.born=s.time.now-1200;
       });
     """)
-    time.sleep(0.55)
+    time.sleep(1.0)
     save(driver, "01-danger-failsafe.png")
 
 def special_gem(driver):
@@ -111,7 +111,7 @@ def high_tier_merge(driver):
       s.queueMerge(a,b);
       s.processMerges();
     """)
-    time.sleep(0.16)
+    time.sleep(0.08)
     save(driver, "03-high-tier-merge.png")
 
 def run_summary(driver):
