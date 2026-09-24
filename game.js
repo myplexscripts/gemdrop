@@ -820,6 +820,7 @@
     'uniform float uStepCut;',
     'uniform float uSpecial;',
     'uniform float uSpecialOffset;',
+    'uniform float uSpecialKind;',
     'varying vec2 outTexCoord;',
     'varying vec4 outTint;',
     'vec3 prismRainbow(float h){',
@@ -851,12 +852,24 @@
     '  vec3 material=mix(richDeep,richGem,low);',
     '  material=mix(material,richAccent,high*.56);',
     '  if(uSpecial>.5){',
-    '    float prismPhase=fract(outTexCoord.x*.62+outTexCoord.y*.24+uTime*.045+uSpecialOffset+style*.11);',
+    '    float kind=max(1.0,uSpecialKind);',
+    '    float pattern=outTexCoord.x*.62+outTexCoord.y*.24+style*.11;',
+    '    if(kind<1.5){',
+    '      pattern+=sin((outTexCoord.y*8.0+uTime*.52+uSpecialOffset)*6.2831853)*.045;',
+    '    }else if(kind<2.5){',
+    '      pattern=outTexCoord.x*.82-outTexCoord.y*.38+style*.16;',
+    '    }else{',
+    '      pattern=outTexCoord.y*.72+outTexCoord.x*.18+style*.08;',
+    '    }',
+    '    float prismPhase=fract(pattern+uTime*(.034+kind*.006)+uSpecialOffset);',
     '    vec3 spectrum=prismRainbow(prismPhase);',
-    '    spectrum=mix(vec3(.94),spectrum,.74);',
-    '    float facetWave=.82+.18*sin((style+outTexCoord.x*.31-outTexCoord.y*.21+uTime*.065+uSpecialOffset)*6.2831853);',
-    '    vec3 prismMaterial=spectrum*(.66+low*.28+high*.12)*facetWave;',
-    '    material=mix(material,prismMaterial,.84);',
+    '    spectrum=mix(vec3(.91),spectrum,.88);',
+    '    float facetWave=.76+.24*sin((style+outTexCoord.x*.31-outTexCoord.y*.21+uTime*.065+uSpecialOffset)*6.2831853);',
+    '    float sweep=pow(max(0.0,1.0-abs(fract(pattern*.72+uTime*.09+uSpecialOffset)-.5)*2.0),5.0);',
+    '    vec3 prismMaterial=spectrum*(.70+low*.24+high*.16)*facetWave;',
+    '    prismMaterial+=mix(vec3(1.0),spectrum,.55)*sweep*.20;',
+    '    if(kind>2.5) prismMaterial*=.94+.10*sin((uTime*.16+uSpecialOffset)*6.2831853);',
+    '    material=mix(material,prismMaterial,.96);',
     '  }',
     '  vec3 viewDir=vec3(0.0,0.0,1.0);',
     '  vec3 reflected=reflect(-lightDir,normal);',
@@ -895,6 +908,7 @@
       this.set1f('uStepCut',d.stepCut?1:0);
       this.set1f('uSpecial',d.special?1:0);
       this.set1f('uSpecialOffset',d.specialOffset||0);
+      this.set1f('uSpecialKind',d.specialKind||0);
     }
 
     onBind(gameObject) {
@@ -1625,6 +1639,7 @@
         stepCut:window.ReactiveGemSystem.isStepCut(t.reactiveCut),
         special:!!gameObject.specialType,
         specialOffset:Number.isFinite(gameObject.specialHueOffset)?gameObject.specialHueOffset:0,
+        specialKind:gameObject.specialType==='scatter'?1:gameObject.specialType==='fusion'?2:gameObject.specialType==='charge'?3:0,
         texelX:1/w,
         texelY:1/h
       };
@@ -2041,6 +2056,7 @@
       if(gameObject.pipelineData){
         gameObject.pipelineData.special=true;
         gameObject.pipelineData.specialOffset=gameObject.specialHueOffset;
+        gameObject.pipelineData.specialKind=specialType==='scatter'?1:specialType==='fusion'?2:3;
       }
     }
 
