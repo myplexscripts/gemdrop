@@ -250,7 +250,7 @@
         <button id="menuMainButton" class="primary-button" type="button">
           <i data-lucide="house" aria-hidden="true"></i><span>MAIN MENU</span>
         </button>
-        <button id="menuHowToButton" class="secondary-button" type="button" disabled>
+        <button id="menuHowToButton" class="secondary-button" type="button">
           <i data-lucide="circle-help" aria-hidden="true"></i><span>HOW TO PLAY</span>
         </button>
         <button id="menuBalanceButton" class="secondary-button" type="button" hidden>
@@ -262,6 +262,32 @@
           <span class="mute-copy">MUTE</span>
         </button>
       </div>
+    </div>
+  </section>
+
+  <section id="tutorialOverlay" class="overlay tutorial-overlay" aria-modal="true" role="dialog" aria-labelledby="tutorialTitle">
+    <div class="tutorial-card">
+      <button id="tutorialSkip" class="tutorial-skip" type="button">SKIP</button>
+
+      <div id="tutorialVisual" class="tutorial-visual tutorial-visual--drop" aria-hidden="true">
+        <div class="tutorial-gem tutorial-gem--one"></div>
+        <div class="tutorial-gem tutorial-gem--two"></div>
+        <div class="tutorial-danger-line"></div>
+        <div class="tutorial-power-row">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="tutorial-chest"><i data-lucide="gift"></i></div>
+      </div>
+
+      <p id="tutorialEyebrow" class="eyebrow">HOW TO PLAY</p>
+      <h2 id="tutorialTitle">Aim. Release. Merge.</h2>
+      <p id="tutorialCopy" class="tutorial-copy">Slide the control, release to drop, and match identical gems.</p>
+
+      <div id="tutorialDots" class="tutorial-dots" aria-label="Tutorial progress"></div>
+
+      <button id="tutorialNext" class="primary-button tutorial-next" type="button">
+        <span>NEXT</span><i data-lucide="chevron-right" aria-hidden="true"></i>
+      </button>
     </div>
   </section>
 
