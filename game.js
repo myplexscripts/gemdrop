@@ -1150,6 +1150,26 @@
       $('menuMainButton').addEventListener('click',()=>this.returnToMenu());
       $('menuHowToButton').addEventListener('click',()=>{});
 
+      const balanceDebug=
+        new URLSearchParams(window.location.search).has('balance')||
+        new URLSearchParams(window.location.search).get('debug')==='1'||
+        localStorage.getItem('gemdrop-balance-debug')==='1';
+      const balanceButton=$('menuBalanceButton');
+      if(balanceButton){
+        balanceButton.hidden=!balanceDebug;
+        balanceButton.addEventListener('click',()=>this.openBalanceScreen());
+      }
+      const balanceClose=$('balanceCloseButton');
+      if(balanceClose) balanceClose.addEventListener('click',()=>this.closeBalanceScreen());
+      const balanceClear=$('balanceClearButton');
+      if(balanceClear){
+        balanceClear.addEventListener('click',()=>{
+          try{localStorage.removeItem('gemdrop-balance-samples-v1')}catch{}
+          window.GemdropBalanceSummary=null;
+          this.renderBalanceScreen();
+        });
+      }
+
       $('muteButton').addEventListener('click',()=>{
         unlockAudio();
         setGameMuted(!gameMuted);
@@ -1897,6 +1917,8 @@
       this.runTreasureClaims=[];
       this.runPowerupsEarned={tumble:0,cascade:0,prism:0};
       this.runPowerupsUsed={tumble:0,cascade:0,prism:0};
+      this.runFirstPowerupMs=null;
+      this.runEndCause='danger-line';
       this.runStartedAt=performance.now();
       this.runPausedTotal=0;
       this.runPauseStartedAt=0;
@@ -3138,6 +3160,9 @@
           after>=.999
         ){
           this.runPowerupsEarned[key]=(this.runPowerupsEarned[key]||0)+1;
+          if(this.runFirstPowerupMs===null){
+            this.runFirstPowerupMs=this.runElapsedMs();
+          }
         }
       }
 
@@ -3601,11 +3626,112 @@
       }
     }
 
+    formatBalanceTime(ms) {
+      const total=Math.max(0,Math.round((Number(ms)||0)/1000));
+      const minutes=Math.floor(total/60);
+      const seconds=total%60;
+      return minutes+':'+String(seconds).padStart(2,'0');
+    }
+
+    getBalanceSamples() {
+      try{
+        const samples=JSON.parse(localStorage.getItem('gemdrop-balance-samples-v1')||'[]');
+        return Array.isArray(samples)?samples.slice(-30):[];
+      }catch{
+        return [];
+      }
+    }
+
+    renderBalanceScreen() {
+      const samples=this.getBalanceSamples();
+      const set=(id,value)=>{
+        const node=$(id);
+        if(node) node.textContent=value;
+      };
+
+      if(!samples.length){
+        set('balanceRuns','0');
+        set('balanceRunTime','0:00');
+        set('balanceDropsPerMin','0');
+        set('balanceMergesPerMin','0');
+        set('balanceFirstPower','—');
+        set('balancePowersPerRun','0');
+        set('balanceTreasuresPerRun','0');
+        set('balancePeak','Quartz');
+        set('balanceDeathCause','No data yet');
+        set('balanceTumbleRate','0 / run');
+        set('balanceMergeRate','0 / run');
+        set('balanceUpgradeRate','0 / run');
+        return;
+      }
+
+      const totals=samples.reduce((acc,item)=>{
+        acc.durationMs+=Number(item.durationMs)||0;
+        acc.drops+=Number(item.drops)||0;
+        acc.merges+=Number(item.merges)||0;
+        acc.treasures+=Number(item.treasures)||0;
+        acc.bestTier+=Number(item.bestTier)||0;
+        if(Number.isFinite(Number(item.firstPowerupMs))){
+          acc.firstPowerupMs+=Number(item.firstPowerupMs);
+          acc.firstPowerupCount++;
+        }
+        const cause=String(item.endCause||'danger-line');
+        acc.causes[cause]=(acc.causes[cause]||0)+1;
+        for(const key of ['tumble','cascade','prism']){
+          acc.powerupsEarned[key]+=Number(item.powerupsEarned&&item.powerupsEarned[key])||0;
+        }
+        return acc;
+      },{
+        durationMs:0,drops:0,merges:0,treasures:0,bestTier:0,
+        firstPowerupMs:0,firstPowerupCount:0,
+        causes:{},
+        powerupsEarned:{tumble:0,cascade:0,prism:0}
+      });
+
+      const runs=samples.length;
+      const minutes=Math.max(.05,totals.durationMs/60000);
+      const avgPeak=clamp(Math.round(totals.bestTier/runs),0,tiers.length-1);
+      const usualCause=Object.entries(totals.causes).sort((a,b)=>b[1]-a[1])[0]?.[0]||'No data yet';
+      const causeLabel={
+        'danger-line':'Pile crossed danger line',
+        'manual-end':'Run ended manually',
+        'unknown':'Unknown'
+      }[usualCause]||usualCause.replace(/-/g,' ');
+
+      set('balanceRuns',String(runs));
+      set('balanceRunTime',this.formatBalanceTime(totals.durationMs/runs));
+      set('balanceDropsPerMin',(totals.drops/minutes).toFixed(1));
+      set('balanceMergesPerMin',(totals.merges/minutes).toFixed(1));
+      set('balanceFirstPower',totals.firstPowerupCount
+        ? this.formatBalanceTime(totals.firstPowerupMs/totals.firstPowerupCount)
+        : '—'
+      );
+      const powersTotal=totals.powerupsEarned.tumble+totals.powerupsEarned.cascade+totals.powerupsEarned.prism;
+      set('balancePowersPerRun',(powersTotal/runs).toFixed(2));
+      set('balanceTreasuresPerRun',(totals.treasures/runs).toFixed(2));
+      set('balancePeak',tiers[avgPeak].name);
+      set('balanceDeathCause',causeLabel);
+      set('balanceTumbleRate',(totals.powerupsEarned.tumble/runs).toFixed(2)+' / run');
+      set('balanceMergeRate',(totals.powerupsEarned.cascade/runs).toFixed(2)+' / run');
+      set('balanceUpgradeRate',(totals.powerupsEarned.prism/runs).toFixed(2)+' / run');
+    }
+
+    openBalanceScreen() {
+      this.renderBalanceScreen();
+      const overlay=$('balanceOverlay');
+      if(overlay) overlay.classList.add('visible');
+    }
+
+    closeBalanceScreen() {
+      const overlay=$('balanceOverlay');
+      if(overlay) overlay.classList.remove('visible');
+    }
+
     recordBalanceSample(finalRunTime) {
       const durationMs=Math.max(1,Number(finalRunTime)||1);
       const minutes=durationMs/60000;
       const sample={
-        version:1,
+        version:2,
         at:Date.now(),
         durationMs:Math.round(durationMs),
         score:Math.round(this.score||0),
@@ -3614,8 +3740,10 @@
         mergesPerMinute:Number(((this.runMerges||0)/Math.max(.05,minutes)).toFixed(2)),
         bestTier:Math.round(this.bestTierReached||0),
         bestChain:Math.round(this.runBestChain||0),
+        firstPowerupMs:Number.isFinite(this.runFirstPowerupMs)?Math.round(this.runFirstPowerupMs):null,
         chestGain:Number((this.runChestGain||0).toFixed(2)),
         treasures:(this.runTreasureClaims||[]).length,
+        endCause:this.runEndCause||'danger-line',
         powerupsEarned:{...(this.runPowerupsEarned||{})},
         powerupsUsed:{...(this.runPowerupsUsed||{})}
       };
@@ -3658,9 +3786,10 @@
       return sample;
     }
 
-    endGame() {
+    endGame(cause='danger-line') {
       if(!this.running) return;
 
+      this.runEndCause=cause||'danger-line';
       const finalRunTime=this.runElapsedMs();
       this.recordBalanceSample(finalRunTime);
       this.running=false;
@@ -3857,7 +3986,7 @@
           this.clearStatus();
         }
 
-        if(this.dangerTime>=1.75) this.endGame();
+        if(this.dangerTime>=1.75) this.endGame('danger-line');
       }
 
       this.drawLimitLine(time);
