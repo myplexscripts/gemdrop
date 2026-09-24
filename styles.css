@@ -8384,3 +8384,104 @@ body,
     font-size:12px;
   }
 }
+
+
+/* === BALANCE DEBUG SCREEN 2026-09-24 === */
+.balance-overlay{
+  z-index:180!important;
+}
+
+.balance-card{
+  width:min(430px,calc(100% - 28px))!important;
+  max-height:min(760px,calc(100dvh - 28px))!important;
+  overflow:auto!important;
+  padding:24px 18px 18px!important;
+}
+
+.balance-card h2{
+  margin:4px 0 2px!important;
+}
+
+.balance-note{
+  margin:0 0 14px;
+  color:#bdaec4;
+  font-size:13px;
+}
+
+.balance-grid,
+.balance-power-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+
+.balance-grid>div,
+.balance-power-grid>div,
+.balance-death{
+  min-width:0;
+  padding:11px;
+  border:1px solid rgba(255,226,175,.09);
+  border-radius:14px;
+  background:rgba(22,10,28,.56);
+}
+
+.balance-grid span,
+.balance-power-grid span,
+.balance-death span{
+  display:block;
+  margin-bottom:4px;
+  color:#aa9ab1;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+
+.balance-grid strong,
+.balance-power-grid strong,
+.balance-death strong{
+  display:block;
+  color:#f7edf8;
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:-.02em;
+}
+
+.balance-death{
+  margin-top:8px;
+}
+
+.balance-death strong{
+  font-size:15px;
+  color:#ffe29a;
+}
+
+.balance-power-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  margin-top:8px;
+}
+
+.balance-power-grid strong{
+  font-size:13px;
+}
+
+.balance-actions{
+  margin-top:12px;
+}
+
+.balance-actions button{
+  width:100%;
+}
+
+@media(max-width:390px){
+  .balance-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .balance-grid strong{
+    font-size:16px;
+  }
+
+  .balance-power-grid{
+    grid-template-columns:1fr;
+  }
+}
