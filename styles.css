@@ -8276,3 +8276,111 @@ body,
   filter:none!important;
   mix-blend-mode:normal!important;
 }
+
+
+/* === PROGRESSION COHESION PASS 2026-09-24 === */
+.collection-progress.complete{
+  color:#ffe29a!important;
+  border-color:rgba(255,215,117,.32)!important;
+  background:rgba(255,205,92,.09)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 18px rgba(255,188,58,.08)!important;
+}
+
+.run-meta-progress{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:10px 0 4px;
+}
+
+.run-meta-progress>div{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  min-height:44px;
+  padding:9px 11px;
+  border:1px solid rgba(255,225,170,.10);
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 18% 0,rgba(255,205,109,.08),transparent 42%),
+    rgba(23,10,29,.46);
+}
+
+.run-meta-progress span{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+  color:#bfaec6;
+  white-space:nowrap;
+}
+
+.run-meta-progress strong{
+  min-width:0;
+  font-size:13px;
+  font-weight:800;
+  color:#f7e9f8;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.run-meta-progress strong.complete{
+  color:#ffe29a;
+}
+
+.run-gem-chip,
+.run-treasure-chip{
+  position:relative;
+}
+
+.run-new-badge{
+  position:absolute;
+  z-index:5;
+  top:7px;
+  right:7px;
+  display:grid;
+  place-items:center;
+  min-width:34px;
+  height:20px;
+  padding:0 7px;
+  border:1px solid rgba(255,232,166,.52);
+  border-radius:999px;
+  background:linear-gradient(180deg,#ffe391,#eeb847);
+  box-shadow:0 4px 10px rgba(0,0,0,.22),0 0 11px rgba(255,198,74,.16);
+  color:#35182a;
+  font-style:normal;
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:.08em;
+}
+
+.run-gem-chip.is-new,
+.run-treasure-chip.is-new{
+  border-color:rgba(255,218,128,.24)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(255,206,92,.035),
+    0 8px 18px rgba(0,0,0,.14)!important;
+}
+
+@media(max-width:390px){
+  .run-meta-progress{
+    gap:6px;
+  }
+
+  .run-meta-progress>div{
+    min-height:40px;
+    padding:8px 9px;
+  }
+
+  .run-meta-progress span{
+    font-size:11px;
+  }
+
+  .run-meta-progress strong{
+    font-size:12px;
+  }
+}
