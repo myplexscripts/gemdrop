@@ -8485,3 +8485,48 @@ body,
     grid-template-columns:1fr;
   }
 }
+
+
+/* === POWERUP FEEDBACK PASS 2026-09-24 === */
+.power-button.power-charge-step{
+  animation:powerChargeStep .34s cubic-bezier(.18,.88,.28,1.18)!important;
+}
+
+.power-button.power-ready-pop{
+  animation:powerReadyPop .68s cubic-bezier(.18,.89,.32,1.28)!important;
+}
+
+.power-button.power-activated{
+  animation:powerActivated .50s cubic-bezier(.18,.89,.32,1.28)!important;
+}
+
+.power-button.power-activated::before{
+  filter:brightness(1.24) saturate(1.12)!important;
+}
+
+@keyframes powerChargeStep{
+  0%,100%{transform:scale(1)}
+  48%{transform:scale(1.035)}
+}
+
+@keyframes powerReadyPop{
+  0%{transform:scale(.96)}
+  42%{transform:scale(1.08)}
+  70%{transform:scale(.985)}
+  100%{transform:scale(1)}
+}
+
+@keyframes powerActivated{
+  0%{transform:scale(1)}
+  30%{transform:scale(.90)}
+  58%{transform:scale(1.08)}
+  100%{transform:scale(1)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .power-button.power-charge-step,
+  .power-button.power-ready-pop,
+  .power-button.power-activated{
+    animation:none!important;
+  }
+}
