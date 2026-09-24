@@ -1871,6 +1871,8 @@
       this.runChestGain=0;
       this.runGemGains=Array(tiers.length).fill(0);
       this.runTreasureClaims=[];
+      this.runPowerupsEarned={tumble:0,cascade:0,prism:0};
+      this.runPowerupsUsed={tumble:0,cascade:0,prism:0};
       this.runStartedAt=performance.now();
       this.runPausedTotal=0;
       this.runPauseStartedAt=0;
@@ -3010,7 +3012,7 @@
 
       for(let tier=0;tier<tiers.length;tier++){
         const same=this.gems
-          .filter(g=>g&&g.active&&!g.merging&&g.tier===tier)
+          .filter(g=>g&&g.active&&!g.merging&&!g.specialType&&g.tier===tier)
           .sort((a,b)=>b.y-a.y);
 
         for(let i=0;i+1<same.length;i+=2){
@@ -3040,6 +3042,14 @@
 
         this.powerCharge[key]=after;
         if(after>before+.0005) charged.push(key);
+
+        if(
+          this.runPowerupsEarned &&
+          before<.999 &&
+          after>=.999
+        ){
+          this.runPowerupsEarned[key]=(this.runPowerupsEarned[key]||0)+1;
+        }
       }
 
       this.updatePowerButtons();
@@ -3095,6 +3105,7 @@
       ) return;
 
       this.powerCharge.tumble=0;
+      if(this.runPowerupsUsed) this.runPowerupsUsed.tumble++;
       this.tumbleState={
         started:this.time.now,
         duration:1950,
@@ -3209,6 +3220,7 @@
       }
 
       this.powerCharge.cascade=0;
+      if(this.runPowerupsUsed) this.runPowerupsUsed.cascade++;
 
       for(const pair of pairs){
         this.queueMerge(pair[0],pair[1]);
@@ -3232,6 +3244,7 @@
       ) return;
 
       this.powerCharge.prism=0;
+      if(this.runPowerupsUsed) this.runPowerupsUsed.prism++;
       this.currentTier=Math.min(this.currentTier+1,tiers.length-1);
       this.unlockTier(this.currentTier,true);
 
@@ -3463,10 +3476,68 @@
       }
     }
 
+    recordBalanceSample(finalRunTime) {
+      const durationMs=Math.max(1,Number(finalRunTime)||1);
+      const minutes=durationMs/60000;
+      const sample={
+        version:1,
+        at:Date.now(),
+        durationMs:Math.round(durationMs),
+        score:Math.round(this.score||0),
+        drops:Math.round(this.runDrops||0),
+        merges:Math.round(this.runMerges||0),
+        mergesPerMinute:Number(((this.runMerges||0)/Math.max(.05,minutes)).toFixed(2)),
+        bestTier:Math.round(this.bestTierReached||0),
+        bestChain:Math.round(this.runBestChain||0),
+        chestGain:Number((this.runChestGain||0).toFixed(2)),
+        treasures:(this.runTreasureClaims||[]).length,
+        powerupsEarned:{...(this.runPowerupsEarned||{})},
+        powerupsUsed:{...(this.runPowerupsUsed||{})}
+      };
+
+      try{
+        const key='gemdrop-balance-samples-v1';
+        const previous=JSON.parse(localStorage.getItem(key)||'[]');
+        const next=[...previous,sample].slice(-30);
+        localStorage.setItem(key,JSON.stringify(next));
+
+        const totals=next.reduce((acc,item)=>{
+          acc.durationMs+=Number(item.durationMs)||0;
+          acc.merges+=Number(item.merges)||0;
+          acc.treasures+=Number(item.treasures)||0;
+          for(const power of ['tumble','cascade','prism']){
+            acc.powerupsEarned[power]+=Number(item.powerupsEarned&&item.powerupsEarned[power])||0;
+          }
+          return acc;
+        },{
+          durationMs:0,
+          merges:0,
+          treasures:0,
+          powerupsEarned:{tumble:0,cascade:0,prism:0}
+        });
+
+        const totalMinutes=Math.max(.05,totals.durationMs/60000);
+        window.GemdropBalanceSummary={
+          runs:next.length,
+          averageRunSeconds:Number((totals.durationMs/next.length/1000).toFixed(1)),
+          mergesPerMinute:Number((totals.merges/totalMinutes).toFixed(2)),
+          treasuresPerRun:Number((totals.treasures/next.length).toFixed(2)),
+          powerupsEarnedPerRun:{
+            tumble:Number((totals.powerupsEarned.tumble/next.length).toFixed(2)),
+            cascade:Number((totals.powerupsEarned.cascade/next.length).toFixed(2)),
+            prism:Number((totals.powerupsEarned.prism/next.length).toFixed(2))
+          }
+        };
+      }catch{}
+
+      return sample;
+    }
+
     endGame() {
       if(!this.running) return;
 
       const finalRunTime=this.runElapsedMs();
+      this.recordBalanceSample(finalRunTime);
       this.running=false;
       this.ready=false;
       this.metaPaused=false;
