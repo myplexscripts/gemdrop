@@ -81,6 +81,7 @@
   const MERGE_POP_MS = 280;
   const HITSTOP_MS = [26,36,48,62,80];
   const MERGE_ZONE_CLEARANCE = 10;
+  const TUMBLE_SETTLE_GRACE_MS = 1400;
   const CHAIN_WINDOW = 1.0;
   const HOT_CHAIN = 4;
 
@@ -2567,6 +2568,7 @@
       this.tumbleState=null;
       this.hitstopActive=false;
       this.hitstopUntil=0;
+      this.tumbleGraceUntil=0;
       this.slowmoUntil=0;
       this.slowmoScale=1;
       this.ending=false;
@@ -4451,6 +4453,7 @@
         engine.gravity.x=0;
         engine.gravity.y=this.baseGravityY;
         this.tumbleState=null;
+        this.tumbleGraceUntil=time+TUMBLE_SETTLE_GRACE_MS;
       }
     }
 
@@ -4639,6 +4642,7 @@
       if(value){
         if(this.tumbleState){
           this.tumbleState=null;
+          this.tumbleGraceUntil=this.time.now+TUMBLE_SETTLE_GRACE_MS;
           this.matter.world.engine.gravity.x=0;
           this.matter.world.engine.gravity.y=this.baseGravityY;
         }
@@ -5381,6 +5385,7 @@
 
         let high=false;
         let dangerGemCount=0;
+        const tumbleShield=!!this.tumbleState||time<(this.tumbleGraceUntil||0);
 
         for(const gem of this.gems){
           if(!gem||!gem.active||!gem.body) continue;
@@ -5445,7 +5450,10 @@
           // A gem that remains above the line is dangerous regardless of
           // tiny Matter jitter. Requiring a low body speed caused soft locks
           // where the pile could never settle enough to start game-over.
+          // Gems thrown over the line by a Tumble never count against the
+          // player while it runs or while the pile settles afterwards.
           const overLine=
+            !tumbleShield &&
             time-gem.born>650 &&
             !gem.merging &&
             gem.body.bounds.min.y<LIMIT_Y;
