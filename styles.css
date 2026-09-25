@@ -9147,3 +9147,45 @@ body,
   .special-gem-art canvas,.special-gem-art::before,.special-gem-spark{animation:none}
   .special-gem-spark{opacity:.7}
 }
+
+/* ---- Portrait guard ---- */
+.rotate-overlay{
+  position:fixed;
+  inset:0;
+  z-index:900;
+  display:none;
+  place-items:center;
+  padding:24px;
+  background:radial-gradient(circle at 50% 40%,#3a1150 0%,#12071a 70%);
+  text-align:center;
+}
+.rotate-overlay.visible{display:grid;animation:overlayFadeIn .25s ease-out both}
+.rotate-card{display:grid;justify-items:center;gap:10px;max-width:360px}
+.rotate-card h2{margin:10px 0 0;font:700 26px/1.15 Fredoka,system-ui,sans-serif;color:#fff1f8}
+.rotate-card p{margin:0;font:600 15px/1.4 Manrope,system-ui,sans-serif;color:rgba(240,222,239,.72)}
+.rotate-phone{
+  position:relative;
+  width:54px;
+  height:92px;
+  border-radius:12px;
+  border:4px solid #ffd36c;
+  box-shadow:0 0 24px rgba(255,200,90,.35);
+  animation:rotatePhone 2.2s cubic-bezier(.5,0,.3,1) infinite;
+}
+.rotate-phone span{
+  position:absolute;
+  left:50%;
+  bottom:6px;
+  width:12px;
+  height:4px;
+  border-radius:4px;
+  transform:translateX(-50%);
+  background:#ffd36c;
+}
+@keyframes rotatePhone{
+  0%,15%{transform:rotate(-90deg)}
+  55%,85%{transform:rotate(0deg)}
+  100%{transform:rotate(-90deg)}
+}
+body.is-sideways .game-app,body.is-sideways .overlay{visibility:hidden}
+@media (prefers-reduced-motion: reduce){.rotate-phone{animation:none}}

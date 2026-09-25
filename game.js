@@ -1282,6 +1282,54 @@
       this.setGemUniforms(gameObject);
     }
   }
+  // ---- Portrait lock -------------------------------------------------------
+  // Installed apps / fullscreen can hard-lock orientation. Everywhere else a
+  // touch device turned sideways gets the rotate screen and the run pauses.
+  function tryLockPortrait() {
+    try{
+      if(screen.orientation&&screen.orientation.lock){
+        screen.orientation.lock('portrait').catch(()=>{});
+      }
+    }catch{}
+  }
+
+  function isSidewaysTouchDevice() {
+    const mq=q=>window.matchMedia&&window.matchMedia(q).matches;
+    const touch=mq('(pointer: coarse)')||mq('(hover: none)');
+    return touch&&window.innerWidth>window.innerHeight;
+  }
+
+  function setupPortraitGuard(scene) {
+    const overlay=$('rotateOverlay');
+    if(!overlay) return;
+    let sideways=false;
+
+    const check=()=>{
+      const now=isSidewaysTouchDevice();
+      if(now===sideways) return;
+      sideways=now;
+      overlay.classList.toggle('visible',sideways);
+      overlay.setAttribute('aria-hidden',sideways?'false':'true');
+      document.body.classList.toggle('is-sideways',sideways);
+      if(sideways){
+        scene.pointerHeld=false;
+        if(scene.running&&!scene.paused&&!scene.ending) scene.setPaused(true);
+        haptic(8);
+      }else{
+        tryLockPortrait();
+      }
+    };
+
+    window.addEventListener('resize',check,{passive:true});
+    window.addEventListener('orientationchange',()=>setTimeout(check,60),{passive:true});
+    if(screen.orientation&&screen.orientation.addEventListener){
+      screen.orientation.addEventListener('change',check);
+    }
+    document.addEventListener('pointerdown',tryLockPortrait,{once:true,passive:true});
+    tryLockPortrait();
+    check();
+  }
+
   // ---- Screen transitions -------------------------------------------------
   // Overlays are shown by adding .visible (display switches on and the CSS
   // entrance animation runs). When .visible is removed we hold the overlay on
@@ -1562,6 +1610,7 @@
       this.bindUI();
       setupOverlayTransitions();
       setupMenuGemRain();
+      setupPortraitGuard(this);
       this.renderCollection();
       this.updateNextPreview();
       this.updatePowerButtons();

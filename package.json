@@ -5,11 +5,12 @@
   "description": "A mobile-first Phaser Matter merge game with dynamically lit procedural gemstones.",
   "scripts": {
     "build": "node scripts/build-web.mjs",
-    "cap:add:ios": "npm run build && npx cap add ios",
-    "cap:add:android": "npm run build && npx cap add android",
-    "cap:sync": "npm run build && npx cap sync",
+    "cap:add:ios": "npm run build && npx cap add ios && npm run cap:portrait",
+    "cap:add:android": "npm run build && npx cap add android && npm run cap:portrait",
+    "cap:sync": "npm run build && npx cap sync && npm run cap:portrait",
     "cap:ios": "npm run cap:sync && npx cap open ios",
-    "cap:android": "npm run cap:sync && npx cap open android"
+    "cap:android": "npm run cap:sync && npx cap open android",
+    "cap:portrait": "node scripts/native-portrait.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.0.0",
