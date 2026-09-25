@@ -8785,3 +8785,21 @@ body,
     animation:none!important;
   }
 }
+
+/* ---- Juice pass: playfield edge glows ---- */
+.playfield-glow{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+  border-radius:inherit;
+}
+.chain-glow{
+  --chain-heat:0;
+  opacity:calc(var(--chain-heat) * .9);
+  box-shadow:
+    inset 0 0 0 2px rgba(255,214,120,.55),
+    inset 0 0 18px 2px rgba(255,176,59,.65),
+    inset 0 0 46px rgba(255,92,160,.28);
+  mix-blend-mode:screen;
+}

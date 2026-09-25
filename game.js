@@ -63,6 +63,8 @@
   const MERGE_PULL_MS = 70;
   const MERGE_POP_MS = 280;
   const HITSTOP_MS = [26,36,48,62,80];
+  const CHAIN_WINDOW = 1.0;
+  const HOT_CHAIN = 4;
 
   const $ = id => document.getElementById(id);
   const scoreEl = $('score');
@@ -381,11 +383,48 @@
   let backgroundMusicSource=null;
   let backgroundMusicGain=null;
 
+  // Music chain: fade gain -> fx gain (swells / ducks) -> low-pass (danger
+  // muffle) -> speakers. Fades and effects use separate gains so they never
+  // fight over the same automation timeline.
+  let musicFxGain=null;
+  let musicFilter=null;
+
   function setupBackgroundMusicBus(){
     if(!audioCtx||backgroundMusicGain) return;
     backgroundMusicGain=audioCtx.createGain();
     backgroundMusicGain.gain.value=0;
-    backgroundMusicGain.connect(audioCtx.destination);
+    musicFxGain=audioCtx.createGain();
+    musicFxGain.gain.value=1;
+    musicFilter=audioCtx.createBiquadFilter();
+    musicFilter.type='lowpass';
+    musicFilter.frequency.value=20000;
+    musicFilter.Q.value=.7;
+    backgroundMusicGain.connect(musicFxGain);
+    musicFxGain.connect(musicFilter);
+    musicFilter.connect(audioCtx.destination);
+  }
+
+  // Temporarily lift (amount>1) or duck (amount<1) the music.
+  function musicFx(amount,attackMs=60,holdMs=300,releaseMs=500){
+    if(!audioCtx||!musicFxGain) return;
+    const g=musicFxGain.gain;
+    const t=audioCtx.currentTime;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value,t);
+    g.linearRampToValueAtTime(amount,t+attackMs/1000);
+    g.setValueAtTime(amount,t+(attackMs+holdMs)/1000);
+    g.linearRampToValueAtTime(1,t+(attackMs+holdMs+releaseMs)/1000);
+  }
+
+  // 0 = clear, 1 = heavily muffled (pile about to overflow).
+  let musicMuffleLevel=0;
+  function setMusicMuffle(level){
+    if(!audioCtx||!musicFilter) return;
+    const l=clamp(level,0,1);
+    if(Math.abs(l-musicMuffleLevel)<.01) return;
+    musicMuffleLevel=l;
+    const hz=20000*Math.pow(620/20000,l);
+    musicFilter.frequency.setTargetAtTime(hz,audioCtx.currentTime,.08);
   }
 
   function loadBackgroundMusic(){
@@ -913,6 +952,19 @@
   function playTickSfx() {
     if(!sfxReady()) return;
     sweep({from:2600,to:2100,duration:.018,volume:.008,type:'sine'});
+  }
+
+  // Chain steps climb a major-pentatonic ladder so combos sound like a riff.
+  const CHAIN_LADDER=[0,2,4,7,9,12,14,16,19,21,24,26,28,31];
+  function playChainSfx(chain) {
+    if(!sfxReady()||chain<2) return;
+    const step=CHAIN_LADDER[Math.min(chain-2,CHAIN_LADDER.length-1)];
+    const f=659.25*Math.pow(2,step/12);
+    const vol=.035+Math.min(.03,chain*.004);
+    sweep({from:f,to:f*.998,duration:.26,volume:vol,type:'sine'});
+    sweep({from:f*2,to:f*2,duration:.14,volume:vol*.35,type:'sine'});
+    sweep({at:.045,from:f*1.5,to:f*1.5,duration:.2,volume:vol*.45,type:'triangle'});
+    if(chain>=4) noiseBurst({duration:.22,volume:.018,type:'highpass',from:5000,to:9000,q:.5});
   }
 
   function tone(freq,duration=.055,volume=.022,type='sine') {
@@ -2217,7 +2269,18 @@
       this.tumbleState=null;
       this.hitstopActive=false;
       this.hitstopUntil=0;
+      this.slowmoUntil=0;
+      this.slowmoScale=1;
+      this.chainHeat=0;
+      this.mergeChain=0;
+      this.mergeWindow=0;
+      if(this.comboBadge){
+        this.tweens.killTweensOf(this.comboBadge);
+        this.comboBadge.setAlpha(0);
+        this.comboShown=false;
+      }
       if(this.matter&&this.matter.world&&this.matter.world.engine){
+        this.matter.world.engine.timing.timeScale=1;
         this.matter.world.engine.gravity.x=0;
         this.matter.world.engine.gravity.y=this.baseGravityY;
       }
@@ -2845,7 +2908,8 @@
         const chargedPowerups=this.rechargePowers(tier);
 
         this.mergeChain=this.mergeWindow>0?this.mergeChain+1:1;
-        this.mergeWindow=.70;
+        this.mergeWindow=CHAIN_WINDOW;
+        this.onChainStep(this.mergeChain,x,y);
         this.runMerges++;
         this.runBestChain=Math.max(this.runBestChain,this.mergeChain);
         if(next>=tiers.length){
@@ -2884,9 +2948,8 @@
         this.addScore(tiers[next].score);
         this.mergeBurst(x,y,tiers[next],impact);
 
-        const label=this.mergeChain>=2
-          ? this.mergeChain+'× CHAIN  +$'+tiers[next].score
-          : '+$'+tiers[next].score;
+        // The chain count lives in the combo badge; merge pops only show value.
+        const label='+$'+tiers[next].score;
 
         this.floatText(
           x,
@@ -2954,6 +3017,125 @@
       }
 
       this.updatePowerButtons();
+    }
+
+    createComboBadge() {
+      const y=236;
+      const glow=this.add.text(0,6,'',{
+        fontFamily:'Fredoka, "Arial Rounded MT Bold", sans-serif',
+        fontSize:'64px',fontStyle:'700',color:'#ffd86f',
+        stroke:'#ffb13b',strokeThickness:14
+      }).setOrigin(.5).setAlpha(.22).setBlendMode(Phaser.BlendModes.ADD);
+      const count=this.add.text(0,6,'',{
+        fontFamily:'Fredoka, "Arial Rounded MT Bold", sans-serif',
+        fontSize:'64px',fontStyle:'700',color:'#fff1c2',
+        stroke:'#3a0f3f',strokeThickness:9,
+        shadow:{offsetX:0,offsetY:6,color:'rgba(0,0,0,.45)',blur:10,stroke:true,fill:true}
+      }).setOrigin(.5);
+      const caption=this.add.text(0,-38,'CHAIN',{
+        fontFamily:'Fredoka, "Arial Rounded MT Bold", sans-serif',
+        fontSize:'22px',fontStyle:'700',color:'#ffcf6a',
+        stroke:'#3a0f3f',strokeThickness:6
+      }).setOrigin(.5);
+      const bar=this.add.graphics();
+      this.comboBadge=this.add.container(W/2,y,[glow,count,caption,bar])
+        .setDepth(58).setAlpha(0).setScale(.6);
+      this.comboBadge.parts={glow,count,caption,bar};
+      this.comboShown=false;
+    }
+
+    onChainStep(chain,x,y) {
+      if(chain<2) return;
+      if(!this.comboBadge) this.createComboBadge();
+      const badge=this.comboBadge;
+      const {glow,count,caption}=badge.parts;
+      const hot=chain>=HOT_CHAIN;
+      const color=hot?'#ffe98a':'#fff1c2';
+
+      count.setText('×'+chain).setColor(color);
+      glow.setText('×'+chain).setStroke(hot?'#ff7a3b':'#ffb13b',hot?18:14);
+      caption.setText(hot?(chain>=7?'UNSTOPPABLE':chain>=6?'BLAZING':'ON FIRE'):'CHAIN');
+      const size=Math.min(96,58+chain*5);
+      count.setFontSize(size);
+      glow.setFontSize(size);
+
+      this.tweens.killTweensOf(badge);
+      badge.setAlpha(1);
+      badge.setScale(this.comboShown?1.32:.6);
+      badge.setAngle(Phaser.Math.FloatBetween(-5,5));
+      this.comboShown=true;
+      this.tweens.add({
+        targets:badge,
+        scale:1,
+        angle:0,
+        duration:REDUCED_MOTION?80:260,
+        ease:'Back.Out'
+      });
+
+      playChainSfx(chain);
+      this.chainHeat=Math.min(1,(this.chainHeat||0)+(hot?.45:.18));
+
+      if(hot){
+        if(!REDUCED_MOTION){
+          this.slowmo(.42,chain>=6?420:300);
+          this.cameras.main.shake(90,.0016+Math.min(.002,chain*.0002));
+        }
+        musicFx(1.4,50,380,700);
+        haptic([10,18,16]);
+      }
+    }
+
+    hideComboBadge() {
+      const badge=this.comboBadge;
+      if(!badge||!this.comboShown) return;
+      this.comboShown=false;
+      this.tweens.killTweensOf(badge);
+      this.tweens.add({
+        targets:badge,
+        alpha:0,
+        scale:.8,
+        y:badge.y-12,
+        duration:240,
+        ease:'Quad.In',
+        onComplete:()=>{badge.y=236;}
+      });
+    }
+
+    updateComboBadge(dt) {
+      this.chainHeat=Math.max(0,(this.chainHeat||0)-dt*.55);
+      const glowEl=this.chainGlowEl||(this.chainGlowEl=$('chainGlow'));
+      if(glowEl){
+        const heat=this.running?this.chainHeat:0;
+        glowEl.style.setProperty('--chain-heat',heat.toFixed(3));
+      }
+
+      const badge=this.comboBadge;
+      if(!badge||!this.comboShown) return;
+      const bar=badge.parts.bar;
+      const u=clamp(this.mergeWindow/CHAIN_WINDOW,0,1);
+      bar.clear();
+      bar.fillStyle(0x2a0c33,.7);
+      bar.fillRoundedRect(-54,46,108,8,4);
+      bar.fillStyle(this.mergeChain>=HOT_CHAIN?0xff8a3d:0xffc857,.95);
+      bar.fillRoundedRect(-54,46,108*u,8,4);
+    }
+
+    slowmo(scale,ms) {
+      this.slowmoUntil=Math.max(this.slowmoUntil||0,this.time.now+ms);
+      this.slowmoScale=Math.min(this.slowmoScale||1,scale);
+    }
+
+    updateSlowmo(time) {
+      const timing=this.matter.world.engine.timing;
+      if(time<(this.slowmoUntil||0)){
+        // Ease back toward full speed across the final third.
+        const remain=this.slowmoUntil-time;
+        const k=clamp(remain/140,0,1);
+        timing.timeScale=1-(1-this.slowmoScale)*k;
+      }else if(timing.timeScale!==1||this.slowmoScale!==1){
+        timing.timeScale=1;
+        this.slowmoScale=1;
+      }
     }
 
     // A freshly dropped gem's first contact: squash, dust and a thud.
@@ -4618,8 +4800,13 @@
         }
         this.processMerges();
 
-        this.mergeWindow=Math.max(0,this.mergeWindow-dt);
-        if(this.mergeWindow<=0) this.mergeChain=0;
+        this.mergeWindow=Math.max(0,this.mergeWindow-(this.hitstopActive?0:dt));
+        if(this.mergeWindow<=0&&this.mergeChain>0){
+          this.mergeChain=0;
+          this.hideComboBadge();
+        }
+        this.updateComboBadge(dt);
+        this.updateSlowmo(time);
 
         if(this.preview){
           this.syncSpecialVisuals(this.preview,time);
