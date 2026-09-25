@@ -984,6 +984,30 @@
     noiseBurst({at:.34,duration:.5,volume:.03,type:'highpass',from:4000,to:9000,q:.4});
   }
 
+  // Two soft low thumps: lub-dub.
+  function playHeartbeatSfx(level=0) {
+    if(!sfxReady()) return;
+    const v=.07+level*.09;
+    sweep({from:90,to:42,duration:.13,volume:v,type:'sine'});
+    sweep({at:.15,from:78,to:38,duration:.12,volume:v*.75,type:'sine'});
+  }
+
+  function playGameOverSfx() {
+    if(!sfxReady()) return;
+    sweep({from:190,to:34,duration:1.1,volume:.2,type:'sine'});
+    noiseBurst({duration:.7,volume:.09,type:'lowpass',from:900,to:60,q:.6});
+    [0,-3,-7,-12].forEach((step,i)=>{
+      const f=392*Math.pow(2,step/12);
+      sweep({at:.18+i*.16,from:f,to:f*.985,duration:.42,volume:.04,type:'triangle'});
+    });
+  }
+
+  function playCrackSfx(tier=0) {
+    if(!sfxReady()) return;
+    noiseBurst({duration:.16,volume:.06,type:'highpass',from:2600,to:6200,q:.8});
+    sweep({from:1400-tier*30,to:500,duration:.12,volume:.03,type:'square'});
+  }
+
   function tone(freq,duration=.055,volume=.022,type='sine') {
     if (!audioCtx||gameMuted) return;
     const osc=audioCtx.createOscillator();
@@ -1527,7 +1551,7 @@
       };
 
       this.aimStrip.addEventListener('pointerdown',e=>{
-        if(!this.running||this.paused||this.metaPaused) return;
+        if(!this.running||this.ending||this.paused||this.metaPaused) return;
         unlockAudio();
         e.preventDefault();
         this.pointerHeld=true;
@@ -2288,6 +2312,10 @@
       this.hitstopUntil=0;
       this.slowmoUntil=0;
       this.slowmoScale=1;
+      this.ending=false;
+      this.dangerVisual=0;
+      this.nextHeartbeatAt=0;
+      setMusicMuffle(0);
       this.chainHeat=0;
       this.mergeChain=0;
       this.mergeWindow=0;
@@ -2456,7 +2484,7 @@
     }
 
     createDropPreview(animate=false) {
-      if(!this.running||this.paused||this.metaPaused||!this.ready) return;
+      if(!this.running||this.ending||this.paused||this.metaPaused||!this.ready) return;
       this.destroyPreview();
 
       const t=tiers[this.currentTier];
@@ -2614,7 +2642,7 @@
     }
 
     dropCurrent() {
-      if(!this.running||this.paused||this.metaPaused||!this.ready) return;
+      if(!this.running||this.ending||this.paused||this.metaPaused||!this.ready) return;
       if(this.time.now-this.lastDropAt<DROP_DELAY) return;
 
       const t=tiers[this.currentTier];
@@ -3153,6 +3181,100 @@
         timing.timeScale=1;
         this.slowmoScale=1;
       }
+    }
+
+    // Heartbeat, red vignette and muffled music all rise with the danger level.
+    updateDangerFeedback(time,level,ending) {
+      const el=this.dangerVignetteEl||(this.dangerVignetteEl=$('dangerVignette'));
+      const smooth=this.dangerVisual=(this.dangerVisual||0)+(level-(this.dangerVisual||0))*.18;
+      if(el){
+        el.style.setProperty('--danger',smooth.toFixed(3));
+        el.classList.toggle('is-ending',!!ending);
+      }
+      setMusicMuffle(ending?1:level*.85);
+
+      if(level<=0||ending){
+        this.nextHeartbeatAt=0;
+        return;
+      }
+      if(!this.nextHeartbeatAt) this.nextHeartbeatAt=time;
+      if(time<this.nextHeartbeatAt) return;
+
+      this.nextHeartbeatAt=time+(880-540*level);
+      playHeartbeatSfx(level);
+      haptic(level>.66?[16,120,12]:level>.33?[10,130,8]:[6,140,5]);
+      if(el){
+        el.classList.remove('beat');
+        void el.offsetWidth;
+        el.classList.add('beat');
+      }
+    }
+
+    // Losing is a moment, not a cut: slow motion, red flash, the gems that
+    // broke the line shatter one by one, then the results slide in.
+    beginGameOver(cause='danger-line') {
+      if(!this.running||this.ending) return;
+      this.ending=true;
+      this.ready=false;
+      this.pointerHeld=false;
+      this.destroyPreview();
+      this.hideComboBadge();
+      this.updatePowerButtons();
+      this.showStatus('VAULT OVERFLOW','danger',0,'triangle-alert');
+
+      const offenders=this.gems
+        .filter(g=>g&&g.active&&g.body&&!g.merging&&g.body.bounds.min.y<LIMIT_Y+6)
+        .sort((a,b)=>a.body.bounds.min.y-b.body.bounds.min.y)
+        .slice(0,6);
+
+      playGameOverSfx();
+      musicFx(.35,120,900,600);
+      if(window.GemdropNative) window.GemdropNative.notify('error');
+      else haptic([30,40,30,40,50]);
+
+      const reduced=REDUCED_MOTION;
+      if(!reduced){
+        this.slowmo(.18,1400);
+        this.cameras.main.flash(260,255,50,90,false);
+        this.cameras.main.shake(320,.0045);
+      }
+
+      offenders.forEach((gem,i)=>{
+        this.time.delayedCall((reduced?60:260)+i*(reduced?30:150),()=>this.crackGem(gem));
+      });
+
+      const total=reduced?420:Math.max(1250,260+offenders.length*150+620);
+      this.time.delayedCall(total,()=>this.endGame(cause));
+    }
+
+    crackGem(gem) {
+      if(!gem||!gem.active) return;
+      const t=tiers[gem.tier];
+      const x=gem.x;
+      const y=gem.y;
+      this.mergeBurst(x,y,t,Math.min(4,1+Math.floor(gem.tier/5)));
+
+      const flash=this.trackTransientFx(
+        this.add.image(x,y,gemTextureKey(gem.tier))
+          .setScale(gem.scaleX,gem.scaleY)
+          .setRotation(gem.rotation)
+          .setDepth(gem.depth+.01)
+          .setTintFill(0xff5a7a)
+          .setBlendMode(Phaser.BlendModes.ADD)
+      );
+      this.tweens.add({
+        targets:flash,
+        alpha:0,
+        scaleX:gem.scaleX*1.35,
+        scaleY:gem.scaleY*1.35,
+        duration:320,
+        ease:'Quad.Out',
+        onComplete:()=>this.destroyTransientFx(flash)
+      });
+
+      playCrackSfx(gem.tier);
+      haptic(14);
+      this.removeGem(gem);
     }
 
     // A freshly dropped gem's first contact: squash, dust and a thud.
@@ -3917,7 +4039,7 @@
     }
 
     updatePowerButtons() {
-      const active=this.running&&!this.paused&&!this.metaPaused;
+      const active=this.running&&!this.ending&&!this.paused&&!this.metaPaused;
       const canCascade=this.matchingPairs().length>0;
       const buttons={
         tumble:$('powerTumble'),
@@ -3947,6 +4069,7 @@
     useTumble() {
       if(
         !this.running||
+        this.ending||
         this.paused||
         this.tumbleState||
         (this.powerCharge.tumble??0)<.999||
@@ -4067,7 +4190,7 @@
     }
 
     useCascade() {
-      if(!this.running||this.paused||(this.powerCharge.cascade??0)<.999) return;
+      if(!this.running||this.ending||this.paused||(this.powerCharge.cascade??0)<.999) return;
 
       const pairs=this.matchingPairs();
       if(!pairs.length){
@@ -4096,6 +4219,7 @@
     usePrism() {
       if(
         !this.running||
+        this.ending||
         this.paused||
         (this.powerCharge.prism??0)<.999||
         !this.ready||
@@ -4240,7 +4364,7 @@
     }
 
     setPaused(value) {
-      if(!this.running) return;
+      if(!this.running||(value&&this.ending)) return;
 
       this.paused=value;
       this.syncRunClockPause();
@@ -4789,6 +4913,11 @@
       if(!this.running) return;
 
       this.runEndCause=cause||'danger-line';
+      this.ending=false;
+      this.dangerTime=0;
+      this.updateDangerFeedback(this.time.now,0,false);
+      setMusicMuffle(0);
+      this.clearStatus();
       const finalRunTime=this.runElapsedMs();
       this.recordBalanceSample(finalRunTime);
       this.running=false;
@@ -4798,6 +4927,9 @@
       this.tumbleState=null;
       this.matter.world.engine.gravity.x=0;
       this.matter.world.engine.gravity.y=this.baseGravityY;
+      this.matter.world.engine.timing.timeScale=1;
+      this.slowmoUntil=0;
+      this.slowmoScale=1;
       this.updatePowerButtons();
       this.matter.world.pause();
 
@@ -4909,12 +5041,12 @@
       this.animateGemLights(time);
       if(!this.paused&&!this.metaPaused) this.updateTumble(time);
 
-      if(this.running&&!this.paused&&!this.metaPaused&&!this.ready&&!this.dropGateGem&&time-this.lastDropAt>=DROP_DELAY){
+      if(this.running&&!this.ending&&!this.paused&&!this.metaPaused&&!this.ready&&!this.dropGateGem&&time-this.lastDropAt>=DROP_DELAY){
         this.ready=true;
         this.createDropPreview(true);
       }
 
-      if(this.running&&!this.paused&&!this.metaPaused&&!this.ready&&this.dropGateGem){
+      if(this.running&&!this.ending&&!this.paused&&!this.metaPaused&&!this.ready&&this.dropGateGem){
         const gate=this.dropGateGem;
         if(!gate.active||!gate.body){
           this.dropGateGem=null;
@@ -5059,56 +5191,55 @@
           this.syncDangerGemVisual(gem,overLine,time);
         }
 
-        if(high){
-          this.dangerTime=Math.min(1.9,this.dangerTime+dt);
+        if(this.ending){
+          this.updateDangerFeedback(time,1,true);
         }else{
-          this.dangerTime=Math.max(0,this.dangerTime-dt*4.6);
-        }
-
-        const dangerActive=this.dangerTime>=.12;
-
-        if(dangerActive&&!this.dangerWasActive){
-          this.dangerWasActive=true;
-        }
-
-        if(this.dangerTime>=.18&&!this.dangerWarned){
-          this.dangerWarned=true;
-          tone(235,.07,.016,'triangle');
-          haptic(6);
-        }
-
-        if(this.dangerTime>=.95&&!this.dangerCriticalWarned){
-          this.dangerCriticalWarned=true;
-          tone(176,.10,.020,'triangle');
-          window.setTimeout(()=>tone(154,.10,.016,'triangle'),88);
-          haptic([8,16,8]);
-        }
-
-        if(this.dangerTime>=.26){
-          if(this.statusKind!=='danger'){
-            this.showStatus(
-              dangerGemCount>1?'PILE TOO HIGH':'GEM TOO HIGH',
-              'danger',
-              0,
-              'triangle-alert'
-            );
+          const dangerDt=this.hitstopActive?0:dt;
+          if(high){
+            this.dangerTime=Math.min(1.9,this.dangerTime+dangerDt);
+          }else{
+            this.dangerTime=Math.max(0,this.dangerTime-dangerDt*4.6);
           }
-        }else if(this.statusKind==='danger'){
-          this.clearStatus();
-        }
 
-        if(!high&&this.dangerTime<=.02&&this.dangerWasActive){
-          if(this.dangerWarned){
-            tone(360,.055,.010,'sine');
-            haptic(4);
+          const dangerActive=this.dangerTime>=.12;
+          if(dangerActive&&!this.dangerWasActive){
+            this.dangerWasActive=true;
           }
-          this.dangerWarned=false;
-          this.dangerCriticalWarned=false;
-          this.dangerWasActive=false;
-          if(this.statusKind==='danger') this.clearStatus();
-        }
 
-        if(this.dangerTime>=1.75) this.endGame('danger-line');
+          if(this.dangerTime>=.26){
+            if(this.statusKind!=='danger'){
+              this.showStatus(
+                dangerGemCount>1?'PILE TOO HIGH':'GEM TOO HIGH',
+                'danger',
+                0,
+                'triangle-alert'
+              );
+            }
+          }else if(this.statusKind==='danger'){
+            this.clearStatus();
+          }
+
+          if(!high&&this.dangerTime<=.02&&this.dangerWasActive){
+            // Relief: a bright little resolve once the pile drops back.
+            if(this.dangerWarned){
+              tone(523,.07,.014,'sine');
+              window.setTimeout(()=>tone(784,.09,.012,'sine'),70);
+              haptic(4);
+            }
+            this.dangerWarned=false;
+            this.dangerCriticalWarned=false;
+            this.dangerWasActive=false;
+            if(this.statusKind==='danger') this.clearStatus();
+          }
+
+          const level=this.dangerTime>=.12?clamp(this.dangerTime/1.75,0,1):0;
+          if(level>0) this.dangerWarned=true;
+          this.updateDangerFeedback(time,level,false);
+
+          if(this.dangerTime>=1.75) this.beginGameOver('danger-line');
+        }
+      }else{
+        this.updateDangerFeedback(time,0,false);
       }
 
       this.drawLimitLine(time);

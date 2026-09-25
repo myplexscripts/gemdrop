@@ -8865,3 +8865,26 @@ body,
   .result-card.is-revealing .run-gem-chip,
   .result-card.is-revealing .run-treasure-chip{animation:none}
 }
+
+/* ---- Juice pass: danger vignette ---- */
+.danger-vignette{
+  --danger:0;
+  opacity:var(--danger);
+  background:
+    radial-gradient(ellipse 85% 70% at 50% 55%,transparent 52%,rgba(255,28,72,.42) 100%),
+    linear-gradient(180deg,rgba(255,40,80,.30),transparent 26%);
+  box-shadow:inset 0 0 0 2px rgba(255,70,100,.5),inset 0 0 26px rgba(255,40,80,.55);
+  transition:opacity .12s linear;
+}
+.danger-vignette.beat{animation:dangerBeat .34s ease-out}
+@keyframes dangerBeat{
+  0%{filter:brightness(1.9) saturate(1.3)}
+  100%{filter:brightness(1) saturate(1)}
+}
+.danger-vignette.is-ending{
+  opacity:1;
+  background:
+    radial-gradient(ellipse 80% 65% at 50% 50%,rgba(40,0,20,.18) 30%,rgba(255,28,72,.55) 100%);
+  animation:dangerEnd 1.2s ease-in-out infinite;
+}
+@keyframes dangerEnd{50%{filter:brightness(1.35)}}
