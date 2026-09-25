@@ -845,8 +845,26 @@
     osc.stop(audioCtx.currentTime+duration);
   }
 
+  // Routed through native.js: Capacitor taptic engine in store builds,
+  // navigator.vibrate on Android, switch-toggle ticks on iOS Safari.
   function haptic(value=7) {
+    const native=window.GemdropNative;
+    if(native){
+      native.haptic(value);
+      return;
+    }
     try { if (navigator.vibrate) navigator.vibrate(value); } catch {}
+  }
+
+  function syncHapticsButton() {
+    const button=$('hapticsButton');
+    const native=window.GemdropNative;
+    if(!button||!native) return;
+    const on=native.isHapticsEnabled();
+    button.setAttribute('aria-pressed',on?'false':'true');
+    button.setAttribute('aria-label',on?'Turn haptics off':'Turn haptics on');
+    const copy=button.querySelector('.haptics-copy');
+    if(copy) copy.textContent=on?'HAPTICS ON':'HAPTICS OFF';
   }
 
   const GEM_WORLD_LIGHT_ANGLE=-Math.PI*.32;
@@ -1261,6 +1279,15 @@
         setGameMuted(!gameMuted);
       });
       syncMuteButton();
+
+      const hapticsButton=$('hapticsButton');
+      if(hapticsButton&&window.GemdropNative){
+        hapticsButton.addEventListener('click',()=>{
+          window.GemdropNative.setHapticsEnabled(!window.GemdropNative.isHapticsEnabled());
+          syncHapticsButton();
+        });
+        syncHapticsButton();
+      }
 
       $('resultMenuButton').addEventListener('click',()=>this.returnToMenu());
 

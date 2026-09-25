@@ -721,7 +721,8 @@
 
     rewardTimers.push(window.setTimeout(()=>{
       overlay.classList.add('burst');
-      if(navigator.vibrate) navigator.vibrate([18,28,42]);
+      if(window.GemdropNative) window.GemdropNative.haptic([18,28,42]);
+      else if(navigator.vibrate) navigator.vibrate([18,28,42]);
     },closedBurstAt));
 
     rewardTimers.push(window.setTimeout(()=>{
