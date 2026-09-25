@@ -721,17 +721,21 @@
 
     rewardTimers.push(window.setTimeout(()=>{
       overlay.classList.add('burst');
+      if(window.GemdropSfx) window.GemdropSfx.chest('open');
       if(window.GemdropNative) window.GemdropNative.haptic([18,28,42]);
       else if(navigator.vibrate) navigator.vibrate([18,28,42]);
     },closedBurstAt));
 
     rewardTimers.push(window.setTimeout(()=>{
       overlay.classList.add('open-burst');
+      if(window.GemdropSfx) window.GemdropSfx.chest('burst');
     },openBurstAt));
 
     rewardTimers.push(window.setTimeout(()=>{
       overlay.classList.remove('opening','burst','open-burst');
       overlay.classList.add('revealed');
+      if(window.GemdropSfx) window.GemdropSfx.chest('reveal');
+      if(window.GemdropNative) window.GemdropNative.notify('success');
       rewardTimers=[];
     },revealAt));
 

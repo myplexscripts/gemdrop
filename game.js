@@ -1008,6 +1008,41 @@
     sweep({from:1400-tier*30,to:500,duration:.12,volume:.03,type:'square'});
   }
 
+  // Merge: a rising shimmer-whoosh under the pitched tones, bigger for
+  // higher tiers.
+  function playMergeSfx(impact=0,tier=0) {
+    if(!sfxReady()) return;
+    const lift=clamp(tier/19,0,1);
+    noiseBurst({duration:.16+impact*.04,volume:.03+impact*.012,from:700+lift*500,to:3800+lift*2400,q:1.6});
+    sweep({from:220+tier*18,to:440+tier*36,duration:.09,volume:.03+impact*.008,type:'triangle'});
+    if(impact>=3){
+      sweep({from:70,to:38,duration:.35,volume:.12,type:'sine'});
+    }
+  }
+
+  function playUiTapSfx(primary=false) {
+    if(!sfxReady()) return;
+    sweep({from:primary?700:560,to:primary?980:760,duration:.05,volume:.03,type:'triangle'});
+    noiseBurst({duration:.03,volume:.012,type:'highpass',from:3000,to:5000,q:.6});
+  }
+
+  function playChestSfx(stage) {
+    if(!sfxReady()) return;
+    if(stage==='open'){
+      sweep({from:160,to:60,duration:.3,volume:.12,type:'sine'});
+      noiseBurst({duration:.35,volume:.05,type:'lowpass',from:1800,to:200,q:.7});
+      sweep({at:.05,from:420,to:300,duration:.14,volume:.03,type:'square'});
+    }else if(stage==='burst'){
+      noiseBurst({duration:.6,volume:.05,from:900,to:6000,q:.9});
+      [0,7,12,16,19].forEach((step,i)=>{
+        const f=659.25*Math.pow(2,step/12);
+        sweep({at:i*.06,from:f,to:f,duration:.3,volume:.03,type:'sine'});
+      });
+    }else if(stage==='reveal'){
+      playFanfareSfx();
+    }
+  }
+
   function tone(freq,duration=.055,volume=.022,type='sine') {
     if (!audioCtx||gameMuted) return;
     const osc=audioCtx.createOscillator();
@@ -1016,7 +1051,9 @@
     osc.frequency.value=freq;
     gain.gain.setValueAtTime(volume,audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+duration);
-    osc.connect(gain).connect(audioCtx.destination);
+    // Through the shared mix bus (compressor + master) rather than straight
+    // to the speakers, so every sound sits in the same space.
+    osc.connect(gain).connect(getSfxBus()||audioCtx.destination);
     osc.start();
     osc.stop(audioCtx.currentTime+duration);
   }
@@ -1042,6 +1079,12 @@
     const copy=button.querySelector('.haptics-copy');
     if(copy) copy.textContent=on?'HAPTICS ON':'HAPTICS OFF';
   }
+
+  window.GemdropSfx={
+    chest:stage=>playChestSfx(stage),
+    tap:primary=>playUiTapSfx(primary),
+    musicFx:(amount,a,h,r)=>musicFx(amount,a,h,r)
+  };
 
   const GEM_WORLD_LIGHT_ANGLE=-Math.PI*.32;
 
@@ -1369,6 +1412,15 @@
     bindUI() {
       if (this.uiBound) return;
       this.uiBound=true;
+
+      // Every button: a soft tap sound and a light haptic on press.
+      document.addEventListener('pointerdown',event=>{
+        const button=event.target.closest&&event.target.closest('button');
+        if(!button||button.disabled||button.id==='gemPickerBackdrop') return;
+        unlockAudio();
+        playUiTapSfx(button.classList.contains('primary-button'));
+        if(window.GemdropNative) window.GemdropNative.impact('light');
+      },{passive:true,capture:true});
 
       $('startButton').addEventListener('click',()=>{
         unlockAudio();
@@ -2968,6 +3020,8 @@
           this.emitMergeRewardTrails(x,y,masterValue,chargedPowerups,this.mergeChain,true,tiers[tier].color);
           this.showStatus('MASTER CUT +$'+masterValue,'reward',1450,'gem',tier);
           this.cameras.main.shake(100,.0038);
+          playMergeSfx(4,tiers.length-1);
+          musicFx(.4,30,500,700);
           tone(760,.15,.042,'sine');
           haptic([14,17,22]);
           if(window.GemdropMeta){
@@ -3026,6 +3080,9 @@
           window.setTimeout(()=>tone(1180,.18,.035,'sine'),95);
           haptic([18,35,18,55]);
         }
+
+        playMergeSfx(impact,next);
+        if(impact>=3) musicFx(.5,30,260,520);
 
         const shakeDuration=62+impact*34;
         const shakeStrength=.0012+impact*.00085;

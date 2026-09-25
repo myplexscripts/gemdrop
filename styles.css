@@ -8888,3 +8888,30 @@ body,
   animation:dangerEnd 1.2s ease-in-out infinite;
 }
 @keyframes dangerEnd{50%{filter:brightness(1.35)}}
+
+/* ---- Juice pass: tactile buttons ---- */
+.primary-button,.secondary-button,.hud-button,.power-button,.collection-back,.treasure-close,
+.collection-tab,.game-menu-close,.tutorial-skip,.treasure-copy-nav button{
+  transition:transform .26s cubic-bezier(.3,1.7,.45,1),filter .2s ease,box-shadow .2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.primary-button:active,.secondary-button:active,.collection-tab:active,
+.game-menu-close:active,.tutorial-skip:active,.treasure-copy-nav button:active{
+  transform:translateY(2px) scale(.93)!important;
+  filter:brightness(1.12);
+  transition-duration:.06s;
+}
+.hud-button:active,.collection-back:active,.treasure-close:active{
+  transform:translateY(1px) scale(.88)!important;
+  transition-duration:.06s;
+}
+.power-button:active:not(:disabled){
+  transform:translateY(2px) scale(.9)!important;
+  filter:brightness(1.15);
+  transition-duration:.06s;
+}
+@media (prefers-reduced-motion: reduce){
+  .primary-button:active,.secondary-button:active,.hud-button:active,.power-button:active:not(:disabled){
+    transform:none!important;
+  }
+}
