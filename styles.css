@@ -8847,7 +8847,7 @@ body,
 }
 @keyframes ribbonIn{to{transform:scale(1) rotate(8deg);opacity:1}}
 @keyframes ribbonGlow{50%{box-shadow:0 0 0 2px rgba(255,255,255,.5),0 6px 28px rgba(255,190,60,.8)}}
-.result-card.new-best-shake{animation:cardThump .42s cubic-bezier(.2,.9,.3,1.3)}
+#gameOverOverlay.visible>.result-card.new-best-shake{animation:cardThump .42s cubic-bezier(.2,.9,.3,1.3)}
 @keyframes cardThump{0%{transform:scale(1)}30%{transform:scale(1.035)}100%{transform:scale(1)}}
 
 .confetti-bit{
@@ -8914,4 +8914,96 @@ body,
   .primary-button:active,.secondary-button:active,.hud-button:active,.power-button:active:not(:disabled){
     transform:none!important;
   }
+}
+
+/* ---- Juice pass: screen transitions ---- */
+.menu-gem-rain{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+  pointer-events:none;
+}
+
+.overlay.closing{display:grid}
+.collection-overlay.closing{display:block}
+.treasure-detail-overlay.closing,.gem-picker-overlay.closing{display:grid}
+.overlay.closing,.collection-overlay.closing,.treasure-detail-overlay.closing,.gem-picker-overlay.closing{
+  pointer-events:none;
+}
+
+.overlay.visible{animation:overlayFadeIn .26s ease-out both}
+.overlay.closing{animation:overlayFadeOut .22s ease-in both}
+@keyframes overlayFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes overlayFadeOut{from{opacity:1}to{opacity:0}}
+
+.overlay.visible>.sheet-card,
+.overlay.visible>.tutorial-card{
+  animation:cardSpringIn .5s cubic-bezier(.2,.9,.28,1.22) both;
+}
+.overlay.closing>.sheet-card,
+.overlay.closing>.tutorial-card{
+  animation:cardDropOut .22s ease-in both;
+}
+@keyframes cardSpringIn{
+  from{opacity:0;transform:translateY(36px) scale(.9)}
+  to{opacity:1;transform:none}
+}
+@keyframes cardDropOut{
+  to{opacity:0;transform:translateY(18px) scale(.95)}
+}
+
+/* Staggered buttons inside menu cards */
+.overlay.visible .game-menu-actions>*{
+  animation:itemRise .42s cubic-bezier(.2,.9,.3,1.3) both;
+}
+.overlay.visible .game-menu-actions>*:nth-child(1){animation-delay:.06s}
+.overlay.visible .game-menu-actions>*:nth-child(2){animation-delay:.11s}
+.overlay.visible .game-menu-actions>*:nth-child(3){animation-delay:.16s}
+.overlay.visible .game-menu-actions>*:nth-child(4){animation-delay:.21s}
+.overlay.visible .game-menu-actions>*:nth-child(5){animation-delay:.26s}
+@keyframes itemRise{
+  from{opacity:0;transform:translateY(12px) scale(.94)}
+  to{opacity:1;transform:none}
+}
+
+/* Home menu: brand drops in, then best value and buttons rise */
+.start-overlay.visible .start-brand{animation:brandDrop .7s cubic-bezier(.2,.9,.25,1.25) both}
+.start-overlay.visible .home-best{animation:itemRise .5s cubic-bezier(.2,.9,.3,1.3) .22s both}
+.start-overlay.visible .start-actions>*:nth-child(1){animation:itemRise .5s cubic-bezier(.2,.9,.3,1.3) .32s both}
+.start-overlay.visible .start-actions>*:nth-child(2){animation:itemRise .5s cubic-bezier(.2,.9,.3,1.3) .4s both}
+.start-overlay.closing .start-card{animation:cardDropOut .22s ease-in both}
+@keyframes brandDrop{
+  from{opacity:0;transform:translateY(-28px) scale(.86)}
+  60%{opacity:1}
+  to{opacity:1;transform:none}
+}
+
+/* Native-style push for full-screen pages */
+.collection-overlay.visible,.treasure-detail-overlay.visible{animation:pagePushIn .34s cubic-bezier(.2,.8,.2,1) both}
+.collection-overlay.closing,.treasure-detail-overlay.closing{animation:pagePushOut .22s ease-in both}
+@keyframes pagePushIn{from{transform:translateX(36%);opacity:0}to{transform:none;opacity:1}}
+@keyframes pagePushOut{to{transform:translateX(30%);opacity:0}}
+
+/* Bottom sheet */
+.gem-picker-overlay.visible .gem-picker-sheet{animation:sheetUp .38s cubic-bezier(.2,.9,.3,1.12) both}
+.gem-picker-overlay.closing .gem-picker-sheet{animation:sheetDown .22s ease-in both}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes sheetDown{to{transform:translateY(100%)}}
+
+/* Gem cards in the showcase pop in */
+.collection-overlay.visible .gem-card{animation:itemRise .4s cubic-bezier(.2,.9,.3,1.25) both}
+.collection-overlay.visible .gem-card:nth-child(n+2){animation-delay:.03s}
+.collection-overlay.visible .gem-card:nth-child(n+4){animation-delay:.07s}
+.collection-overlay.visible .gem-card:nth-child(n+6){animation-delay:.11s}
+.collection-overlay.visible .gem-card:nth-child(n+8){animation-delay:.15s}
+.collection-overlay.visible .gem-card:nth-child(n+10){animation-delay:.19s}
+
+@media (prefers-reduced-motion: reduce){
+  .overlay.visible,.overlay.visible>.sheet-card,.overlay.visible>.tutorial-card,
+  .overlay.visible .game-menu-actions>*,.start-overlay.visible .start-brand,
+  .start-overlay.visible .home-best,.start-overlay.visible .start-actions>*,
+  .collection-overlay.visible,.treasure-detail-overlay.visible,
+  .gem-picker-overlay.visible .gem-picker-sheet,.collection-overlay.visible .gem-card{animation:none}
 }

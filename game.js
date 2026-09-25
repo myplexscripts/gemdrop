@@ -1219,6 +1219,140 @@
       this.setGemUniforms(gameObject);
     }
   }
+  // ---- Screen transitions -------------------------------------------------
+  // Overlays are shown by adding .visible (display switches on and the CSS
+  // entrance animation runs). When .visible is removed we hold the overlay on
+  // screen with .closing for the exit animation, then let it disappear.
+  function setupOverlayTransitions() {
+    if(REDUCED_MOTION) return;
+    const selectors='.overlay,.collection-overlay,.treasure-detail-overlay,.gem-picker-overlay';
+    const EXIT_MS=220;
+    document.querySelectorAll(selectors).forEach(overlay=>{
+      let wasVisible=overlay.classList.contains('visible');
+      let timer=0;
+      new MutationObserver(()=>{
+        const visible=overlay.classList.contains('visible');
+        if(visible===wasVisible) return;
+        wasVisible=visible;
+        window.clearTimeout(timer);
+        if(visible){
+          overlay.classList.remove('closing');
+          return;
+        }
+        overlay.classList.add('closing');
+        timer=window.setTimeout(()=>overlay.classList.remove('closing'),EXIT_MS);
+      }).observe(overlay,{attributes:true,attributeFilter:['class']});
+    });
+  }
+
+  // ---- Menu gem rain ---------------------------------------------------------
+  // A handful of real rendered gems tumble down behind the home menu, bounce
+  // on the floor and fade away. Pure 2D, runs only while the menu is visible.
+  function setupMenuGemRain() {
+    const canvas=$('menuGemRain');
+    if(!canvas||!window.ReactiveGemSystem) return;
+    const ctx=canvas.getContext('2d');
+    const sprites=[];
+    const spriteTiers=[0,1,2,3,4,5,7,8,10,12,13,16,19];
+    for(const tier of spriteTiers){
+      const t=tiers[tier];
+      try{
+        sprites.push(window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,112,t,GEM_WORLD_LIGHT_ANGLE));
+      }catch{}
+    }
+    if(!sprites.length) return;
+
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    let w=0,h=0;
+    const gems=[];
+    const COUNT=REDUCED_MOTION?7:11;
+
+    function resize(){
+      const rect=canvas.getBoundingClientRect();
+      w=Math.max(1,rect.width);
+      h=Math.max(1,rect.height);
+      canvas.width=Math.round(w*dpr);
+      canvas.height=Math.round(h*dpr);
+    }
+
+    function spawn(gem,initial){
+      const depth=Math.random();
+      gem.sprite=sprites[Math.floor(Math.random()*sprites.length)];
+      gem.size=26+depth*34;
+      gem.depth=depth;
+      gem.x=gem.size+Math.random()*(w-gem.size*2);
+      gem.y=initial?Math.random()*h*.8:-gem.size-Math.random()*h*.5;
+      gem.vx=(Math.random()-.5)*40;
+      gem.vy=initial?Math.random()*60:0;
+      gem.rot=Math.random()*Math.PI*2;
+      gem.vr=(Math.random()-.5)*2.2;
+      gem.alpha=initial?.0:0;
+      gem.bounces=0;
+      gem.fading=false;
+      return gem;
+    }
+
+    resize();
+    for(let i=0;i<COUNT;i++) gems.push(spawn({},true));
+    window.addEventListener('resize',resize,{passive:true});
+
+    let last=0;
+    let raf=0;
+    function frame(now){
+      raf=0;
+      if(!startOverlay.classList.contains('visible')||document.hidden){ last=0; return; }
+      const dt=last?Math.min(.05,(now-last)/1000):0;
+      last=now;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.clearRect(0,0,w,h);
+
+      for(const g of gems){
+        if(!REDUCED_MOTION){
+          g.vy+=(520+g.depth*420)*dt;
+          g.x+=g.vx*dt;
+          g.y+=g.vy*dt;
+          g.rot+=g.vr*dt;
+          const floor=h-g.size*.5-(1-g.depth)*h*.06-8;
+          if(g.y>floor){
+            g.y=floor;
+            if(Math.abs(g.vy)>60){
+              g.vy=-g.vy*(.46+g.depth*.1);
+              g.vr=-g.vr*.7+(Math.random()-.5);
+              g.vx+=(Math.random()-.5)*50;
+              g.bounces++;
+            }else{
+              g.vy=0;
+              g.vx*=.9;
+              g.vr*=.85;
+              g.fading=true;
+            }
+          }
+          if(g.x<g.size*.5||g.x>w-g.size*.5){
+            g.vx=-g.vx*.6;
+            g.x=Math.max(g.size*.5,Math.min(w-g.size*.5,g.x));
+          }
+          g.alpha=g.fading?g.alpha-dt*.45:Math.min(1,g.alpha+dt*1.4);
+          if(g.fading&&g.alpha<=0) spawn(g,false);
+        }else{
+          g.alpha=1;
+        }
+
+        ctx.save();
+        ctx.globalAlpha=Math.max(0,g.alpha)*(.28+g.depth*.34);
+        ctx.translate(g.x,g.y);
+        ctx.rotate(g.rot);
+        ctx.drawImage(g.sprite,-g.size/2,-g.size/2,g.size,g.size);
+        ctx.restore();
+      }
+      if(!REDUCED_MOTION) raf=requestAnimationFrame(frame);
+    }
+
+    const kick=()=>{ if(!raf) raf=requestAnimationFrame(frame); };
+    new MutationObserver(kick).observe(startOverlay,{attributes:true,attributeFilter:['class']});
+    document.addEventListener('visibilitychange',kick);
+    kick();
+  }
+
   class GameScene extends Phaser.Scene {
     constructor() {
       super('GameScene');
@@ -1360,6 +1494,8 @@
 
       window.GemdropGameScene=this;
       this.bindUI();
+      setupOverlayTransitions();
+      setupMenuGemRain();
       this.renderCollection();
       this.updateNextPreview();
       this.updatePowerButtons();
