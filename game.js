@@ -5,7 +5,10 @@
 
   function syncGameViewport(){
     const standalone=(
-      window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches
+      window.matchMedia&&(
+        window.matchMedia('(display-mode: standalone)').matches||
+        window.matchMedia('(display-mode: fullscreen)').matches
+      )
     )||window.navigator.standalone===true;
 
     document.body.classList.toggle('gemdrop-standalone',!!standalone);
@@ -55,7 +58,21 @@
   const AIM_CONTROL_GAIN = 1.25;
   const COLLIDER_SCALE = 0.97;
   const ART_SCALE = 0.97;
-  const RENDER_SCALE = 2;
+  // Render only as many pixels as the screen can show: the playfield is about
+  // one screen wide, so match its physical pixel width (capped lower on
+  // low-memory / few-core devices). ?scale=1.5 overrides for testing.
+  function pickRenderScale() {
+    const forced=Number(new URLSearchParams(window.location.search).get('scale'));
+    if(forced>=1&&forced<=2) return forced;
+    const dpr=window.devicePixelRatio||1;
+    const cssWidth=Math.min(window.innerWidth||390,560);
+    const needed=(cssWidth*dpr)/640;
+    const lowEnd=(navigator.deviceMemory&&navigator.deviceMemory<=3)||
+      (navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);
+    return Math.max(1,Math.min(lowEnd?1.5:2,Math.ceil(needed*4)/4));
+  }
+  const RENDER_SCALE = pickRenderScale();
+  const MIN_RENDER_SCALE = 1;
   const GEM_TEXTURE_SIZE = 768;
   const REDUCED_MOTION = !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   // Merge juice: the two parents slide together, the world freezes for a
@@ -706,15 +723,29 @@
   function unlockAudio() {
     if (!audioCtx) {
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+      if(audioCtx) audioCtx.onstatechange=()=>{ if(audioCtx.state==='running') syncMusic({instant:false}); };
     }
 
     if(audioCtx){
-      if(audioCtx.state==='suspended') audioCtx.resume();
+      resumeAudio();
       setupGemAudioBus();
     }
 
     unlockMusic();
   }
+
+  // iOS moves the context to "interrupted" after calls, Siri or alarms, and
+  // other platforms suspend it in the background. Try to resume whenever the
+  // page comes back and on the next touch.
+  function resumeAudio() {
+    if(!audioCtx||audioCtx.state==='running'||audioCtx.state==='closed') return;
+    try{ audioCtx.resume().catch(()=>{}); }catch{}
+  }
+
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) resumeAudio(); });
+  window.addEventListener('pageshow',resumeAudio);
+  window.addEventListener('focus',resumeAudio);
+  document.addEventListener('pointerdown',resumeAudio,{passive:true,capture:true});
 
   function getCrystalNoiseBuffer() {
     if(crystalNoiseBuffer) return crystalNoiseBuffer;
@@ -1438,6 +1469,10 @@
 
     preload() {
       if(!window.ReactiveGemSystem) throw new Error('ReactiveGemSystem is not available');
+      if(window.GemdropBoot){
+        window.GemdropBoot.progress(.4,'Loading cuts…');
+        this.load.on('progress',v=>window.GemdropBoot.progress(.4+v*.3));
+      }
       for(const [cutKey,cut] of Object.entries(window.ReactiveGemSystem.cuts)){
         this.load.text('reactive-src-'+cutKey,cut.asset);
       }
@@ -1493,12 +1528,44 @@
       this.updateHomeProgress();
 
       window.GemdropGameScene=this;
+      window.GemdropRenderScale=RENDER_SCALE;
       this.bindUI();
       setupOverlayTransitions();
       setupMenuGemRain();
       this.renderCollection();
       this.updateNextPreview();
       this.updatePowerButtons();
+
+      this.renderScale=RENDER_SCALE;
+      this.perfSamples=[];
+      this.perfLastCheck=0;
+      if(window.GemdropBoot){
+        window.GemdropBoot.progress(.95,'Opening the vault…');
+        requestAnimationFrame(()=>requestAnimationFrame(()=>window.GemdropBoot.done()));
+      }
+    }
+
+    // If a device can't hold frame rate during play, step the render
+    // resolution down (never up mid-session, to avoid oscillating).
+    monitorPerformance(time,delta) {
+      if(!this.running||this.paused||this.metaPaused||this.ending) return;
+      if(time-this.runStartedAtScene<4000) return;
+      this.perfSamples.push(delta);
+      if(this.perfSamples.length<150) return;
+      const avg=this.perfSamples.reduce((a,b)=>a+b,0)/this.perfSamples.length;
+      this.perfSamples.length=0;
+      if(avg<26||this.renderScale<=MIN_RENDER_SCALE) return;
+      if(time-this.perfLastCheck<5000) return;
+      this.perfLastCheck=time;
+      this.setRenderScale(Math.max(MIN_RENDER_SCALE,this.renderScale-.25));
+    }
+
+    setRenderScale(scale) {
+      if(scale===this.renderScale) return;
+      this.renderScale=scale;
+      this.scale.setGameSize(Math.round(W*scale),Math.round(H*scale));
+      this.cameras.main.setZoom(scale);
+      window.GemdropRenderScale=scale;
     }
 
     createWorldWalls() {
@@ -2437,6 +2504,7 @@
       this.runFirstPowerupMs=null;
       this.runEndCause='danger-line';
       this.runStartedAt=performance.now();
+      this.runStartedAtScene=this.time.now;
       this.runPausedTotal=0;
       this.runPauseStartedAt=0;
 
@@ -5229,6 +5297,7 @@
 
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
+      this.monitorPerformance(time,delta);
       this.updateHitStop(time);
       this.updateScoreDisplay(dt);
       this.animateGemLights(time);

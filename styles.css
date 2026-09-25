@@ -9007,3 +9007,52 @@ body,
   .collection-overlay.visible,.treasure-detail-overlay.visible,
   .gem-picker-overlay.visible .gem-picker-sheet,.collection-overlay.visible .gem-card{animation:none}
 }
+
+/* ---- Boot splash ---- */
+.boot-splash{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  display:grid;
+  place-items:center;
+  background:radial-gradient(circle at 50% 38%,#3a1150 0%,#16091d 62%);
+  transition:opacity .45s ease,visibility 0s .45s;
+}
+.boot-splash.is-done{opacity:0;visibility:hidden;pointer-events:none}
+.boot-splash__inner{display:grid;justify-items:center;gap:14px}
+.boot-splash__icon{
+  width:96px;
+  height:96px;
+  border-radius:24px;
+  box-shadow:0 18px 50px rgba(160,70,230,.35);
+  animation:bootBob 1.6s ease-in-out infinite;
+}
+.boot-splash__title{
+  font:900 30px/1 "Cinzel Decorative",Georgia,serif;
+  letter-spacing:.04em;
+  color:#ffeab8;
+  text-shadow:0 3px 0 #6d2150;
+}
+.boot-splash__bar{
+  width:180px;
+  height:8px;
+  border-radius:99px;
+  overflow:hidden;
+  background:rgba(255,255,255,.08);
+  box-shadow:inset 0 0 0 1px rgba(255,200,120,.2);
+}
+.boot-splash__bar span{
+  display:block;
+  height:100%;
+  transform:scaleX(0);
+  transform-origin:left;
+  background:linear-gradient(90deg,#ffcf5c,#ff7ab8);
+  transition:transform .3s ease;
+}
+.boot-splash__label{
+  font:700 13px/1 Manrope,system-ui,sans-serif;
+  letter-spacing:.08em;
+  color:rgba(240,222,239,.62);
+}
+@keyframes bootBob{50%{transform:translateY(-6px) rotate(-2deg)}}
+@media (prefers-reduced-motion: reduce){.boot-splash__icon{animation:none}}

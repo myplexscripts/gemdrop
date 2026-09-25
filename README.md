@@ -33,9 +33,38 @@ Physics remain separate from the visuals. Each tier uses a convex Matter body ma
 - Cascade: merges all currently available matching pairs.
 - Prism: upgrades the current dropper gem by one tier.
 
+## Game feel
+
+- Merges: parents slide together, a short physics hit-stop, the new gem springs out with squash/stretch and a flash, and neighbours get a soft radial push
+- Drops: dotted aim guide with an outlined landing ghost, claw release animation, landing squash + dust + thud, slider detent ticks
+- Chains: a single combo badge with a draining window bar, rising pentatonic chain chimes, and at ×4+ slow-motion, edge glow and a music swell
+- Score: the HUD rolls up as coin trails land; the results screen tallies and celebrates a new best
+- Danger: heartbeat (sound + haptic) that speeds up, red vignette, progressively muffled music; game over plays a slow-motion shatter sequence
+- Screens: spring-in cards, native-style page pushes and bottom sheets, staggered menus, gem rain behind the home menu
+- Everything honours `prefers-reduced-motion`
+
+## Native & offline
+
+- `native.js` routes haptics to the Capacitor Haptics plugin in store builds, `navigator.vibrate` on Android, and the iOS 18 switch-toggle tick on iOS Safari. Haptics can be toggled in the pause menu.
+- Phaser, Lucide and fonts are bundled in `vendor/`; `sw.js` precaches the game shell so it launches offline.
+- A branded boot splash covers texture generation; PNG and maskable icons live in `icons/`.
+- Render resolution matches the device's pixel density and steps down automatically if frame times stay high.
+
+### Building the iOS / Android apps (Capacitor)
+
+```sh
+npm install
+npm run cap:add:android   # once; needs Android Studio to build
+npm run cap:add:ios       # once; macOS + Xcode
+npm run cap:android       # sync web files and open Android Studio
+npm run cap:ios           # sync web files and open Xcode
+```
+
+`npm run build` copies the static game into `www/`, which Capacitor bundles into the native shell.
+
 ## Runtime
 
-- Phaser 3.90.0
+- Phaser 3.90.0 (bundled in `vendor/`)
 - Matter Physics
 - Fixed 60 Hz simulation
 - WebGL Light2D normal-map rendering when available

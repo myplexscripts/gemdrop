@@ -11,11 +11,47 @@
   <meta name="format-detection" content="telephone=no" />
   <title>Gem Drop</title>
   <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="preload" href="vendor/fonts/fredoka-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="vendor/fonts/fonts.css" />
-  <link rel="stylesheet" href="styles.css?v=20260924-sevenpass1" />
+  <link rel="stylesheet" href="styles.css?v=20260925-juice1" />
 </head>
 <body>
+  <div id="bootSplash" class="boot-splash" aria-hidden="true">
+    <div class="boot-splash__inner">
+      <img class="boot-splash__icon" src="icons/icon-192.png" alt="" width="96" height="96" />
+      <div class="boot-splash__title">GEM DROP</div>
+      <div class="boot-splash__bar"><span id="bootSplashFill"></span></div>
+      <div id="bootSplashLabel" class="boot-splash__label">Polishing gems…</div>
+    </div>
+  </div>
+  <script>
+    // Boot splash progress. Game code reports milestones via GemdropBoot.
+    (function(){
+      var fill=document.getElementById('bootSplashFill');
+      var label=document.getElementById('bootSplashLabel');
+      var splash=document.getElementById('bootSplash');
+      var shown=0;
+      window.GemdropBoot={
+        progress:function(p,text){
+          shown=Math.max(shown,Math.min(1,p));
+          if(fill) fill.style.transform='scaleX('+shown+')';
+          if(text&&label) label.textContent=text;
+        },
+        done:function(){
+          if(!splash||splash.classList.contains('is-done')) return;
+          window.GemdropBoot.progress(1,'Ready');
+          splash.classList.add('is-done');
+          setTimeout(function(){ if(splash.parentNode) splash.parentNode.removeChild(splash); },520);
+        }
+      };
+      window.GemdropBoot.progress(.08);
+      // Never trap the player behind the splash.
+      setTimeout(function(){ window.GemdropBoot.done(); },15000);
+    })();
+  </script>
   <main class="game-app" id="gameApp">
     <div id="backgroundParticles" class="background-particles" aria-hidden="true"></div>
     <header class="hud">
@@ -121,7 +157,7 @@
 
       </div>
 
-      <div class="start-version" aria-label="Game version">v0.8.29</div>
+      <div class="start-version" aria-label="Game version">v0.9.0</div>
     </div>
   </section>
 
@@ -394,7 +430,13 @@
   <script src="reactive-gem-system.js?v=20260923-richgems1"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
   <script src="native.js?v=20260925-juice1"></script>
-  <script src="meta.js?v=20260924-sevenpass1"></script>
-  <script src="game.js?v=20260924-sevenpass1"></script>
+  <script src="meta.js?v=20260925-juice1"></script>
+  <script>window.GemdropBoot&&window.GemdropBoot.progress(.3,'Cutting facets…');</script>
+  <script src="game.js?v=20260925-juice1"></script>
+  <script>
+    if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())){
+      window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+    }
+  </script>
 </body>
 </html>
