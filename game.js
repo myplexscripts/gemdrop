@@ -82,6 +82,10 @@
   const HITSTOP_MS = [26,36,48,62,80];
   const MERGE_ZONE_CLEARANCE = 10;
   const TUMBLE_SETTLE_GRACE_MS = 1400;
+  // Seconds a pile may stay over the line before the vault overflows. The
+  // on-screen countdown ticks 5, 4, 3, 2, 1 across this window.
+  const DANGER_LIMIT = 5;
+  const DANGER_COUNTDOWN_AT = .26;
   const CHAIN_WINDOW = 1.0;
   const HOT_CHAIN = 4;
 
@@ -89,9 +93,6 @@
   const scoreEl = $('score');
   const homeBestEl = $('homeBest');
   const nextPreview = $('nextPreview');
-  const statusHud = $('statusHud');
-  const statusIcon = $('statusIcon');
-  const statusText = $('statusText');
   const collectionOverlay = $('collectionOverlay');
   const gemCollection = $('gemCollection');
   const collectionProgress = $('collectionProgress');
@@ -318,7 +319,7 @@
     {
       key:'danger',
       title:'Stay below the line.',
-      copy:'A gem that remains above the glowing line starts the danger countdown.'
+      copy:'A gem that stays above the glowing line starts a 5-second countdown.'
     },
     {
       key:'powers',
@@ -1025,6 +1026,23 @@
     sweep({at:.15,from:78,to:38,duration:.12,volume:v*.75,type:'sine'});
   }
 
+  // Countdown tick: a bright two-tone blip that climbs as the number falls.
+  function playCountdownSfx(n) {
+    if(!sfxReady()) return;
+    const step=[0,12,9,7,4,0][clamp(n,0,5)]||0;
+    const f=587.33*Math.pow(2,step/12);
+    sweep({from:f*1.02,to:f,duration:.16,volume:.06,type:'square'});
+    sweep({at:.05,from:f*1.5,to:f*1.5,duration:.12,volume:.03,type:'triangle'});
+  }
+
+  function playSafeSfx() {
+    if(!sfxReady()) return;
+    [0,4,7,12].forEach((step,i)=>{
+      const f=659.25*Math.pow(2,step/12);
+      sweep({at:i*.05,from:f,to:f,duration:.18,volume:.035,type:'sine'});
+    });
+  }
+
   function playGameOverSfx() {
     if(!sfxReady()) return;
     sweep({from:190,to:34,duration:1.1,volume:.2,type:'sine'});
@@ -1433,8 +1451,6 @@
       this.limitLine=null;
       this.dropper=null;
       this.limitJewels=[];
-      this.statusTimer=null;
-      this.statusKind='';
       this.powerCharge={...POWER_START_CHARGE};
       this.spawnBag=[];
       this.spawnBagShift=-1;
@@ -1870,7 +1886,7 @@
       } catch {}
     }
 
-    unlockTier(tier,notify=false) {
+    unlockTier(tier) {
       if(tier<0||tier>=tiers.length||this.unlockedTiers.has(tier)) return false;
 
       this.unlockedTiers.add(tier);
@@ -1878,11 +1894,6 @@
       this.saveUnlocked();
       this.renderCollection();
       this.updateHomeProgress();
-
-      if(notify){
-        const t=tiers[tier];
-        this.showStatus('NEW GEM · '+t.name.toUpperCase(),'reward',1650,'gem',tier);
-      }
 
       return true;
     }
@@ -2468,18 +2479,6 @@
       return selected;
     }
 
-    announceCurrentSpecial() {
-      if(!this.currentSpecial) return;
-      const special=SPECIAL_DROPS[this.currentSpecial];
-      if(!special) return;
-      this.showStatus(
-        special.label.toUpperCase()+' GEM · '+special.hint,
-        'reward',
-        1250,
-        'sparkles'
-      );
-    }
-
     startRun() {
       unlockAudio();
       syncMusic();
@@ -2527,8 +2526,8 @@
       this.currentSpecial=this.rollSpecialDrop();
       this.nextTier=this.randomSpawnTier();
       this.nextSpecial=this.rollSpecialDrop();
-      this.unlockTier(this.currentTier,false);
-      this.unlockTier(this.nextTier,false);
+      this.unlockTier(this.currentTier);
+      this.unlockTier(this.nextTier);
       this.ready=true;
       this.running=true;
       this.paused=false;
@@ -2547,7 +2546,6 @@
       this.powerCharge={...POWER_START_CHARGE};
 
       this.resetScoreDisplay();
-      this.clearStatus();
 
       this.matter.world.resume();
       this.updateNextPreview();
@@ -2582,6 +2580,12 @@
         this.tweens.killTweensOf(this.comboBadge);
         this.comboBadge.setAlpha(0);
         this.comboShown=false;
+      }
+      if(this.dangerBadge){
+        this.tweens.killTweensOf(this.dangerBadge);
+        this.dangerBadge.setAlpha(0);
+        this.dangerShown=false;
+        this.dangerCount=0;
       }
       if(this.matter&&this.matter.world&&this.matter.world.engine){
         this.matter.world.engine.timing.timeScale=1;
@@ -2930,11 +2934,10 @@
       this.currentSpecial=this.nextSpecial;
       this.nextTier=this.randomSpawnTier();
       this.nextSpecial=this.rollSpecialDrop();
-      this.unlockTier(this.currentTier,false);
-      this.unlockTier(this.nextTier,false);
+      this.unlockTier(this.currentTier);
+      this.unlockTier(this.nextTier);
 
       this.updateNextPreview();
-      this.announceCurrentSpecial();
       this.updateAimHandle();
       this.updatePowerButtons();
     }
@@ -2980,7 +2983,6 @@
 
           this.mergeBurst(x,y,tiers[Math.min(6,tiers.length-1)],true);
           this.cameras.main.shake(420,.0105);
-          this.showStatus('SCATTER GEM!','reward',1100,'sparkles');
           tone(230,.14,.03,'triangle');
           haptic([12,18,12,24]);
           return;
@@ -3007,7 +3009,6 @@
 
           this.mergeBurst(x,y,tiers[4],1);
           this.updatePowerButtons();
-          this.showStatus('CHARGE GEM +16%','reward',1250,'zap');
           tone(640,.13,.03,'sine');
           haptic([8,12,8]);
           return;
@@ -3032,7 +3033,6 @@
           if(next===tier){
             this.addScore(Math.max(1,Math.round(tiers[tier].score*.5)));
             this.mergeBurst(tx,ty,tiers[tier],true);
-            this.showStatus('FUSION GEM!','reward',1100,'sparkles');
             return;
           }
 
@@ -3044,9 +3044,8 @@
           this.addScore(Math.max(1,Math.round(tiers[next].score*.75)));
           this.mergeBurst(tx,ty,tiers[next],next>=6);
 
-          if(!this.unlockedTiers.has(next)) this.unlockTier(next,true);
+          if(!this.unlockedTiers.has(next)) this.unlockTier(next);
 
-          this.showStatus('FUSION GEM · '+tiers[next].name.toUpperCase(),'reward',1250,'sparkles');
           tone(720,.14,.032,'sine');
           haptic([9,16,9]);
         }
@@ -3228,7 +3227,6 @@
           this.mergeBurst(x,y,tiers[tier],4);
           this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',30,{big:true,impact:4});
           this.emitMergeRewardTrails(x,y,masterValue,chargedPowerups,this.mergeChain,true,tiers[tier].color);
-          this.showStatus('MASTER CUT +$'+masterValue,'reward',1450,'gem',tier);
           this.cameras.main.shake(100,.0038);
           playMergeSfx(4,tiers.length-1);
           musicFx(.4,30,500,700);
@@ -3284,7 +3282,6 @@
         }
 
         if(next===tiers.length-1){
-          this.showStatus('CROWNSTONE FORGED','reward',2400,'gem',next);
           this.cameras.main.flash(420,255,218,96,false);
           tone(920,.16,.045,'sine');
           window.setTimeout(()=>tone(1180,.18,.035,'sine'),95);
@@ -3324,7 +3321,7 @@
         else haptic([14,20,14,28]);
 
         if(!this.unlockedTiers.has(next)){
-          this.unlockTier(next,true);
+          this.unlockTier(next);
         }
       }
 
@@ -3450,6 +3447,104 @@
       }
     }
 
+    // ---- Danger countdown badge -------------------------------------------
+    // Lives in the playfield like the combo badge: a big number counting down
+    // 5..1 with a draining ring, punching in on every second.
+    createDangerBadge() {
+      const font='Fredoka, "Arial Rounded MT Bold", sans-serif';
+      const ring=this.add.graphics();
+      const glow=this.add.circle(0,4,66,0xff2d55,.24).setBlendMode(Phaser.BlendModes.ADD);
+      const count=this.add.text(0,4,'5',{
+        fontFamily:font,fontSize:'120px',fontStyle:'700',color:'#fff4f6',
+        stroke:'#5a0a22',strokeThickness:12,
+        shadow:{offsetX:0,offsetY:7,color:'rgba(0,0,0,.5)',blur:12,stroke:true,fill:true}
+      }).setOrigin(.5);
+      const caption=this.add.text(0,-96,'TOO HIGH!',{
+        fontFamily:font,fontSize:'30px',fontStyle:'700',color:'#ffd3dc',
+        stroke:'#5a0a22',strokeThickness:8
+      }).setOrigin(.5);
+      this.dangerBadge=this.add.container(W/2,392,[ring,glow,count,caption])
+        .setDepth(59).setAlpha(0).setScale(.5);
+      this.dangerBadge.parts={ring,glow,count,caption};
+      this.dangerShown=false;
+      this.dangerCount=0;
+    }
+
+    updateDangerCountdown(gemCount=1) {
+      if(!this.dangerBadge) this.createDangerBadge();
+      const badge=this.dangerBadge;
+      const {ring,glow,count,caption}=badge.parts;
+      const remaining=Math.max(0,DANGER_LIMIT-this.dangerTime);
+      const n=clamp(Math.ceil(remaining),1,5);
+
+      if(!this.dangerShown){
+        this.dangerShown=true;
+        this.dangerCount=0;
+        this.tweens.killTweensOf(badge);
+        badge.setAlpha(1).setScale(.4).setAngle(0);
+        badge.y=392;
+        this.tweens.add({targets:badge,scale:1,duration:REDUCED_MOTION?80:320,ease:'Back.Out'});
+      }
+      caption.setText(gemCount>1?'PILE TOO HIGH!':'TOO HIGH!');
+
+      if(n!==this.dangerCount){
+        this.dangerCount=n;
+        count.setText(String(n));
+        const hot=n<=2;
+        count.setColor(hot?'#ffe1e7':'#fff4f6').setStroke('#5a0a22',12);
+        caption.setColor('#ffd3dc').setStroke('#5a0a22',8);
+        glow.setFillStyle(0xff2d55,.24);
+        this.tweens.killTweensOf([count,glow]);
+        count.setScale(1.45).setAngle(Phaser.Math.FloatBetween(-8,8));
+        glow.setScale(1.45).setAlpha(.7);
+        this.tweens.add({targets:count,scale:1,angle:0,duration:REDUCED_MOTION?60:340,ease:'Back.Out'});
+        this.tweens.add({targets:glow,scale:1,alpha:1,duration:420,ease:'Quad.Out'});
+        playCountdownSfx(n);
+        haptic(hot?[16,40,16]:12);
+        if(hot&&!REDUCED_MOTION) this.cameras.main.shake(110,.0025+(3-n)*.0012);
+      }
+
+      // Ring drains across the current second; it turns hotter near zero.
+      const frac=remaining-Math.floor(remaining);
+      const u=remaining>=5?1:(frac===0?1:frac);
+      const color=n<=2?0xff2d55:0xff6b8a;
+      ring.clear();
+      ring.lineStyle(10,0x3a0718,.55);
+      ring.strokeCircle(0,4,74);
+      ring.lineStyle(10,color,.95);
+      ring.beginPath();
+      ring.arc(0,4,74,-Math.PI/2,-Math.PI/2+Math.PI*2*u,false);
+      ring.strokePath();
+      // Gentle breathing between ticks.
+      const breathe=1+.035*Math.sin(this.time.now*.012);
+      caption.setScale(breathe);
+    }
+
+    hideDangerCountdown(safe) {
+      const badge=this.dangerBadge;
+      if(!badge||!this.dangerShown) return;
+      this.dangerShown=false;
+      this.dangerCount=0;
+      this.tweens.killTweensOf(badge);
+      if(safe){
+        const {count,glow,caption,ring}=badge.parts;
+        ring.clear();
+        count.setText('✓').setColor('#d9ffe6').setStroke('#0b4a2a',12);
+        caption.setText('SAFE!').setColor('#b8ffcf').setStroke('#0b4a2a',8);
+        glow.setFillStyle(0x3dff8f,.26);
+        playSafeSfx();
+        this.tweens.add({
+          targets:badge,
+          scale:1.25,
+          alpha:0,
+          duration:REDUCED_MOTION?120:520,
+          ease:'Quad.Out'
+        });
+      }else{
+        this.tweens.add({targets:badge,scale:.6,alpha:0,duration:200,ease:'Quad.In'});
+      }
+    }
+
     // Heartbeat, red vignette and muffled music all rise with the danger level.
     updateDangerFeedback(time,level,ending) {
       const el=this.dangerVignetteEl||(this.dangerVignetteEl=$('dangerVignette'));
@@ -3486,8 +3581,8 @@
       this.pointerHeld=false;
       this.destroyPreview();
       this.hideComboBadge();
+      this.hideDangerCountdown(false);
       this.updatePowerButtons();
-      this.showStatus('VAULT OVERFLOW','danger',0,'triangle-alert');
 
       const offenders=this.gems
         .filter(g=>g&&g.active&&g.body&&!g.merging&&g.body.bounds.min.y<LIMIT_Y+6)
@@ -4147,69 +4242,6 @@
       });
     }
 
-    renderStatusIcon(icon='sparkles',tier=null) {
-      statusIcon.innerHTML='';
-
-      if(icon==='gem'&&Number.isInteger(tier)&&window.ReactiveGemSystem){
-        const canvas=document.createElement('canvas');
-        canvas.width=40;
-        canvas.height=40;
-        const ctx=canvas.getContext('2d');
-        const t=tiers[tier];
-        const source=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,128,t);
-        const scale=Math.min(34/source.width,34/source.height);
-        const w=source.width*scale;
-        const h=source.height*scale;
-        ctx.drawImage(source,(40-w)/2,(40-h)/2,w,h);
-        statusIcon.appendChild(canvas);
-        return;
-      }
-
-      const i=document.createElement('i');
-      i.setAttribute('data-lucide',icon);
-      i.setAttribute('aria-hidden','true');
-      statusIcon.appendChild(i);
-
-      if(window.lucide){
-        window.lucide.createIcons({attrs:{'stroke-width':1.9}});
-      }
-    }
-
-    showStatus(text,kind='info',duration=1300,icon=null,tier=null) {
-      window.clearTimeout(this.statusTimer);
-      this.statusKind=kind;
-
-      let resolvedIcon=icon;
-      if(!resolvedIcon){
-        if(kind==='danger') resolvedIcon='triangle-alert';
-        else if(text.startsWith('TUMBLE')) resolvedIcon='rotate-cw';
-        else if(text.startsWith('CASCADE')) resolvedIcon='sparkles';
-        else if(text.startsWith('PRISM')) resolvedIcon='gem';
-        else if(text.startsWith('NO MATCH')) resolvedIcon='circle-slash-2';
-        else resolvedIcon='sparkles';
-      }
-
-      this.renderStatusIcon(resolvedIcon,tier);
-      statusText.textContent=text;
-      statusHud.className='status-hud';
-      void statusHud.offsetWidth;
-      statusHud.className='status-hud show'+(kind==='danger'?' danger':'');
-
-      if(duration>0){
-        this.statusTimer=window.setTimeout(()=>{
-          if(this.statusKind===kind) this.clearStatus();
-        },duration);
-      }
-    }
-
-    clearStatus() {
-      window.clearTimeout(this.statusTimer);
-      this.statusKind='';
-      statusText.textContent='';
-      statusIcon.innerHTML='';
-      statusHud.className='status-hud';
-    }
-
     matchingPairs() {
       const pairs=[];
       const used=new Set();
@@ -4389,7 +4421,6 @@
 
       this.cameras.main.shake(1850,.0135);
       this.cameras.main.flash(120,255,177,76,false);
-      this.showStatus('TUMBLE!','reward',1050,'rotate-cw');
       tone(210,.12,.028,'triangle');
       haptic([10,18,10,18,12]);
       this.updatePowerButtons();
@@ -4462,7 +4493,6 @@
 
       const pairs=this.matchingPairs();
       if(!pairs.length){
-        this.showStatus('NO MATCHES TO MERGE','info',900,'circle-slash-2');
         this.updatePowerButtons();
         return;
       }
@@ -4475,7 +4505,6 @@
         this.queueMerge(pair[0],pair[1]);
       }
 
-      this.showStatus('MERGE ×'+pairs.length,'reward',1050,'sparkles');
       this.cameras.main.shake(105,.0026);
       this.cameras.main.flash(105,224,132,255,false);
       tone(520,.11,.03,'sine');
@@ -4502,7 +4531,7 @@
       const previousTier=this.currentTier;
       const boost=previousTier<tiers.length-2?2:1;
       this.currentTier=Math.min(previousTier+boost,tiers.length-1);
-      this.unlockTier(this.currentTier,true);
+      this.unlockTier(this.currentTier);
 
       if(this.preview){
         const x=this.preview.x;
@@ -4513,7 +4542,6 @@
 
       this.updateAimHandle();
       const gained=this.currentTier-previousTier;
-      this.showStatus('UPGRADE +'+gained,'reward',1200,'gem',this.currentTier);
       this.cameras.main.flash(150,103,212,255,false);
       tone(680,.11,.03,'sine');
       if(gained>1) window.setTimeout(()=>tone(880,.10,.024,'sine'),72);
@@ -4621,7 +4649,6 @@
       this.metaPaused=false;
       this.pointerHeld=false;
       this.clearRun();
-      this.clearStatus();
       this.matter.world.pause();
       pauseOverlay.classList.remove('visible');
       gameOverOverlay.classList.remove('visible');
@@ -5010,7 +5037,6 @@
         );
       }
 
-      this.showStatus('STRESS TEST','info',1200,'gauge');
       return {
         gems:this.gems.length,
         transientFx:this.transientFx.size,
@@ -5186,7 +5212,6 @@
       this.dangerTime=0;
       this.updateDangerFeedback(this.time.now,0,false);
       setMusicMuffle(0);
-      this.clearStatus();
       const finalRunTime=this.runElapsedMs();
       this.recordBalanceSample(finalRunTime);
       this.running=false;
@@ -5294,7 +5319,7 @@
         if(this.gemMask) gem.dangerGlow.setMask(this.gemMask);
       }
 
-      const danger=clamp(this.dangerTime/1.75,0,1);
+      const danger=clamp(this.dangerTime/DANGER_LIMIT,0,1);
       const pulse=.5+.5*Math.sin(time*.014+gem.tier);
       gem.dangerGlow.x=gem.x;
       gem.dangerGlow.y=gem.y;
@@ -5470,7 +5495,7 @@
         }else{
           const dangerDt=this.hitstopActive?0:dt;
           if(high){
-            this.dangerTime=Math.min(1.9,this.dangerTime+dangerDt);
+            this.dangerTime=Math.min(DANGER_LIMIT+.15,this.dangerTime+dangerDt);
           }else{
             this.dangerTime=Math.max(0,this.dangerTime-dangerDt*4.6);
           }
@@ -5480,17 +5505,11 @@
             this.dangerWasActive=true;
           }
 
-          if(this.dangerTime>=.26){
-            if(this.statusKind!=='danger'){
-              this.showStatus(
-                dangerGemCount>1?'PILE TOO HIGH':'GEM TOO HIGH',
-                'danger',
-                0,
-                'triangle-alert'
-              );
-            }
-          }else if(this.statusKind==='danger'){
-            this.clearStatus();
+          if(this.dangerTime>=DANGER_COUNTDOWN_AT){
+            this.updateDangerCountdown(dangerGemCount);
+          }else{
+            // Draining back below the line is a save worth celebrating.
+            this.hideDangerCountdown(!high);
           }
 
           if(!high&&this.dangerTime<=.02&&this.dangerWasActive){
@@ -5503,14 +5522,14 @@
             this.dangerWarned=false;
             this.dangerCriticalWarned=false;
             this.dangerWasActive=false;
-            if(this.statusKind==='danger') this.clearStatus();
+            this.hideDangerCountdown(true);
           }
 
-          const level=this.dangerTime>=.12?clamp(this.dangerTime/1.75,0,1):0;
+          const level=this.dangerTime>=.12?clamp(this.dangerTime/DANGER_LIMIT,0,1):0;
           if(level>0) this.dangerWarned=true;
           this.updateDangerFeedback(time,level,false);
 
-          if(this.dangerTime>=1.75) this.beginGameOver('danger-line');
+          if(this.dangerTime>=DANGER_LIMIT) this.beginGameOver('danger-line');
         }
       }else{
         this.updateDangerFeedback(time,0,false);
@@ -5521,7 +5540,7 @@
     }
 
     drawLimitLine(time) {
-      const danger=clamp(this.dangerTime/1.75,0,1);
+      const danger=clamp(this.dangerTime/DANGER_LIMIT,0,1);
       const active=danger>.035;
       const pulse=.5+.5*Math.sin(time*(.006+danger*.010));
       const color=mixHex('#ffca58','#ff355f',danger);

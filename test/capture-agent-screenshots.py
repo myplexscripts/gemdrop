@@ -90,7 +90,6 @@ def special_gem(driver):
       const special=s.createGem(320,330,9,'fusion');
       M.Body.setStatic(special.body,true);
       special.born=s.time.now-1000;
-      s.showStatus('FUSION GEM','reward',0,'sparkles');
     """)
     time.sleep(0.9)
     save(driver, "02-prismatic-special-gem.png")
