@@ -1356,111 +1356,289 @@
     });
   }
 
-  // ---- Menu gem rain ---------------------------------------------------------
-  // A handful of real rendered gems tumble down behind the home menu, bounce
-  // on the floor and fade away. Pure 2D, runs only while the menu is visible.
-  function setupMenuGemRain() {
+  // ---- Menu vault ------------------------------------------------------------
+  // The home menu plays a quiet, self-running game behind the buttons: gems
+  // drop, pile up and merge up the tiers exactly like a run (no specials).
+  // When the pile gets tall it bursts and starts over. Runs on its own small
+  // Matter engine and only while the home menu is visible.
+  function setupMenuGemPile() {
     const canvas=$('menuGemRain');
-    if(!canvas||!window.ReactiveGemSystem) return;
+    if(!canvas||!window.ReactiveGemSystem||!window.Phaser) return;
+    const M=Phaser.Physics.Matter.Matter;
     const ctx=canvas.getContext('2d');
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const MAX_TIER=10;
+    const SPAWN_MS=520;
+    const ALPHA=.62;
+
+    const engine=M.Engine.create({enableSleeping:false});
+    engine.gravity.y=1;
+    engine.gravity.scale=.0011;
+    engine.positionIterations=8;
+    engine.velocityIterations=6;
+
+    let w=0,h=0,scale=1;
+    let walls=[];
+    const gems=new Map();
+    const fx=[];
+    const shapes=[];
     const sprites=[];
-    const spriteTiers=[0,1,2,3,4,5,7,8,10,12,13,16,19];
-    for(const tier of spriteTiers){
+    let pending=[];
+    let lastSpawn=0;
+    let lastScan=0;
+    let resetting=0;
+
+    for(let tier=0;tier<=MAX_TIER;tier++){
       const t=tiers[tier];
       try{
-        sprites.push(window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,112,t,GEM_WORLD_LIGHT_ANGLE));
-      }catch{}
+        sprites[tier]=window.ReactiveGemSystem.renderPreviewCanvas(t.reactiveCut,t.color,0,160,t,GEM_WORLD_LIGHT_ANGLE);
+      }catch{
+        sprites[tier]=null;
+      }
     }
-    if(!sprites.length) return;
 
-    const dpr=Math.min(2,window.devicePixelRatio||1);
-    let w=0,h=0;
-    const gems=[];
-    const COUNT=REDUCED_MOTION?7:11;
+    function tierShape(tier){
+      const t=tiers[tier];
+      const r=t.r*COLLIDER_SCALE*scale;
+      const shape=window.ReactiveGemSystem.collisionShape(t.reactiveCut,r);
+      if(!shape||shape.type==='circle'){
+        return {r,circle:true,box:{x:-r,y:-r,w:r*2,h:r*2}};
+      }
+      const centre=M.Vertices.centre(shape.vertices);
+      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+      for(const v of shape.vertices){
+        minX=Math.min(minX,v.x-centre.x); maxX=Math.max(maxX,v.x-centre.x);
+        minY=Math.min(minY,v.y-centre.y); maxY=Math.max(maxY,v.y-centre.y);
+      }
+      return {r,verts:shape.vertices,box:{x:minX,y:minY,w:maxX-minX,h:maxY-minY}};
+    }
 
-    function resize(){
+    function layout(){
       const rect=canvas.getBoundingClientRect();
       w=Math.max(1,rect.width);
       h=Math.max(1,rect.height);
       canvas.width=Math.round(w*dpr);
       canvas.height=Math.round(h*dpr);
+      scale=Math.min(.82,(w/640)*.82);
+      for(let tier=0;tier<=MAX_TIER;tier++) shapes[tier]=tierShape(tier);
+      if(walls.length) M.Composite.remove(engine.world,walls);
+      const opts={isStatic:true,friction:.08,restitution:.02};
+      walls=[
+        M.Bodies.rectangle(w/2,h+34,w+400,80,opts),
+        M.Bodies.rectangle(-40,h/2,80,h*3,opts),
+        M.Bodies.rectangle(w+40,h/2,80,h*3,opts)
+      ];
+      M.Composite.add(engine.world,walls);
+      clearAll();
     }
 
-    function spawn(gem,initial){
-      const depth=Math.random();
-      gem.sprite=sprites[Math.floor(Math.random()*sprites.length)];
-      gem.size=26+depth*34;
-      gem.depth=depth;
-      gem.x=gem.size+Math.random()*(w-gem.size*2);
-      gem.y=initial?Math.random()*h*.8:-gem.size-Math.random()*h*.5;
-      gem.vx=(Math.random()-.5)*40;
-      gem.vy=initial?Math.random()*60:0;
-      gem.rot=Math.random()*Math.PI*2;
-      gem.vr=(Math.random()-.5)*2.2;
-      gem.alpha=initial?.0:0;
-      gem.bounces=0;
-      gem.fading=false;
-      return gem;
+    function addGem(tier,x,y,vx=0,vy=0,pop=false){
+      const shape=shapes[tier];
+      const opts={restitution:.02,friction:.05,frictionStatic:.06,frictionAir:.004,density:.0012,slop:.02};
+      const body=shape.circle
+        ? M.Bodies.circle(x,y,shape.r,opts)
+        : M.Bodies.fromVertices(x,y,[shape.verts],opts);
+      M.Body.setAngle(body,Phaser.Math.FloatBetween(-.2,.2));
+      M.Body.setVelocity(body,{x:vx,y:vy});
+      M.Composite.add(engine.world,body);
+      gems.set(body,{body,tier,born:performance.now(),pop:pop?performance.now():0,merging:false,fade:0});
     }
 
-    resize();
-    for(let i=0;i<COUNT;i++) gems.push(spawn({},true));
-    window.addEventListener('resize',resize,{passive:true});
+    function removeGem(gem){
+      M.Composite.remove(engine.world,gem.body);
+      gems.delete(gem.body);
+    }
+
+    function clearAll(){
+      for(const gem of [...gems.values()]) removeGem(gem);
+      pending=[];
+      fx.length=0;
+      resetting=0;
+    }
+
+    function spawn(){
+      const roll=Math.random();
+      const tier=roll<.42?0:roll<.72?1:roll<.9?2:3;
+      const r=shapes[tier].r;
+      addGem(tier,Phaser.Math.FloatBetween(r+4,w-r-4),-r*1.6,Phaser.Math.FloatBetween(-.4,.4),0);
+    }
+
+    function burst(x,y,tier,big){
+      const color=tiers[tier].accent;
+      fx.push({kind:'ring',x,y,r:shapes[tier].r*.6,color,t:performance.now(),life:big?520:380});
+      for(let i=0;i<(big?10:6);i++){
+        const a=Math.random()*Math.PI*2;
+        const sp=Phaser.Math.FloatBetween(40,110)*(big?1.4:1);
+        fx.push({kind:'shard',x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,color:i%3?color:'#ffffff',t:performance.now(),life:Phaser.Math.Between(260,420)});
+      }
+    }
+
+    M.Events.on(engine,'collisionStart',event=>{
+      for(const pair of event.pairs){
+        const a=gems.get(pair.bodyA);
+        const b=gems.get(pair.bodyB);
+        if(!a||!b||a.merging||b.merging||a.tier!==b.tier||a.tier>=MAX_TIER) continue;
+        if(a.body.position.y<0||b.body.position.y<0) continue;
+        a.merging=b.merging=true;
+        pending.push([a,b]);
+      }
+    });
+
+    // Like the game's resting scan: same-tier gems already touching merge
+    // even if they never registered a fresh collision.
+    function scanResting(){
+      const list=[...gems.values()];
+      for(let i=0;i<list.length;i++){
+        const a=list[i];
+        if(a.merging||a.tier>=MAX_TIER||a.body.position.y<0) continue;
+        for(let j=i+1;j<list.length;j++){
+          const b=list[j];
+          if(b.merging||b.tier!==a.tier||b.body.position.y<0) continue;
+          const A=a.body.bounds,B=b.body.bounds;
+          const gapX=Math.max(0,Math.max(A.min.x-B.max.x,B.min.x-A.max.x));
+          const gapY=Math.max(0,Math.max(A.min.y-B.max.y,B.min.y-A.max.y));
+          if(gapX>2||gapY>2) continue;
+          const d=Math.hypot(a.body.position.x-b.body.position.x,a.body.position.y-b.body.position.y);
+          if(d>shapes[a.tier].r*2.12) continue;
+          a.merging=b.merging=true;
+          pending.push([a,b]);
+          break;
+        }
+      }
+    }
+
+    function resolveMerges(){
+      for(const [a,b] of pending){
+        if(!gems.has(a.body)||!gems.has(b.body)) continue;
+        const x=(a.body.position.x+b.body.position.x)/2;
+        const y=(a.body.position.y+b.body.position.y)/2;
+        const vx=(a.body.velocity.x+b.body.velocity.x)*.3;
+        const vy=(a.body.velocity.y+b.body.velocity.y)*.2;
+        removeGem(a);
+        removeGem(b);
+        addGem(a.tier+1,x,y,vx,vy,true);
+        burst(x,y,a.tier+1,a.tier+1>=6);
+      }
+      pending=[];
+    }
+
+    function checkReset(now){
+      if(resetting) return;
+      let top=Infinity;
+      for(const gem of gems.values()){
+        if(now-gem.born<1400||gem.body.speed>.6) continue;
+        top=Math.min(top,gem.body.bounds.min.y);
+      }
+      // Reset once the pile reaches the menu buttons.
+      if(top<h*.6||gems.size>44){
+        resetting=now;
+        for(const gem of gems.values()) burst(gem.body.position.x,gem.body.position.y,gem.tier,false);
+      }
+    }
+
+    function draw(now){
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.clearRect(0,0,w,h);
+      const fade=resetting?clamp(1-(now-resetting)/600,0,1):1;
+
+      for(const gem of gems.values()){
+        const sprite=sprites[gem.tier];
+        if(!sprite) continue;
+        const shape=shapes[gem.tier];
+        const pad=shape.r*.11;
+        let sx=1,sy=1;
+        if(gem.pop){
+          const p=clamp((now-gem.pop)/300,0,1);
+          const spring=1-.5*Math.cos(1.5*Math.PI*p)*Math.exp(-2.2*p);
+          sx=sy=spring;
+          if(p>=1) gem.pop=0;
+        }
+        ctx.save();
+        ctx.globalAlpha=ALPHA*fade;
+        ctx.translate(gem.body.position.x,gem.body.position.y);
+        ctx.rotate(gem.body.angle);
+        ctx.scale(sx*(resetting?1+(1-fade)*.3:1),sy*(resetting?1+(1-fade)*.3:1));
+        ctx.drawImage(sprite,shape.box.x-pad,shape.box.y-pad,shape.box.w+pad*2,shape.box.h+pad*2);
+        ctx.restore();
+      }
+
+      for(let i=fx.length-1;i>=0;i--){
+        const f=fx[i];
+        const p=(now-f.t)/f.life;
+        if(p>=1){ fx.splice(i,1); continue; }
+        ctx.save();
+        ctx.globalAlpha=(1-p)*.8;
+        if(f.kind==='ring'){
+          ctx.strokeStyle=f.color;
+          ctx.lineWidth=2.5*(1-p)+.5;
+          ctx.beginPath();
+          ctx.arc(f.x,f.y,f.r*(1+p*2.2),0,Math.PI*2);
+          ctx.stroke();
+        }else{
+          const t=p*f.life/1000;
+          ctx.fillStyle=f.color;
+          ctx.translate(f.x+f.vx*t,f.y+f.vy*t+60*t*t);
+          ctx.rotate(p*4);
+          ctx.fillRect(-2.2,-2.2,4.4,4.4);
+        }
+        ctx.restore();
+      }
+    }
 
     let last=0;
+    let acc=0;
     let raf=0;
+    const STEP=1000/60;
+
     function frame(now){
       raf=0;
       if(!startOverlay.classList.contains('visible')||document.hidden){ last=0; return; }
-      const dt=last?Math.min(.05,(now-last)/1000):0;
+      const dt=last?Math.min(100,now-last):STEP;
       last=now;
-      ctx.setTransform(dpr,0,0,dpr,0,0);
-      ctx.clearRect(0,0,w,h);
 
-      for(const g of gems){
-        if(!REDUCED_MOTION){
-          g.vy+=(520+g.depth*420)*dt;
-          g.x+=g.vx*dt;
-          g.y+=g.vy*dt;
-          g.rot+=g.vr*dt;
-          const floor=h-g.size*.5-(1-g.depth)*h*.06-8;
-          if(g.y>floor){
-            g.y=floor;
-            if(Math.abs(g.vy)>60){
-              g.vy=-g.vy*(.46+g.depth*.1);
-              g.vr=-g.vr*.7+(Math.random()-.5);
-              g.vx+=(Math.random()-.5)*50;
-              g.bounces++;
-            }else{
-              g.vy=0;
-              g.vx*=.9;
-              g.vr*=.85;
-              g.fading=true;
-            }
-          }
-          if(g.x<g.size*.5||g.x>w-g.size*.5){
-            g.vx=-g.vx*.6;
-            g.x=Math.max(g.size*.5,Math.min(w-g.size*.5,g.x));
-          }
-          g.alpha=g.fading?g.alpha-dt*.45:Math.min(1,g.alpha+dt*1.4);
-          if(g.fading&&g.alpha<=0) spawn(g,false);
-        }else{
-          g.alpha=1;
-        }
+      if(resetting&&now-resetting>650) clearAll();
+      if(!resetting&&now-lastSpawn>SPAWN_MS){ lastSpawn=now; spawn(); }
 
-        ctx.save();
-        ctx.globalAlpha=Math.max(0,g.alpha)*(.28+g.depth*.34);
-        ctx.translate(g.x,g.y);
-        ctx.rotate(g.rot);
-        ctx.drawImage(g.sprite,-g.size/2,-g.size/2,g.size,g.size);
-        ctx.restore();
+      acc+=dt;
+      let steps=0;
+      while(acc>=STEP&&steps<3){
+        M.Engine.update(engine,STEP);
+        resolveMerges();
+        acc-=STEP;
+        steps++;
       }
-      if(!REDUCED_MOTION) raf=requestAnimationFrame(frame);
+      if(steps===3) acc=0;
+      if(!resetting&&now-lastScan>90){ lastScan=now; scanResting(); resolveMerges(); }
+      checkReset(now);
+      draw(now);
+      raf=requestAnimationFrame(frame);
     }
+
+    // Reduced motion: settle a small pile once and show it still.
+    function staticPile(){
+      for(let i=0;i<14;i++){
+        spawn();
+        for(let k=0;k<45;k++){ M.Engine.update(engine,STEP); resolveMerges(); }
+      }
+      for(let k=0;k<240;k++){ M.Engine.update(engine,STEP); resolveMerges(); }
+      draw(performance.now());
+    }
+
+    layout();
+    window.addEventListener('resize',()=>{ layout(); if(REDUCED_MOTION) staticPile(); },{passive:true});
+    if(REDUCED_MOTION){ staticPile(); return; }
 
     const kick=()=>{ if(!raf) raf=requestAnimationFrame(frame); };
     new MutationObserver(kick).observe(startOverlay,{attributes:true,attributeFilter:['class']});
     document.addEventListener('visibilitychange',kick);
+    // Debug/test handle.
+    window.GemdropMenuPile={
+      count:()=>gems.size,
+      tiers:()=>[...gems.values()].map(g=>g.tier),
+      resetting:()=>!!resetting,
+      pileTop:()=>{ let top=Infinity; for(const g of gems.values()) if(g.body.speed<.6) top=Math.min(top,g.body.bounds.min.y); return {top:Math.round(top),limit:Math.round(h*.6),h:Math.round(h)}; },
+      drop:n=>{ for(let i=0;i<n;i++) setTimeout(spawn,i*90); }
+    };
     kick();
   }
 
@@ -1609,7 +1787,7 @@
       window.GemdropRenderScale=RENDER_SCALE;
       this.bindUI();
       setupOverlayTransitions();
-      setupMenuGemRain();
+      setupMenuGemPile();
       setupPortraitGuard(this);
       this.renderCollection();
       this.updateNextPreview();
