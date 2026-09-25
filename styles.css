@@ -8803,3 +8803,65 @@ body,
     inset 0 0 46px rgba(255,92,160,.28);
   mix-blend-mode:screen;
 }
+
+/* ---- Juice pass: results reveal ---- */
+.count-pop{animation:countPop .34s cubic-bezier(.2,.9,.3,1.5)}
+@keyframes countPop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.result-hero-value strong{display:inline-block}
+
+.result-card.is-revealing .run-stat-grid > div,
+.result-card.is-revealing .run-meta-progress > div,
+.result-card.is-revealing .run-gem-chip,
+.result-card.is-revealing .run-treasure-chip{
+  animation:revealUp .42s cubic-bezier(.2,.9,.3,1.25) both;
+  animation-delay:calc(360ms + var(--reveal-i,0) * 70ms);
+}
+@keyframes revealUp{
+  from{opacity:0;transform:translateY(14px) scale(.9)}
+  to{opacity:1;transform:none}
+}
+
+.result-hero-value{position:relative}
+.new-best-ribbon{
+  position:absolute;
+  right:-6px;
+  top:-14px;
+  padding:4px 10px 5px;
+  border-radius:999px;
+  font:800 12px/1 Manrope,system-ui,sans-serif;
+  font-style:normal;
+  letter-spacing:.08em;
+  color:#3a1300;
+  background:linear-gradient(180deg,#fff0a8,#ffb840);
+  box-shadow:0 0 0 2px rgba(255,255,255,.35),0 6px 18px rgba(255,170,40,.45);
+  transform:scale(0) rotate(-12deg);
+  opacity:0;
+  pointer-events:none;
+}
+.result-card.is-new-best .new-best-ribbon{
+  animation:ribbonIn .5s cubic-bezier(.2,.9,.3,1.6) forwards,ribbonGlow 1.6s ease-in-out .5s infinite;
+}
+.result-card.is-new-best .result-hero-value strong{
+  color:#fff1b0;
+  text-shadow:0 0 18px rgba(255,200,80,.65),0 0 2px #fff;
+}
+@keyframes ribbonIn{to{transform:scale(1) rotate(8deg);opacity:1}}
+@keyframes ribbonGlow{50%{box-shadow:0 0 0 2px rgba(255,255,255,.5),0 6px 28px rgba(255,190,60,.8)}}
+.result-card.new-best-shake{animation:cardThump .42s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes cardThump{0%{transform:scale(1)}30%{transform:scale(1.035)}100%{transform:scale(1)}}
+
+.confetti-bit{
+  position:fixed;
+  z-index:200;
+  width:8px;
+  height:12px;
+  border-radius:2px;
+  pointer-events:none;
+  will-change:transform,opacity;
+}
+@media (prefers-reduced-motion: reduce){
+  .result-card.is-revealing .run-stat-grid > div,
+  .result-card.is-revealing .run-meta-progress > div,
+  .result-card.is-revealing .run-gem-chip,
+  .result-card.is-revealing .run-treasure-chip{animation:none}
+}

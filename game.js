@@ -967,6 +967,23 @@
     if(chain>=4) noiseBurst({duration:.22,volume:.018,type:'highpass',from:5000,to:9000,q:.5});
   }
 
+  // Tiny coin tick for rolling counters; pitch rises as the roll speeds up.
+  function playCoinTickSfx(speed=0) {
+    if(!sfxReady()) return;
+    const f=2400+clamp(speed,0,1)*900+Math.random()*120;
+    sweep({from:f,to:f*1.06,duration:.03,volume:.010,type:'triangle'});
+  }
+
+  function playFanfareSfx() {
+    if(!sfxReady()) return;
+    [0,4,7,12,16].forEach((step,i)=>{
+      const f=523.25*Math.pow(2,step/12);
+      sweep({at:i*.085,from:f,to:f,duration:.32+i*.04,volume:.045,type:'triangle'});
+      sweep({at:i*.085,from:f*2,to:f*2,duration:.18,volume:.014,type:'sine'});
+    });
+    noiseBurst({at:.34,duration:.5,volume:.03,type:'highpass',from:4000,to:9000,q:.4});
+  }
+
   function tone(freq,duration=.055,volume=.022,type='sine') {
     if (!audioCtx||gameMuted) return;
     const osc=audioCtx.createOscillator();
@@ -2247,7 +2264,7 @@
       this.discoveredCuts=new Set(this.unlockedTiers);
       this.powerCharge={...POWER_START_CHARGE};
 
-      scoreEl.textContent='$0';
+      this.resetScoreDisplay();
       this.clearStatus();
 
       this.matter.world.resume();
@@ -2917,7 +2934,7 @@
           if(Number.isInteger(tier)&&tier>=0&&tier<this.runGemGains.length){
             this.runGemGains[tier]++;
           }
-          this.addScore(masterValue);
+          this.addScore(masterValue,560);
           this.mergeBurst(x,y,tiers[tier],4);
           this.floatText(x,y-8,'MASTER CUT +$'+masterValue,'#ffe0a0',30,{big:true,impact:4});
           this.emitMergeRewardTrails(x,y,masterValue,chargedPowerups,this.mergeChain,true,tiers[tier].color);
@@ -2945,7 +2962,7 @@
         this.mergeShockwave(x,y,next,impact,gem);
 
         this.bestTierReached=Math.max(this.bestTierReached,next);
-        this.addScore(tiers[next].score);
+        this.addScore(tiers[next].score,520);
         this.mergeBurst(x,y,tiers[next],impact);
 
         // The chain count lives in the combo badge; merge pops only show value.
@@ -4112,20 +4129,63 @@
       this.updatePowerButtons();
     }
 
-    addScore(points) {
+    // The run total updates immediately; the HUD number is released when the
+    // coin trail lands (holdMs) and then rolls up instead of snapping.
+    addScore(points,holdMs=0) {
       this.score+=points;
 
       if(this.score>this.best){
         this.best=this.score;
         this.saveBest();
       }
-
-      scoreEl.textContent='$'+fmt(this.score);
       homeBestEl.textContent='$'+fmt(this.best);
 
-      scoreEl.classList.remove('bump');
-      void scoreEl.offsetWidth;
-      scoreEl.classList.add('bump');
+      if(!this.scoreReleases) this.scoreReleases=[];
+      this.scoreReleases.push({at:performance.now()+holdMs,points});
+    }
+
+    resetScoreDisplay() {
+      this.scoreReleases=[];
+      this.scoreShown=0;
+      this.scoreTarget=0;
+      this.scoreTickAt=0;
+      scoreEl.textContent='$0';
+    }
+
+    flushScoreDisplay() {
+      this.scoreReleases=[];
+      this.scoreTarget=this.score;
+      this.scoreShown=this.score;
+      scoreEl.textContent='$'+fmt(this.score);
+    }
+
+    updateScoreDisplay(dt) {
+      const now=performance.now();
+      const releases=this.scoreReleases||[];
+      let released=false;
+      while(releases.length&&releases[0].at<=now){
+        this.scoreTarget=(this.scoreTarget||0)+releases.shift().points;
+        released=true;
+      }
+      if(released){
+        scoreEl.classList.remove('bump');
+        void scoreEl.offsetWidth;
+        scoreEl.classList.add('bump');
+      }
+
+      const target=this.scoreTarget||0;
+      const shown=this.scoreShown||0;
+      if(shown===target) return;
+
+      const gap=target-shown;
+      const step=Math.max(1,Math.ceil(gap*Math.min(1,dt*7.5)));
+      this.scoreShown=Math.min(target,shown+step);
+      scoreEl.textContent='$'+fmt(this.scoreShown);
+
+      if(now-(this.scoreTickAt||0)>58){
+        this.scoreTickAt=now;
+        playCoinTickSfx(clamp(gap/200,0,1));
+      }
     }
 
     syncRunClockPause() {
@@ -4157,6 +4217,8 @@
     }
 
     returnToMenu() {
+      this.revealToken=(this.revealToken||0)+1;
+      document.querySelectorAll('.confetti-bit').forEach(node=>node.remove());
       // The pause sheet pauses all Phaser tweens. Releasing that global pause
       // here prevents the next run's ambient particles and effects freezing.
       this.tweens.resumeAll();
@@ -4359,6 +4421,100 @@
             treasureHaul.appendChild(chip);
           });
         }
+      }
+    }
+
+    countUp(el,to,ms,format,delay=0) {
+      if(!el) return;
+      const token=this.revealToken;
+      const start=performance.now()+delay;
+      let lastTick=0;
+      el.textContent=format(0);
+      const step=now=>{
+        if(token!==this.revealToken) return;
+        if(now<start){ requestAnimationFrame(step); return; }
+        const p=clamp((now-start)/ms,0,1);
+        const eased=1-Math.pow(1-p,3);
+        el.textContent=format(Math.round(to*eased));
+        if(p<1){
+          if(now-lastTick>62&&to>0){ lastTick=now; playCoinTickSfx(1-p); }
+          requestAnimationFrame(step);
+        }else{
+          el.classList.remove('count-pop');
+          void el.offsetWidth;
+          el.classList.add('count-pop');
+        }
+      };
+      requestAnimationFrame(step);
+    }
+
+    playResultsReveal() {
+      this.revealToken=(this.revealToken||0)+1;
+      const token=this.revealToken;
+      const card=gameOverOverlay.querySelector('.result-card');
+      const reduced=REDUCED_MOTION;
+      const scoreMs=reduced?1:Math.min(1600,700+Math.log10(Math.max(10,this.score))*220);
+
+      if(card){
+        card.classList.remove('is-revealing','is-new-best');
+        void card.offsetWidth;
+        card.classList.add('is-revealing');
+        card.querySelectorAll('.run-stat-grid > div, .run-meta-progress > div, .run-gem-chip, .run-treasure-chip')
+          .forEach((node,i)=>node.style.setProperty('--reveal-i',String(i)));
+      }
+
+      this.countUp(finalScoreEl,this.score,scoreMs,v=>'$'+fmt(v),reduced?0:260);
+      this.countUp($('runMerges'),this.runMerges,reduced?1:700,v=>String(v),reduced?0:520);
+      this.countUp($('runBestChain'),Math.max(1,this.runBestChain),reduced?1:600,v=>Math.max(1,v)+'×',reduced?0:600);
+
+      const newBest=this.score>0&&this.score>this.runStartBest;
+      if(newBest){
+        window.setTimeout(()=>{
+          if(token!==this.revealToken) return;
+          if(card) card.classList.add('is-new-best');
+          this.celebrateNewBest();
+        },(reduced?0:260)+scoreMs+80);
+      }
+    }
+
+    celebrateNewBest() {
+      playFanfareSfx();
+      if(window.GemdropNative) window.GemdropNative.notify('success');
+      else haptic([12,40,22]);
+      if(REDUCED_MOTION) return;
+
+      const card=gameOverOverlay.querySelector('.result-card');
+      const anchor=finalScoreEl.getBoundingClientRect();
+      const cx=anchor.left+anchor.width/2;
+      const cy=anchor.top+anchor.height/2;
+      const colors=['#ffd86f','#ff6fb5','#8fe3ff','#b98cff','#9dff9a','#fff4c8'];
+      const token=this.revealToken;
+
+      for(let i=0;i<46;i++){
+        const bit=document.createElement('span');
+        bit.className='confetti-bit';
+        bit.style.left=cx+'px';
+        bit.style.top=cy+'px';
+        bit.style.background=colors[i%colors.length];
+        if(i%3===0) bit.style.borderRadius='50%';
+        document.body.appendChild(bit);
+        const angle=-Math.PI/2+Phaser.Math.FloatBetween(-1.25,1.25);
+        const speed=Phaser.Math.Between(140,320);
+        const dx=Math.cos(angle)*speed;
+        const dy=Math.sin(angle)*speed;
+        const spin=Phaser.Math.Between(-720,720);
+        const anim=bit.animate([
+          {transform:'translate(-50%,-50%) rotate(0deg) scale(1)',opacity:1},
+          {transform:'translate(calc(-50% + '+dx*.8+'px),calc(-50% + '+dy*.8+'px)) rotate('+spin*.6+'deg) scale(1)',opacity:1,offset:.45},
+          {transform:'translate(calc(-50% + '+dx+'px),calc(-50% + '+(dy+260)+'px)) rotate('+spin+'deg) scale(.7)',opacity:0}
+        ],{duration:Phaser.Math.Between(1100,1600),easing:'cubic-bezier(.15,.7,.35,1)',fill:'forwards'});
+        anim.onfinish=()=>bit.remove();
+        if(token!==this.revealToken) bit.remove();
+      }
+      if(card){
+        card.classList.remove('new-best-shake');
+        void card.offsetWidth;
+        card.classList.add('new-best-shake');
       }
     }
 
@@ -4645,6 +4801,7 @@
       this.updatePowerButtons();
       this.matter.world.pause();
 
+      this.flushScoreDisplay();
       finalScoreEl.textContent='$'+fmt(this.score);
 
       const finest=tiers[this.bestTierReached];
@@ -4667,6 +4824,7 @@
       this.updateHomeProgress();
 
       gameOverOverlay.classList.add('visible');
+      this.playResultsReveal();
       syncMusic();
       if(window.lucide) window.lucide.createIcons({attrs:{'stroke-width':1.9}});
       haptic([36,26,36]);
@@ -4747,6 +4905,7 @@
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
       this.updateHitStop(time);
+      this.updateScoreDisplay(dt);
       this.animateGemLights(time);
       if(!this.paused&&!this.metaPaused) this.updateTumble(time);
 
