@@ -80,6 +80,7 @@
   const MERGE_PULL_MS = 70;
   const MERGE_POP_MS = 280;
   const HITSTOP_MS = [26,36,48,62,80];
+  const MERGE_ZONE_CLEARANCE = 10;
   const CHAIN_WINDOW = 1.0;
   const HOT_CHAIN = 4;
 
@@ -3138,14 +3139,17 @@
       if(a.specialType||b.specialType) return;
       if(a.tier!==b.tier||a.merging||b.merging) return;
 
-      // Consecutive drops may touch while both are still in transit, but they
-      // cannot merge until they have actually settled into the pile.
+      // Back-to-back drops can't fuse up in the drop zone (they would merge
+      // in mid-air above the line). Once both are below the line they merge
+      // on contact: waiting for them to "settle" let the top gem slide off
+      // its match and the pair never merged.
       const consecutiveDrops=
         Number.isInteger(a.dropSerial)&&
         Number.isInteger(b.dropSerial)&&
         Math.abs(a.dropSerial-b.dropSerial)===1;
+      const inDropZone=g=>g.body&&g.body.bounds.min.y<LIMIT_Y+MERGE_ZONE_CLEARANCE;
 
-      if(consecutiveDrops&&(a.dropTransit||b.dropTransit)) return;
+      if(consecutiveDrops&&(a.dropTransit||b.dropTransit)&&(inDropZone(a)||inDropZone(b))) return;
 
       a.merging=true;
       b.merging=true;
