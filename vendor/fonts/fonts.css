@@ -1,0 +1,8 @@
+/* Self-hosted fonts (latin subset) so the game renders correctly offline. */
+@font-face{font-family:"Cinzel Decorative";font-style:normal;font-weight:700;font-display:swap;src:url(cinzel-decorative-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Cinzel Decorative";font-style:normal;font-weight:900;font-display:swap;src:url(cinzel-decorative-latin-900-normal.woff2) format("woff2")}
+@font-face{font-family:"Fredoka";font-style:normal;font-weight:600;font-display:swap;src:url(fredoka-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Fredoka";font-style:normal;font-weight:700;font-display:swap;src:url(fredoka-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:600;font-display:swap;src:url(manrope-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:700;font-display:swap;src:url(manrope-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:800;font-display:swap;src:url(manrope-latin-800-normal.woff2) format("woff2")}

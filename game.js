@@ -57,6 +57,12 @@
   const ART_SCALE = 0.97;
   const RENDER_SCALE = 2;
   const GEM_TEXTURE_SIZE = 768;
+  const REDUCED_MOTION = !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Merge juice: the two parents slide together, the world freezes for a
+  // beat (hit-stop), then the new gem springs out and nudges its neighbours.
+  const MERGE_PULL_MS = 70;
+  const MERGE_POP_MS = 280;
+  const HITSTOP_MS = [26,36,48,62,80];
 
   const $ = id => document.getElementById(id);
   const scoreEl = $('score');
@@ -1055,6 +1061,8 @@
       this.collectionLightLastFrame=0;
       this.tumbleState=null;
       this.baseGravityY=1.32;
+      this.hitstopActive=false;
+      this.hitstopUntil=0;
     }
 
     preload() {
@@ -2083,6 +2091,8 @@
       this.activeGemGlints=0;
       this.dropGateGem=null;
       this.tumbleState=null;
+      this.hitstopActive=false;
+      this.hitstopUntil=0;
       if(this.matter&&this.matter.world&&this.matter.world.engine){
         this.matter.world.engine.gravity.x=0;
         this.matter.world.engine.gravity.y=this.baseGravityY;
@@ -2375,6 +2385,7 @@
       if(gem.dangerGlow&&gem.dangerGlow.active) gem.dangerGlow.destroy();
       gem.dangerGlow=null;
 
+      this.endGemPop(gem);
       this.destroySpecialVisuals(gem);
 
       if(gem.body) this.matter.world.remove(gem.body);
@@ -2692,8 +2703,11 @@
         const vy=(a.body.velocity.y+b.body.velocity.y)*.18;
         const av=(a.body.angularVelocity+b.body.angularVelocity)*.22;
 
+        this.mergePullIn(a,x,y);
+        this.mergePullIn(b,x,y);
         this.removeGem(a);
         this.removeGem(b);
+        this.hitStop(HITSTOP_MS[clamp(impact,0,4)]);
 
         const chargedPowerups=this.rechargePowers(tier);
 
@@ -2730,6 +2744,8 @@
         if(gateInMerge) this.dropGateGem=gem;
         gem.setVelocity(vx,vy);
         gem.setAngularVelocity(clamp(av,-.025,.025));
+        this.startGemPop(gem,impact);
+        this.mergeShockwave(x,y,next,impact,gem);
 
         this.bestTierReached=Math.max(this.bestTierReached,next);
         this.addScore(tiers[next].score);
@@ -2805,6 +2821,164 @@
       }
 
       this.updatePowerButtons();
+    }
+
+    hitStop(ms) {
+      if(REDUCED_MOTION||!ms) return;
+      if(!this.running||this.paused||this.metaPaused) return;
+      this.hitstopUntil=Math.max(this.hitstopUntil,this.time.now+ms);
+      if(!this.hitstopActive&&this.matter.world.enabled){
+        this.hitstopActive=true;
+        this.matter.world.pause();
+      }
+    }
+
+    updateHitStop(time) {
+      if(!this.hitstopActive||time<this.hitstopUntil) return;
+      this.hitstopActive=false;
+      if(this.running&&!this.paused&&!this.metaPaused) this.matter.world.resume();
+    }
+
+    // Visual stand-ins for the two parent gems: their bodies are removed
+    // immediately so the simulation stays exact, while these copies slide
+    // into the merge point and collapse.
+    mergePullIn(gem,x,y) {
+      if(!gem||!gem.active) return;
+      const ghost=this.trackTransientFx(
+        this.add.image(gem.x,gem.y,gemTextureKey(gem.tier))
+          .setScale(gem.scaleX,gem.scaleY)
+          .setRotation(gem.rotation)
+          .setDepth(gem.depth+.004)
+      );
+      this.applyGemLighting(ghost,gem.tier);
+      if(this.gemMask) ghost.setMask(this.gemMask);
+
+      this.tweens.add({
+        targets:ghost,
+        x,
+        y,
+        scaleX:gem.scaleX*.74,
+        scaleY:gem.scaleY*.74,
+        rotation:gem.rotation+(gem.x<x?.22:-.22),
+        duration:MERGE_PULL_MS,
+        ease:'Quad.In',
+        onComplete:()=>this.destroyTransientFx(ghost)
+      });
+    }
+
+    startGemPop(gem,impact=0) {
+      if(!gem||!gem.active) return;
+
+      const scale=this.gemSpriteScale(gem.tier);
+      const pop=this.add.image(gem.x,gem.y,gemTextureKey(gem.tier))
+        .setScale(0)
+        .setRotation(gem.rotation)
+        .setDepth(gem.depth);
+      this.applyGemLighting(pop,gem.tier);
+      if(this.gemMask) pop.setMask(this.gemMask);
+
+      const flash=this.add.image(gem.x,gem.y,gemTextureKey(gem.tier))
+        .setScale(0)
+        .setRotation(gem.rotation)
+        .setDepth(gem.depth+.005)
+        .setTintFill(0xffffff)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setAlpha(0);
+      if(this.gemMask) flash.setMask(this.gemMask);
+
+      gem.setAlpha(0);
+      gem.popSprite=pop;
+      gem.popFlash=flash;
+      gem.popBaseScale=scale;
+      gem.popStart=this.time.now+MERGE_PULL_MS*.8;
+      gem.popDuration=MERGE_POP_MS+impact*22;
+      gem.popAmp=.5+impact*.03;
+      gem.nextGlintAt=Math.max(gem.nextGlintAt||0,gem.popStart+gem.popDuration+160);
+    }
+
+    endGemPop(gem) {
+      if(!gem) return;
+      if(gem.popSprite&&gem.popSprite.active) gem.popSprite.destroy();
+      if(gem.popFlash&&gem.popFlash.active) gem.popFlash.destroy();
+      gem.popSprite=null;
+      gem.popFlash=null;
+      gem.popStart=0;
+      if(gem.active){
+        gem.setAlpha(1);
+        if(gem.shadow&&gem.shadow.active){
+          gem.shadow.setScale(gem.popBaseScale*1.035,gem.popBaseScale*.97);
+        }
+      }
+    }
+
+    // Damped spring: starts at 1-amp, overshoots, settles exactly on 1.
+    syncGemPop(gem,time) {
+      if(!gem.popStart) return;
+      const pop=gem.popSprite;
+      if(!pop||!pop.active){
+        this.endGemPop(gem);
+        return;
+      }
+
+      const elapsed=time-gem.popStart;
+      const base=gem.popBaseScale;
+      pop.x=gem.x;
+      pop.y=gem.y;
+      pop.rotation=gem.rotation;
+      gem.popFlash.x=gem.x;
+      gem.popFlash.y=gem.y;
+      gem.popFlash.rotation=gem.rotation;
+
+      if(elapsed<0){
+        pop.setScale(0);
+        if(gem.shadow&&gem.shadow.active) gem.shadow.setScale(0);
+        return;
+      }
+
+      const p=clamp(elapsed/gem.popDuration,0,1);
+      if(p>=1){
+        this.endGemPop(gem);
+        return;
+      }
+
+      const spring=1-gem.popAmp*Math.cos(1.5*Math.PI*p)*Math.exp(-2.2*p);
+      // Squash and stretch: wider on the way out, taller on the rebound.
+      const wobble=Math.sin(p*Math.PI*2.2)*Math.exp(-3*p)*.08;
+      pop.setScale(base*spring*(1+wobble),base*spring*(1-wobble));
+      gem.popFlash.setScale(base*spring*1.02);
+      gem.popFlash.setAlpha(clamp(1-p*3.2,0,1)*.78);
+      if(gem.shadow&&gem.shadow.active){
+        gem.shadow.setScale(base*spring*1.035,base*spring*.97);
+      }
+    }
+
+    // A soft radial push so the pile visibly reacts to a merge.
+    mergeShockwave(x,y,tier,impact,exclude) {
+      const radius=tiers[tier].r*2.7+impact*10;
+      const strength=1.05+impact*.42;
+      const M=Phaser.Physics.Matter.Matter;
+
+      for(const other of this.gems){
+        if(!other||other===exclude||!other.active||!other.body||other.merging) continue;
+        const dx=other.x-x;
+        const dy=other.y-y;
+        const d=Math.hypot(dx,dy);
+        if(d<1||d>radius+tiers[other.tier].r) continue;
+
+        const falloff=clamp(1-d/(radius+tiers[other.tier].r),0,1);
+        const massScale=clamp(Math.sqrt(tiers[tier].r/Math.max(8,tiers[other.tier].r)),.45,1.4);
+        const push=strength*falloff*massScale;
+        const v=other.body.velocity;
+        M.Body.setVelocity(other.body,{
+          x:v.x+(dx/d)*push,
+          // Keep the push mostly sideways so merges never launch gems over the line.
+          y:v.y+Math.max(-.9,(dy/d)*push*.55)
+        });
+        M.Body.setAngularVelocity(
+          other.body,
+          clamp(other.body.angularVelocity+(dx>0?1:-1)*push*.006,-.05,.05)
+        );
+      }
     }
 
     mergeImpactLevel(resultTier) {
@@ -4197,6 +4371,7 @@
 
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
+      this.updateHitStop(time);
       this.animateGemLights(time);
       if(!this.paused&&!this.metaPaused) this.updateTumble(time);
 
@@ -4288,6 +4463,7 @@
             M.Body.setAngularVelocity(gem.body,0);
           }
 
+          this.syncGemPop(gem,time);
           this.syncGemOptics(gem,time);
           this.syncGemShadow(gem);
           this.syncSpecialVisuals(gem,time);

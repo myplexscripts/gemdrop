@@ -11,9 +11,8 @@
   <meta name="format-detection" content="telephone=no" />
   <title>Gem Drop</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preload" href="vendor/fonts/fredoka-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="vendor/fonts/fonts.css" />
   <link rel="stylesheet" href="styles.css?v=20260924-sevenpass1" />
 </head>
 <body>
@@ -381,8 +380,8 @@
     </div>
   </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
-  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="vendor/phaser-3.90.0.min.js"></script>
+  <script src="vendor/lucide-0.468.0.min.js"></script>
   <script src="reactive-gem-system.js?v=20260923-richgems1"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
   <script src="meta.js?v=20260924-sevenpass1"></script>
