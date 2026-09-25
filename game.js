@@ -832,6 +832,89 @@
     ice.stop(t+.50);
   }
 
+  let sfxBus=null;
+  let sfxNoiseBuffer=null;
+
+  function getSfxBus() {
+    if(!audioCtx||!gemAudioCompressor) return null;
+    if(!sfxBus){
+      sfxBus=audioCtx.createGain();
+      sfxBus.gain.value=1;
+      sfxBus.connect(gemAudioCompressor);
+    }
+    return sfxBus;
+  }
+
+  function sfxReady() {
+    return !!(audioCtx&&audioCtx.state==='running'&&!gameMuted&&getSfxBus());
+  }
+
+  function getSfxNoise() {
+    if(sfxNoiseBuffer) return sfxNoiseBuffer;
+    const length=Math.floor(audioCtx.sampleRate*.6);
+    const buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<length;i++) data[i]=Math.random()*2-1;
+    sfxNoiseBuffer=buffer;
+    return buffer;
+  }
+
+  function noiseBurst({at=0,duration=.12,volume=.05,type='bandpass',from=2000,to=800,q=1.2}={}) {
+    const t=audioCtx.currentTime+at;
+    const src=audioCtx.createBufferSource();
+    src.buffer=getSfxNoise();
+    const filter=audioCtx.createBiquadFilter();
+    filter.type=type;
+    filter.Q.value=q;
+    filter.frequency.setValueAtTime(from,t);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(40,to),t+duration);
+    const gain=audioCtx.createGain();
+    gain.gain.setValueAtTime(.0001,t);
+    gain.gain.exponentialRampToValueAtTime(volume,t+Math.min(.018,duration*.25));
+    gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+    src.connect(filter).connect(gain).connect(getSfxBus());
+    src.start(t,Math.random()*.3);
+    src.stop(t+duration+.02);
+  }
+
+  function sweep({at=0,from=440,to=220,duration=.1,volume=.04,type='sine'}={}) {
+    const t=audioCtx.currentTime+at;
+    const osc=audioCtx.createOscillator();
+    osc.type=type;
+    osc.frequency.setValueAtTime(from,t);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20,to),t+duration);
+    const gain=audioCtx.createGain();
+    gain.gain.setValueAtTime(.0001,t);
+    gain.gain.exponentialRampToValueAtTime(volume,t+.006);
+    gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+    osc.connect(gain).connect(getSfxBus());
+    osc.start(t);
+    osc.stop(t+duration+.02);
+  }
+
+  // The claw letting go: a short airy whoosh with a soft mechanical click.
+  function playDropSfx(tier=0) {
+    if(!sfxReady()) return;
+    const weight=clamp(tier/12,0,1);
+    noiseBurst({duration:.16,volume:.055,from:3200-weight*900,to:650,q:.9});
+    sweep({from:900,to:520,duration:.025,volume:.018,type:'triangle'});
+  }
+
+  // First landing: a pitched thud scaled by impact speed and gem size.
+  function playLandSfx(strength=.5,tier=0) {
+    if(!sfxReady()) return;
+    const s=clamp(strength,0,1);
+    const low=clamp(1-tier/20,.35,1);
+    sweep({from:150*low+40,to:46,duration:.16+s*.06,volume:.05+s*.11,type:'sine'});
+    noiseBurst({duration:.07,volume:.02+s*.05,type:'lowpass',from:1400,to:300,q:.7});
+  }
+
+  // Detent tick for the aim slider.
+  function playTickSfx() {
+    if(!sfxReady()) return;
+    sweep({from:2600,to:2100,duration:.018,volume:.008,type:'sine'});
+  }
+
   function tone(freq,duration=.055,volume=.022,type='sine') {
     if (!audioCtx||gameMuted) return;
     const osc=audioCtx.createOscillator();
@@ -1123,6 +1206,8 @@
 
       this.limitLine=this.add.graphics().setDepth(6);
       this.dropper=this.add.graphics().setDepth(30);
+      this.aimGuide=this.add.graphics().setDepth(9.6);
+      if(this.gemMask) this.aimGuide.setMask(this.gemMask);
       this.limitJewels=[
         this.add.rectangle(WALL+17+LIMIT_OPTICAL_X,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7),
         this.add.rectangle(W-WALL-17+LIMIT_OPTICAL_X,LIMIT_Y,8,8,0xffcf65,1).setAngle(45).setDepth(7)
@@ -1358,6 +1443,18 @@
         const max=W-WALL-t.r*COLLIDER_SCALE;
         this.targetX=Phaser.Math.Linear(min,max,u);
         this.updateAimHandle();
+
+        // Detents: a soft tick and selection haptic every 1/14 of the rail.
+        const detent=Math.round(u*14);
+        if(detent!==this.aimDetent){
+          const now=performance.now();
+          if(this.aimDetent!==undefined&&now-(this.aimDetentAt||0)>38){
+            this.aimDetentAt=now;
+            playTickSfx();
+            if(window.GemdropNative) window.GemdropNative.selection();
+          }
+          this.aimDetent=detent;
+        }
       };
 
       this.aimStrip.addEventListener('pointerdown',e=>{
@@ -2300,12 +2397,16 @@
       }
 
       if(animate){
-        this.preview.setAlpha(0);
+        const scale=this.preview.scaleX;
+        this.preview.setAlpha(0).setScale(scale*.55);
+        this.preview.y=DROP_Y-14;
         this.tweens.add({
           targets:this.preview,
           alpha:1,
-          duration:130,
-          ease:'Quad.Out'
+          y:DROP_Y,
+          scale,
+          duration:REDUCED_MOTION?90:240,
+          ease:REDUCED_MOTION?'Quad.Out':'Back.Out'
         });
       }
     }
@@ -2453,8 +2554,10 @@
       gem.dropSerial=this.runDrops;
       gem.dropTransit=true;
 
-      tone(180,.04,.015,'triangle');
+      playDropSfx(this.currentTier);
       haptic(5);
+      this.clawReleaseAt=this.time.now;
+      gem.awaitingLanding=true;
 
       this.currentTier=this.nextTier;
       this.currentSpecial=this.nextSpecial;
@@ -2631,6 +2734,8 @@
             );
           }
 
+          this.noteLanding(a,speed);
+          this.noteLanding(b,speed);
           this.queueMerge(a,b);
           continue;
         }
@@ -2655,6 +2760,7 @@
 
         const v=gem.body.velocity;
         const speed=Math.hypot(v.x,v.y);
+        if(otherBody.gemdropSurface==='floor') this.noteLanding(gem,speed);
 
         if(speed>.55&&now-(gem.lastDingAt||0)>64){
           gem.lastDingAt=now;
@@ -2850,6 +2956,58 @@
       this.updatePowerButtons();
     }
 
+    // A freshly dropped gem's first contact: squash, dust and a thud.
+    noteLanding(gem,speed) {
+      if(!gem||!gem.active||!gem.awaitingLanding||gem.merging) return;
+      gem.awaitingLanding=false;
+      const strength=clamp((speed-.6)/6.5,0,1);
+      if(strength<=0) return;
+
+      const r=tiers[gem.tier].r;
+      this.startGemSquash(gem,.05+strength*.1);
+      this.landingDust(gem.x,gem.body.bounds.max.y-4,r,strength);
+      playLandSfx(strength,gem.tier);
+      haptic(strength>.55?12:6);
+      if(strength>.6&&!REDUCED_MOTION) this.cameras.main.shake(60,.0006+strength*.0009);
+    }
+
+    startGemSquash(gem,amount) {
+      if(REDUCED_MOTION||!gem||!gem.active||gem.popStart) return;
+      this.startGemPop(gem,0);
+      gem.popStart=this.time.now;
+      gem.popMode='land';
+      gem.popDuration=190;
+      gem.popAmp=amount;
+      gem.popFlash.setVisible(false);
+    }
+
+    landingDust(x,y,r,strength) {
+      if(this.transientFx.size>100) return;
+      const count=4+Math.round(strength*6);
+      for(let i=0;i<count;i++){
+        const side=i%2===0?-1:1;
+        const puff=this.trackTransientFx(
+          this.add.circle(
+            x+side*Phaser.Math.FloatBetween(r*.2,r*.6),
+            y+Phaser.Math.FloatBetween(-3,3),
+            Phaser.Math.FloatBetween(3,5.5)+strength*3,
+            i%3===0?0xf7d8ff:0xc9a4e6,
+            .30+strength*.18
+          ).setDepth(9).setBlendMode(Phaser.BlendModes.ADD)
+        );
+        this.tweens.add({
+          targets:puff,
+          x:puff.x+side*Phaser.Math.Between(18,40+Math.round(strength*34)),
+          y:puff.y-Phaser.Math.Between(6,18),
+          scale:{from:.7,to:1.9},
+          alpha:0,
+          duration:Phaser.Math.Between(320,520),
+          ease:'Quad.Out',
+          onComplete:()=>this.destroyTransientFx(puff)
+        });
+      }
+    }
+
     hitStop(ms) {
       if(REDUCED_MOTION||!ms) return;
       if(!this.running||this.paused||this.metaPaused) return;
@@ -2930,6 +3088,7 @@
       gem.popSprite=null;
       gem.popFlash=null;
       gem.popStart=0;
+      gem.popMode=null;
       if(gem.active){
         gem.setAlpha(1);
         if(gem.shadow&&gem.shadow.active){
@@ -2965,6 +3124,13 @@
       const p=clamp(elapsed/gem.popDuration,0,1);
       if(p>=1){
         this.endGemPop(gem);
+        return;
+      }
+
+      if(gem.popMode==='land'){
+        // Wide-and-short on impact, a small rebound, then rest.
+        const e=Math.sin(Math.PI*2*p)*Math.exp(-3.2*p);
+        pop.setScale(base*(1+gem.popAmp*e),base*(1-gem.popAmp*e));
         return;
       }
 
@@ -4635,34 +4801,134 @@
       }
     }
 
+    // Where would the held gem come to rest? Highest surface under its width.
+    predictLanding(x,tier) {
+      const r=tiers[tier].r*COLLIDER_SCALE;
+      let surface=FLOOR;
+      for(const gem of this.gems){
+        if(!gem||!gem.active||!gem.body||gem.awaitingLanding) continue;
+        const b=gem.body.bounds;
+        const overlap=Math.min(x+r*.82,b.max.x)-Math.max(x-r*.82,b.min.x);
+        if(overlap<=0) continue;
+        // Round-ish gems: the contact point sits lower toward the edges.
+        const half=(b.max.x-b.min.x)/2;
+        const dx=Math.abs(x-gem.x);
+        const edge=clamp((dx-half*.35)/Math.max(1,half+r),0,1);
+        const top=b.min.y+(b.max.y-b.min.y)*.35*edge*edge;
+        surface=Math.min(surface,top);
+      }
+      return {surface,centerY:surface-r};
+    }
+
+    drawAimGuide(x,time) {
+      const g=this.aimGuide;
+      if(!g) return;
+      g.clear();
+
+      const show=this.running&&this.ready&&this.preview&&this.preview.active;
+      if(!show){
+        if(this.landingGhost) this.landingGhost.setVisible(false);
+        return;
+      }
+
+      const tier=this.currentTier;
+      const r=tiers[tier].r*COLLIDER_SCALE;
+      const landing=this.predictLanding(x,tier);
+      const top=DROP_Y+r*.9;
+      const bottom=Math.max(top,landing.surface-2);
+      const accent=hexToInt(tiers[tier].accent);
+
+      // Marching dots from the held gem down to the landing surface.
+      const gap=15;
+      const phase=(time*.045)%gap;
+      for(let y=top+phase;y<bottom;y+=gap){
+        const fade=clamp((y-top)/60,0,1)*clamp((bottom-y)/40,.25,1);
+        g.fillStyle(accent,.42*fade);
+        g.fillCircle(x,y,2.1);
+      }
+
+      // Landing marker: soft ellipse where the gem will touch down.
+      g.fillStyle(accent,.10);
+      g.fillEllipse(x,landing.surface,r*1.35,10);
+      g.lineStyle(1.5,accent,.34);
+      g.strokeEllipse(x,landing.surface,r*1.35,10);
+
+      if(!this.landingGhost){
+        this.landingGhost=this.add.image(0,0,gemTextureKey(tier))
+          .setDepth(9.5)
+          .setTintFill(0xf3dcff);
+        if(this.gemMask) this.landingGhost.setMask(this.gemMask);
+      }
+      // Outline of the real collider at the predicted resting spot.
+      if(landing.centerY>top+r){
+        const shape=window.ReactiveGemSystem.collisionShape(tiers[tier].reactiveCut,r);
+        g.lineStyle(2,accent,.30+.10*Math.sin(time*.006));
+        if(shape&&shape.type==='circle'){
+          g.strokeCircle(x,landing.centerY,shape.radius);
+        }else if(shape&&shape.vertices&&shape.vertices.length>=3){
+          const vs=shape.vertices;
+          // Collider vertices are relative to their centroid.
+          let cx=0,cy=0;
+          for(const v of vs){cx+=v.x;cy+=v.y;}
+          cx/=vs.length; cy/=vs.length;
+          g.beginPath();
+          g.moveTo(x+vs[0].x-cx,landing.centerY+vs[0].y-cy);
+          for(let i=1;i<vs.length;i++) g.lineTo(x+vs[i].x-cx,landing.centerY+vs[i].y-cy);
+          g.closePath();
+          g.strokePath();
+        }
+      }
+
+      const ghost=this.landingGhost;
+      if(ghost.texture.key!==gemTextureKey(tier)) ghost.setTexture(gemTextureKey(tier));
+      ghost.setScale(this.gemSpriteScale(tier));
+      ghost.setPosition(x,landing.centerY);
+      ghost.setAlpha(.08+.03*Math.sin(time*.006));
+      ghost.setVisible(landing.centerY>top+r);
+    }
+
     drawDropper(time) {
       this.dropper.clear();
 
-      if(!this.running||this.paused) return;
+      if(!this.running||this.paused){
+        if(this.aimGuide) this.aimGuide.clear();
+        if(this.landingGhost) this.landingGhost.setVisible(false);
+        return;
+      }
 
       const x=this.preview&&this.preview.active
         ? this.preview.x
         : clamp(this.targetX,WALL+28,W-WALL-28);
       const pulse=.82+.10*Math.sin(time*.006);
 
+      this.drawAimGuide(x,time);
+
+      // Claw release: prongs spring open and the crown kicks up, then settle.
+      const since=time-(this.clawReleaseAt||-1e9);
+      const open=since<340
+        ? Math.sin(clamp(since/80,0,1)*Math.PI/2)*Math.pow(1-clamp((since-80)/260,0,1),2)
+        : 0;
+      const spread=open*17;
+      const lift=open*-11;
+
       this.dropper.fillStyle(0xffc64e,pulse);
       this.dropper.lineStyle(2,0xffeda3,.62);
       this.dropper.beginPath();
-      this.dropper.moveTo(x-31,20);
-      this.dropper.lineTo(x-22,42);
-      this.dropper.lineTo(x-14,34);
-      this.dropper.lineTo(x-7,45);
-      this.dropper.lineTo(x,31);
-      this.dropper.lineTo(x+7,45);
-      this.dropper.lineTo(x+14,34);
-      this.dropper.lineTo(x+22,42);
-      this.dropper.lineTo(x+31,20);
+      this.dropper.moveTo(x-31-spread*.5,20+lift);
+      this.dropper.lineTo(x-22-spread,42+lift-spread*.4);
+      this.dropper.lineTo(x-14-spread*.6,34+lift);
+      this.dropper.lineTo(x-7-spread*.3,45+lift-spread*.2);
+      this.dropper.lineTo(x,31+lift);
+      this.dropper.lineTo(x+7+spread*.3,45+lift-spread*.2);
+      this.dropper.lineTo(x+14+spread*.6,34+lift);
+      this.dropper.lineTo(x+22+spread,42+lift-spread*.4);
+      this.dropper.lineTo(x+31+spread*.5,20+lift);
       this.dropper.closePath();
       this.dropper.fillPath();
       this.dropper.strokePath();
 
       this.dropper.fillStyle(0x21082c,1);
-      this.dropper.fillEllipse(x,44,30,12);
+      this.dropper.fillEllipse(x,44+lift,30+spread*1.2,12);
 
       for(let i=0;i<4;i++){
         const yy=51+i*7+Math.sin(time*.005+i)*1.5;
