@@ -9057,3 +9057,93 @@ body,
 }
 @keyframes bootBob{50%{transform:translateY(-6px) rotate(-2deg)}}
 @media (prefers-reduced-motion: reduce){.boot-splash__icon{animation:none}}
+
+/* ---- Special gems guide ---- */
+.overlay.visible .game-menu-actions>*:nth-child(6){animation-delay:.31s}
+.special-gems-card{
+  position:relative;
+  width:min(420px,100%);
+  max-height:calc(100dvh - 40px);
+  overflow-y:auto;
+  text-align:center;
+}
+.special-gems-intro{
+  margin:6px 4px 16px;
+  font:600 14px/1.45 Manrope,system-ui,sans-serif;
+  color:rgba(240,222,239,.72);
+}
+.special-gems-list{display:grid;gap:12px;text-align:left}
+.special-gem-card{
+  --special-color:#e06cff;
+  display:grid;
+  grid-template-columns:84px 1fr;
+  gap:14px;
+  align-items:center;
+  padding:12px 14px 12px 10px;
+  border-radius:20px;
+  background:
+    radial-gradient(120% 140% at 0% 50%,color-mix(in srgb,var(--special-color) 22%,transparent),transparent 60%),
+    rgba(28,9,36,.72);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--special-color) 45%,transparent);
+}
+.overlay.visible .special-gem-card{animation:itemRise .46s cubic-bezier(.2,.9,.3,1.3) both}
+.overlay.visible .special-gem-card:nth-child(2){animation-delay:.08s}
+.overlay.visible .special-gem-card:nth-child(3){animation-delay:.16s}
+.special-gem-art{position:relative;width:84px;height:84px;display:grid;place-items:center}
+.special-gem-art::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--special-color) 55%,transparent),transparent 70%);
+  filter:blur(6px);
+  animation:specialHalo 2.4s ease-in-out infinite;
+}
+.special-gem-art canvas{
+  position:relative;
+  width:72px;
+  height:72px;
+  animation:specialPrism 4s linear infinite,specialFloat 2.6s ease-in-out infinite;
+}
+.special-gem-spark{
+  position:absolute;
+  width:10px;
+  height:10px;
+  background:#fff;
+  clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);
+  opacity:0;
+  animation:specialSpark 1.8s ease-in-out infinite;
+}
+.special-gem-spark:nth-of-type(1){top:10px;left:14px}
+.special-gem-spark:nth-of-type(2){top:18px;right:10px;animation-delay:.6s}
+.special-gem-spark:nth-of-type(3){bottom:12px;left:26px;animation-delay:1.2s}
+@keyframes specialPrism{to{filter:hue-rotate(360deg) saturate(1.25)}}
+@keyframes specialFloat{50%{transform:translateY(-4px) rotate(-4deg)}}
+@keyframes specialHalo{50%{opacity:.55;transform:scale(1.12)}}
+@keyframes specialSpark{0%,100%{opacity:0;transform:scale(.3)}45%{opacity:1;transform:scale(1) rotate(45deg)}}
+.special-gem-title{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.special-gem-title strong{font:700 20px/1.1 Fredoka,system-ui,sans-serif;color:#fff4f9}
+.special-gem-rarity{
+  padding:3px 8px;
+  border-radius:99px;
+  font:800 10px/1 Manrope,system-ui,sans-serif;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#1c0724;
+  background:var(--special-color);
+}
+.special-gem-effect{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:0 0 4px;
+  font:800 11px/1.2 Manrope,system-ui,sans-serif;
+  letter-spacing:.08em;
+  color:var(--special-color);
+}
+.special-gem-effect svg{width:14px;height:14px;flex:none}
+.special-gem-desc{margin:0;font:600 13px/1.4 Manrope,system-ui,sans-serif;color:rgba(240,222,239,.78)}
+@media (prefers-reduced-motion: reduce){
+  .special-gem-art canvas,.special-gem-art::before,.special-gem-spark{animation:none}
+  .special-gem-spark{opacity:.7}
+}

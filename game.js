@@ -344,6 +344,10 @@
       hint:'SHAKES THE BOARD',
       color:0xe06cff,
       css:'#E06CFF',
+      rarity:'Common',
+      icon:'sparkles',
+      previewTier:3,
+      description:'Bursts the moment it lands and blasts nearby gems apart. Great for breaking up a jammed pile.',
       weight:58,
       cooldown:16
     },
@@ -352,6 +356,10 @@
       hint:'UPGRADES FIRST GEM',
       color:0x5ce5ff,
       css:'#5CE5FF',
+      rarity:'Uncommon',
+      icon:'circle-fading-arrow-up',
+      previewTier:7,
+      description:'Fuses into the first gem it touches (or seeks out the nearest one) and upgrades it one tier.',
       weight:29,
       cooldown:24
     },
@@ -360,6 +368,10 @@
       hint:'REFILLS POWERS',
       color:0xffd45c,
       css:'#FFD45C',
+      rarity:'Rare',
+      icon:'zap',
+      previewTier:2,
+      description:'Shatters on landing and adds 16% charge to Tumble, Merge and Upgrade all at once.',
       weight:13,
       cooldown:40
     }
@@ -1695,6 +1707,9 @@
       $('menuButton').addEventListener('click',()=>this.setPaused(true));
       $('menuCloseButton').addEventListener('click',()=>this.setPaused(false));
       $('menuMainButton').addEventListener('click',()=>this.returnToMenu());
+      $('menuSpecialButton').addEventListener('click',()=>this.openSpecialGems());
+      $('specialGemsClose').addEventListener('click',()=>this.closeSpecialGems());
+
       $('menuHowToButton').addEventListener('click',()=>{
         pauseOverlay.classList.remove('visible');
         this.openTutorial('pause');
@@ -4988,6 +5003,64 @@
         return;
       }
       this.finishTutorial();
+    }
+
+    renderSpecialGems() {
+      const list=$('specialGemsList');
+      if(!list||list.dataset.rendered) return;
+      list.dataset.rendered='1';
+
+      for(const [key,special] of Object.entries(SPECIAL_DROPS)){
+        const t=tiers[special.previewTier]||tiers[0];
+        const card=document.createElement('article');
+        card.className='special-gem-card special-gem-card--'+key;
+        card.style.setProperty('--special-color',special.css);
+
+        const art=document.createElement('div');
+        art.className='special-gem-art';
+        const canvas=document.createElement('canvas');
+        canvas.width=160;
+        canvas.height=160;
+        canvas.setAttribute('aria-hidden','true');
+        try{
+          const source=window.ReactiveGemSystem.renderPreviewCanvas(
+            t.reactiveCut,special.css,0,160,{...t,color:special.css,accent:'#ffffff'},GEM_WORLD_LIGHT_ANGLE
+          );
+          const fit=Math.min(150/source.width,150/source.height);
+          const w=source.width*fit;
+          const h=source.height*fit;
+          canvas.getContext('2d').drawImage(source,(160-w)/2,(160-h)/2,w,h);
+        }catch{}
+        art.appendChild(canvas);
+        for(let i=0;i<3;i++){
+          const spark=document.createElement('i');
+          spark.className='special-gem-spark';
+          art.appendChild(spark);
+        }
+
+        const copy=document.createElement('div');
+        copy.className='special-gem-copy';
+        copy.innerHTML=
+          '<div class="special-gem-title"><strong>'+special.label+'</strong>'+
+          '<span class="special-gem-rarity">'+special.rarity+'</span></div>'+
+          '<p class="special-gem-effect"><i data-lucide="'+special.icon+'"></i><span>'+special.hint+'</span></p>'+
+          '<p class="special-gem-desc">'+special.description+'</p>';
+
+        card.append(art,copy);
+        list.appendChild(card);
+      }
+      if(window.lucide) window.lucide.createIcons({attrs:{'stroke-width':2}});
+    }
+
+    openSpecialGems() {
+      this.renderSpecialGems();
+      pauseOverlay.classList.remove('visible');
+      $('specialGemsOverlay').classList.add('visible');
+    }
+
+    closeSpecialGems() {
+      $('specialGemsOverlay').classList.remove('visible');
+      if(this.running) pauseOverlay.classList.add('visible');
     }
 
     finishTutorial() {

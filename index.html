@@ -287,6 +287,9 @@
         <button id="menuHowToButton" class="secondary-button" type="button">
           <i data-lucide="circle-help" aria-hidden="true"></i><span>HOW TO PLAY</span>
         </button>
+        <button id="menuSpecialButton" class="secondary-button" type="button">
+          <i data-lucide="sparkles" aria-hidden="true"></i><span>SPECIAL GEMS</span>
+        </button>
         <button id="menuBalanceButton" class="secondary-button" type="button" hidden>
           <i data-lucide="gauge" aria-hidden="true"></i><span>BALANCE</span>
         </button>
@@ -301,6 +304,18 @@
           <span class="haptics-copy">HAPTICS ON</span>
         </button>
       </div>
+    </div>
+  </section>
+
+  <section id="specialGemsOverlay" class="overlay special-gems-overlay" aria-modal="true" role="dialog" aria-labelledby="specialGemsTitle">
+    <div class="sheet-card special-gems-card">
+      <button id="specialGemsClose" class="game-menu-close" type="button" aria-label="Back to menu">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+      <p class="eyebrow">HOW TO PLAY</p>
+      <h2 id="specialGemsTitle">Special Gems</h2>
+      <p class="special-gems-intro">Prismatic gems shimmer with rainbow light. They never merge: each one triggers its power instead.</p>
+      <div id="specialGemsList" class="special-gems-list"></div>
     </div>
   </section>
 
