@@ -56,8 +56,8 @@
   const DROP_GATE_CLEARANCE = 12;
   const MAX_TRANSIENT_FX = 140;
   const AIM_CONTROL_GAIN = 1.25;
-  const COLLIDER_SCALE = 0.97;
-  const ART_SCALE = 0.97;
+  const COLLIDER_SCALE = 0.90;
+  const ART_SCALE = 0.90;
   // Render only as many pixels as the screen can show: the playfield is about
   // one screen wide, so match its physical pixel width (capped lower on
   // low-memory / few-core devices). ?scale=1.5 overrides for testing.
@@ -334,7 +334,7 @@
     {
       key:'treasure',
       title:'Fill the treasure chest.',
-      copy:'Merging fills the meter. Unlock treasures, then set collected gems into them.'
+      copy:'Merging fills the meter. Unlock treasures, set collected gems into them, then complete Jeweller orders for your vault fund.'
     }
   ];
 

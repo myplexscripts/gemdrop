@@ -142,10 +142,26 @@
       </div>
 
       <div class="start-menu">
-        <div class="home-best">
-          <span>BEST VALUE</span>
-          <strong id="homeBest">$0</strong>
+        <div class="home-stats">
+          <div class="home-stat">
+            <span>BEST VALUE</span>
+            <strong id="homeBest">$0</strong>
+          </div>
+          <div class="home-stat">
+            <span>VAULT FUND</span>
+            <strong id="homeFund">$0</strong>
+          </div>
         </div>
+
+        <button id="homeOrderCard" class="home-order-card" type="button">
+          <span class="home-order-icon" aria-hidden="true"><i data-lucide="scroll-text"></i></span>
+          <span class="home-order-copy">
+            <small>JEWELLER'S ORDER</small>
+            <strong id="homeOrderTitle">New commission</strong>
+            <span id="homeOrderProgress">Collect requested gems</span>
+          </span>
+          <b id="homeOrderReward" class="home-order-reward">$0</b>
+        </button>
 
         <div class="start-actions">
           <button id="startButton" class="primary-button" type="button">
@@ -160,7 +176,7 @@
 
       </div>
 
-      <div class="start-version" aria-label="Game version">v0.9.1</div>
+      <div class="start-version" aria-label="Game version">v0.10.0</div>
     </div>
   </section>
 
@@ -183,9 +199,13 @@
         <button id="collectionTabTreasures" class="collection-tab" type="button" aria-selected="false">
           <i data-lucide="crown" aria-hidden="true"></i><span>Treasures</span>
         </button>
+        <button id="collectionTabOrders" class="collection-tab" type="button" aria-selected="false">
+          <i data-lucide="scroll-text" aria-hidden="true"></i><span>Orders</span>
+        </button>
       </nav>
       <div id="gemCollection" class="gem-collection" aria-label="Gem showcase"></div>
       <div id="treasureCollection" class="treasure-collection" aria-label="Treasure collection" hidden></div>
+      <div id="orderBoard" class="order-board" aria-label="Jeweller orders" hidden></div>
     </div>
   </section>
 

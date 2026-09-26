@@ -3,6 +3,9 @@
 
   const STORAGE_KEY='gemdrop-meta-v1';
   const CHEST_TARGET=320;
+  const ORDER_SLOTS=3;
+  const TREASURE_DELIVERY_COST=600;
+  const ORDER_REFRESH_COST=90;
 
   const GEMS=[
     {name:'Quartz',description:'A pale crystal that catches even the faintest light.',score:1,color:'#D7EBF2',accent:'#EDF6F9',dark:'#859296',cut:'rectangular'},
@@ -120,7 +123,7 @@
 
   function blankState(){
     return {
-      version:3,
+      version:4,
       gemCounts:Array(GEMS.length).fill(0),
       chest:0,
       totalMerges:0,
@@ -136,7 +139,10 @@
       bestRunMerges:0,
       crownstonesCreated:0,
       ownedThemes:['velvet'],
-      activeTheme:'velvet'
+      activeTheme:'velvet',
+      orders:[],
+      ordersCompleted:0,
+      orderSequence:0
     };
   }
 
@@ -158,6 +164,9 @@
     base.crownstonesCreated=Math.max(0,Math.floor(Number(base.crownstonesCreated)||0));
     if(!Array.isArray(base.ownedThemes)) base.ownedThemes=['velvet'];
     if(!base.ownedThemes.includes('velvet')) base.ownedThemes.unshift('velvet');
+    if(!Array.isArray(base.orders)) base.orders=[];
+    base.ordersCompleted=Math.max(0,Math.floor(Number(base.ordersCompleted)||0));
+    base.orderSequence=Math.max(0,Math.floor(Number(base.orderSequence)||0));
     try{
       const unlocked=JSON.parse(localStorage.getItem('gemDropUnlocked')||'[0]');
       if(Array.isArray(unlocked)&&unlocked.length){
@@ -175,6 +184,9 @@
       const oldChest=Math.max(0,Number(base.chest)||0);
       base.chest=(oldChest/oldTarget)*CHEST_TARGET;
       base.version=3;
+    }
+    if((Number(base.version)||1)<4){
+      base.version=4;
     }
     base.chest=clamp(Number(base.chest)||0,0,CHEST_TARGET);
 
@@ -398,6 +410,7 @@
       const count=card.querySelector('.gem-card__count');
       if(count) count.textContent='×'+(state.gemCounts[tier]||0);
     });
+    renderHomeOrder();
   }
 
   function onMerge(tier,chain=1,options={}){
@@ -500,6 +513,452 @@
     if(!state.discoveredTreasures.includes(treasure.id)) state.discoveredTreasures.push(treasure.id);
     save();
     return copy;
+  }
+
+
+  function orderGemTier(){
+    const maxTier=clamp(Math.min(state.highestTier,9),0,GEMS.length-1);
+    if(maxTier<=0) return 0;
+    if(Math.random()<.14) return maxTier;
+    return Math.min(maxTier,Math.floor(Math.pow(Math.random(),1.7)*(maxTier+1)));
+  }
+
+  function createGemOrder(slot){
+    const requirementCount=state.highestTier>=2&&Math.random()<.42?2:1;
+    const requirements=[];
+    const used=new Set();
+
+    while(requirements.length<requirementCount){
+      let tier=orderGemTier();
+      let guard=0;
+      while(used.has(tier)&&guard<12){
+        tier=orderGemTier();
+        guard++;
+      }
+      if(used.has(tier)) break;
+      used.add(tier);
+
+      const qty=tier<=1
+        ? 3+Math.floor(Math.random()*3)
+        : tier<=5
+          ? 2+Math.floor(Math.random()*3)
+          : 1+Math.floor(Math.random()*2);
+
+      requirements.push({tier,qty});
+    }
+
+    const baseValue=requirements.reduce((sum,item)=>sum+gemContribution(item.tier)*item.qty,0);
+    const reward=Math.max(
+      85,
+      Math.round(baseValue*(1.58+Math.min(.34,state.ordersCompleted*.008))+40+requirements.length*18)
+    );
+
+    state.orderSequence++;
+    return {
+      id:uid(),
+      number:state.orderSequence,
+      slot,
+      kind:'gems',
+      requirements,
+      reward,
+      createdAt:Date.now()
+    };
+  }
+
+  function treasureOrderCandidates(){
+    return TREASURES.filter(treasure=>copiesFor(treasure.id).length>0);
+  }
+
+  function createTreasureOrder(slot){
+    const used=new Set(
+      state.orders
+        .filter(order=>order&&order.kind==='treasure')
+        .map(order=>order.treasureId)
+    );
+    let pool=treasureOrderCandidates().filter(treasure=>!used.has(treasure.id));
+    if(!pool.length) pool=treasureOrderCandidates();
+    if(!pool.length) return createGemOrder(slot);
+
+    const treasure=pool[Math.floor(Math.random()*pool.length)];
+    const bonus=Math.max(130,Math.round(treasure.base*.72+90));
+
+    state.orderSequence++;
+    return {
+      id:uid(),
+      number:state.orderSequence,
+      slot,
+      kind:'treasure',
+      treasureId:treasure.id,
+      bonus,
+      createdAt:Date.now()
+    };
+  }
+
+  function validOrder(order){
+    if(!order||typeof order!=='object') return false;
+    if(!Number.isInteger(order.slot)||order.slot<0||order.slot>=ORDER_SLOTS) return false;
+
+    if(order.kind==='gems'){
+      return Array.isArray(order.requirements)&&
+        order.requirements.length>0&&
+        order.requirements.every(item=>
+          item&&
+          Number.isInteger(item.tier)&&
+          item.tier>=0&&
+          item.tier<GEMS.length&&
+          Number.isInteger(item.qty)&&
+          item.qty>0
+        );
+    }
+
+    if(order.kind==='treasure'){
+      return !!treasureById(order.treasureId)&&copiesFor(order.treasureId).length>0;
+    }
+
+    return false;
+  }
+
+  function createOrder(slot){
+    const treasurePossible=treasureOrderCandidates().length>0;
+    const wantsTreasure=treasurePossible&&(slot===2||Math.random()<.22);
+    return wantsTreasure?createTreasureOrder(slot):createGemOrder(slot);
+  }
+
+  function ensureOrders(){
+    const previous=JSON.stringify(state.orders||[]);
+    const slots=new Map();
+
+    for(const order of state.orders||[]){
+      if(validOrder(order)&&!slots.has(order.slot)) slots.set(order.slot,order);
+    }
+
+    state.orders=[...slots.values()];
+    for(let slot=0;slot<ORDER_SLOTS;slot++){
+      if(!slots.has(slot)){
+        const order=createOrder(slot);
+        slots.set(slot,order);
+        state.orders.push(order);
+      }
+    }
+
+    state.orders.sort((a,b)=>a.slot-b.slot);
+    if(JSON.stringify(state.orders)!==previous) save();
+  }
+
+  function completedCopyForTreasure(id){
+    const treasure=treasureById(id);
+    if(!treasure) return null;
+
+    const completed=copiesFor(id)
+      .filter(copy=>calculateValue(treasure,copy).full)
+      .sort((a,b)=>calculateValue(treasure,a).total-calculateValue(treasure,b).total);
+
+    return completed[0]||null;
+  }
+
+  function orderReady(order){
+    if(!order) return false;
+
+    if(order.kind==='gems'){
+      return order.requirements.every(item=>availableGemCount(item.tier)>=item.qty);
+    }
+
+    if(order.kind==='treasure'){
+      return !!completedCopyForTreasure(order.treasureId);
+    }
+
+    return false;
+  }
+
+  function orderTitle(order){
+    if(!order) return 'New commission';
+    if(order.kind==='treasure'){
+      const treasure=treasureById(order.treasureId);
+      return treasure?treasure.name+' commission':'Treasure commission';
+    }
+    if(order.requirements.length>1) return 'Mixed gem commission';
+    const gem=GEMS[order.requirements[0].tier];
+    return (gem?gem.name:'Gem')+' commission';
+  }
+
+  function orderProgressLabel(order){
+    if(!order) return '';
+    if(order.kind==='treasure'){
+      const treasure=treasureById(order.treasureId);
+      return orderReady(order)
+        ? 'Ready to deliver'
+        : 'Complete one '+(treasure?treasure.name:'treasure')+' in the vault';
+    }
+
+    return order.requirements.map(item=>{
+      const have=Math.min(item.qty,availableGemCount(item.tier));
+      return have+'/'+item.qty+' '+GEMS[item.tier].name;
+    }).join(' · ');
+  }
+
+  function orderRewardLabel(order){
+    if(!order) return '';
+    return order.kind==='treasure'
+      ? '+'+money(order.bonus)+' bonus'
+      : money(order.reward);
+  }
+
+  function renderHomeOrder(){
+    ensureOrders();
+
+    const fund=$('homeFund');
+    if(fund) fund.textContent=money(state.gold);
+
+    const card=$('homeOrderCard');
+    if(!card) return;
+
+    const order=state.orders.find(orderReady)||state.orders[0];
+    if(!order) return;
+
+    const ready=orderReady(order);
+    card.classList.toggle('ready',ready);
+    card.setAttribute('aria-label',orderTitle(order)+'. '+orderProgressLabel(order));
+
+    const title=$('homeOrderTitle');
+    const progress=$('homeOrderProgress');
+    const reward=$('homeOrderReward');
+
+    if(title) title.textContent=orderTitle(order);
+    if(progress) progress.textContent=orderProgressLabel(order);
+    if(reward) reward.textContent=orderRewardLabel(order);
+  }
+
+  function renderOrderGemItem(item){
+    const row=document.createElement('div');
+    row.className='order-item';
+
+    const art=document.createElement('span');
+    art.className='order-item__art';
+    drawMiniGem(art,item.tier,54);
+
+    const copy=document.createElement('span');
+    copy.className='order-item__copy';
+    copy.innerHTML='<strong>'+GEMS[item.tier].name+'</strong><small>Requested gem</small>';
+
+    const count=document.createElement('span');
+    count.className='order-item__count';
+    const have=availableGemCount(item.tier);
+    count.textContent=Math.min(have,item.qty)+' / '+item.qty;
+    count.classList.toggle('complete',have>=item.qty);
+
+    row.append(art,copy,count);
+    return row;
+  }
+
+  function renderOrderTreasureItem(order){
+    const treasure=treasureById(order.treasureId);
+    const row=document.createElement('div');
+    row.className='order-item order-item--treasure';
+
+    const art=document.createElement('span');
+    art.className='order-item__art order-item__art--treasure';
+    art.innerHTML=treasureSVG(treasure,false);
+
+    const copy=document.createElement('span');
+    copy.className='order-item__copy';
+    copy.innerHTML='<strong>'+treasure.name+'</strong><small>Completed treasure</small>';
+
+    const count=document.createElement('span');
+    count.className='order-item__count';
+    count.textContent=orderReady(order)?'READY':'0 / 1';
+    count.classList.toggle('complete',orderReady(order));
+
+    row.append(art,copy,count);
+    return row;
+  }
+
+  function renderOrders(){
+    const root=$('orderBoard');
+    if(!root) return;
+
+    ensureOrders();
+    root.innerHTML='';
+
+    const merchant=document.createElement('section');
+    merchant.className='order-merchant';
+    merchant.innerHTML=
+      '<div class="order-merchant__mark"><i data-lucide="gem" aria-hidden="true"></i></div>'+
+      '<div class="order-merchant__copy"><span>THE JEWELLER</span><strong>Commissions</strong>'+
+      '<p>Bring requested gems or finished treasures. Use the fund to bring more treasure into the vault.</p></div>'+
+      '<div class="order-wallet"><span>VAULT FUND</span><strong>'+money(state.gold)+'</strong></div>';
+    root.appendChild(merchant);
+
+    const spend=document.createElement('div');
+    spend.className='order-spend-grid';
+
+    const chestButton=document.createElement('button');
+    chestButton.type='button';
+    chestButton.className='order-spend-card';
+    chestButton.disabled=state.gold<TREASURE_DELIVERY_COST;
+    chestButton.innerHTML=
+      '<span class="order-spend-card__icon"><i data-lucide="package-open" aria-hidden="true"></i></span>'+
+      '<span><strong>Treasure delivery</strong><small>Buy one random treasure chest</small></span>'+
+      '<b>'+money(TREASURE_DELIVERY_COST)+'</b>';
+    chestButton.addEventListener('click',buyTreasureDelivery);
+
+    const refreshButton=document.createElement('button');
+    refreshButton.type='button';
+    refreshButton.className='order-spend-card';
+    refreshButton.disabled=state.gold<ORDER_REFRESH_COST;
+    refreshButton.innerHTML=
+      '<span class="order-spend-card__icon"><i data-lucide="refresh-cw" aria-hidden="true"></i></span>'+
+      '<span><strong>New commissions</strong><small>Replace all three requests</small></span>'+
+      '<b>'+money(ORDER_REFRESH_COST)+'</b>';
+    refreshButton.addEventListener('click',refreshOrders);
+
+    spend.append(chestButton,refreshButton);
+    root.appendChild(spend);
+
+    const heading=document.createElement('div');
+    heading.className='order-section-heading';
+    heading.innerHTML='<span>OPEN ORDERS</span><strong>'+state.orders.length+'</strong>';
+    root.appendChild(heading);
+
+    const list=document.createElement('div');
+    list.className='order-list';
+
+    state.orders.forEach(order=>{
+      const ready=orderReady(order);
+      const card=document.createElement('article');
+      card.className='order-card'+(ready?' ready':'');
+      card.dataset.orderId=order.id;
+
+      const header=document.createElement('header');
+      header.className='order-card__header';
+      header.innerHTML=
+        '<span>ORDER '+String(order.number).padStart(3,'0')+'</span>'+
+        '<strong>'+orderTitle(order)+'</strong>'+
+        '<b>'+orderRewardLabel(order)+'</b>';
+      card.appendChild(header);
+
+      const items=document.createElement('div');
+      items.className='order-items';
+      if(order.kind==='gems'){
+        order.requirements.forEach(item=>items.appendChild(renderOrderGemItem(item)));
+      }else{
+        items.appendChild(renderOrderTreasureItem(order));
+      }
+      card.appendChild(items);
+
+      const action=document.createElement('button');
+      action.type='button';
+      action.className='order-deliver'+(ready?' ready':'');
+      if(order.kind==='treasure'&&!ready){
+        action.innerHTML='<i data-lucide="crown" aria-hidden="true"></i><span>OPEN TREASURE</span>';
+        action.addEventListener('click',()=>openTreasureDetail(order.treasureId));
+      }else{
+        action.disabled=!ready;
+        action.innerHTML=ready
+          ? '<i data-lucide="package-check" aria-hidden="true"></i><span>DELIVER ORDER</span>'
+          : '<i data-lucide="circle-dashed" aria-hidden="true"></i><span>KEEP COLLECTING</span>';
+        if(ready) action.addEventListener('click',()=>fulfillOrder(order.id));
+      }
+      card.appendChild(action);
+      list.appendChild(card);
+    });
+
+    root.appendChild(list);
+
+    const progress=$('collectionProgress');
+    if(progress){
+      progress.textContent=state.orders.length+' OPEN';
+      progress.classList.remove('complete');
+    }
+
+    renderHomeOrder();
+    refreshIcons();
+  }
+
+  function orderButtonFeedback(selector){
+    const button=document.querySelector(selector);
+    if(!button) return;
+    button.classList.remove('shake');
+    void button.offsetWidth;
+    button.classList.add('shake');
+  }
+
+  function fulfillOrder(orderId){
+    ensureOrders();
+    const order=state.orders.find(item=>item.id===orderId);
+    if(!order||!orderReady(order)) return;
+
+    let payout=0;
+
+    if(order.kind==='gems'){
+      for(const item of order.requirements){
+        if(availableGemCount(item.tier)<item.qty) return;
+      }
+      for(const item of order.requirements){
+        state.gemCounts[item.tier]=Math.max(0,(state.gemCounts[item.tier]||0)-item.qty);
+      }
+      payout=order.reward;
+    }else{
+      const treasure=treasureById(order.treasureId);
+      const copy=completedCopyForTreasure(order.treasureId);
+      if(!treasure||!copy) return;
+
+      const calc=calculateValue(treasure,copy);
+      for(const tier of copy.inlays){
+        if(Number.isInteger(tier)){
+          state.gemCounts[tier]=Math.max(0,(state.gemCounts[tier]||0)-1);
+        }
+      }
+
+      const index=state.treasures.findIndex(item=>item.uid===copy.uid);
+      if(index>=0) state.treasures.splice(index,1);
+
+      payout=calc.total+order.bonus;
+      state.lifetimeTreasureSales+=payout;
+      state.treasureRecords[treasure.id]=Math.max(state.treasureRecords[treasure.id]||0,calc.total);
+    }
+
+    state.gold+=payout;
+    state.ordersCompleted++;
+    state.orders=state.orders.filter(item=>item.id!==order.id);
+    ensureOrders();
+    save();
+
+    updateGemBadges();
+    renderTreasureCollection();
+    renderOrders();
+    renderHomeOrder();
+
+    if(window.GemdropNative) window.GemdropNative.notify('success');
+    else if(navigator.vibrate) navigator.vibrate([14,18,20]);
+  }
+
+  function buyTreasureDelivery(){
+    if(state.gold<TREASURE_DELIVERY_COST){
+      orderButtonFeedback('#orderBoard .order-spend-card');
+      return;
+    }
+
+    state.gold-=TREASURE_DELIVERY_COST;
+    save();
+    claimTreasure('purchase');
+    renderOrders();
+    renderHomeOrder();
+  }
+
+  function refreshOrders(){
+    if(state.gold<ORDER_REFRESH_COST){
+      orderButtonFeedback('#orderBoard .order-spend-card:last-child');
+      return;
+    }
+
+    state.gold-=ORDER_REFRESH_COST;
+    state.orders=[];
+    ensureOrders();
+    save();
+    renderOrders();
+    renderHomeOrder();
+
+    if(window.GemdropNative) window.GemdropNative.haptic([8,14,8]);
   }
 
   let rewardTimers=[];
@@ -686,11 +1145,12 @@
     rewardAnimationFrame=window.requestAnimationFrame(frame);
   }
 
-  function claimTreasure(){
-    if(state.chest<CHEST_TARGET) return;
+  function claimTreasure(source='meter'){
+    const purchased=source==='purchase';
+    if(!purchased&&state.chest<CHEST_TARGET) return;
     const treasure=randomTreasure();
     const copy=addTreasure(treasure);
-    state.chest=0;
+    if(!purchased) state.chest=0;
     rewardCopyUid=copy.uid;
     const scene=window.GemdropGameScene;
     if(scene&&scene.running&&typeof scene.noteTreasureClaim==='function'){
@@ -757,14 +1217,28 @@
   }
 
   function selectCollectionTab(tab){
-    const gems=tab!=='treasures';
+    const active=tab==='treasures'||tab==='orders'?tab:'gems';
+    const gems=active==='gems';
+    const treasures=active==='treasures';
+    const orders=active==='orders';
+
     $('collectionTabGems').classList.toggle('active',gems);
-    $('collectionTabTreasures').classList.toggle('active',!gems);
+    $('collectionTabTreasures').classList.toggle('active',treasures);
+    $('collectionTabOrders').classList.toggle('active',orders);
     $('collectionTabGems').setAttribute('aria-selected',gems?'true':'false');
-    $('collectionTabTreasures').setAttribute('aria-selected',gems?'false':'true');
+    $('collectionTabTreasures').setAttribute('aria-selected',treasures?'true':'false');
+    $('collectionTabOrders').setAttribute('aria-selected',orders?'true':'false');
+
     $('gemCollection').hidden=!gems;
-    $('treasureCollection').hidden=gems;
-    $('collectionTitle').textContent=gems?'Gem Showcase':'Treasure Vault';
+    $('treasureCollection').hidden=!treasures;
+    $('orderBoard').hidden=!orders;
+
+    $('collectionTitle').textContent=gems
+      ? 'Gem Showcase'
+      : treasures
+        ? 'Treasure Vault'
+        : 'Jeweller Orders';
+
     if(gems){
       const unlocked=window.GemdropGameScene?window.GemdropGameScene.unlockedTiers.size:1;
       const complete=unlocked>=GEMS.length;
@@ -773,8 +1247,10 @@
         : unlocked+' / '+GEMS.length;
       $('collectionProgress').classList.toggle('complete',complete);
       updateGemBadges();
-    }else{
+    }else if(treasures){
       renderTreasureCollection();
+    }else{
+      renderOrders();
     }
   }
 
@@ -1210,7 +1686,9 @@
     if(index>=0) state.treasures.splice(index,1);
 
     save();
+    ensureOrders();
     updateGemBadges();
+    renderHomeOrder();
 
     const remaining=copiesFor(currentTreasureId);
     if(!remaining.length){
@@ -1233,6 +1711,10 @@
 
     $('collectionTabGems').addEventListener('click',()=>selectCollectionTab('gems'));
     $('collectionTabTreasures').addEventListener('click',()=>selectCollectionTab('treasures'));
+    $('collectionTabOrders').addEventListener('click',()=>selectCollectionTab('orders'));
+
+    const homeOrder=$('homeOrderCard');
+    if(homeOrder) homeOrder.addEventListener('click',()=>showCollection('orders'));
 
     $('treasureRewardClose').addEventListener('click',()=>closeReward(true));
     $('treasureRewardView').addEventListener('click',()=>closeReward(true));
@@ -1254,9 +1736,12 @@
 
   function init(){
     applyTheme();
+    ensureOrders();
     bind();
     updateMeter();
     renderTreasureCollection();
+    renderOrders();
+    renderHomeOrder();
     refreshIcons();
   }
 
@@ -1272,6 +1757,7 @@
     showCollection,
     selectCollectionTab,
     renderTreasureCollection,
+    renderOrders,
     openTreasureDetail,
     getTreasureInfo:id=>{
       const treasure=treasureById(id);
