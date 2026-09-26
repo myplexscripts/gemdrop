@@ -1,6 +1,6 @@
 {
   "name": "gem-drop",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "private": true,
   "description": "A mobile-first Phaser Matter merge game with dynamically lit procedural gemstones.",
   "scripts": {

@@ -3,9 +3,11 @@
 
   const STORAGE_KEY='gemdrop-meta-v1';
   const CHEST_TARGET=320;
-  const ORDER_SLOTS=3;
-  const TREASURE_DELIVERY_COST=600;
-  const ORDER_REFRESH_COST=90;
+  const ORDER_SLOTS=1;
+  const ORDER_REFRESH_COST=100;
+  const TREASURE_BASE_COST=450;
+  const TREASURE_COST_STEP=100;
+  const TREASURE_UNLOCK_ORDERS=[0,2,4,7,10,14,18,23,29,36,44];
 
   const GEMS=[
     {name:'Quartz',description:'A pale crystal that catches even the faintest light.',score:1,color:'#D7EBF2',accent:'#EDF6F9',dark:'#859296',cut:'rectangular'},
@@ -123,7 +125,7 @@
 
   function blankState(){
     return {
-      version:4,
+      version:5,
       gemCounts:Array(GEMS.length).fill(0),
       chest:0,
       totalMerges:0,
@@ -188,7 +190,15 @@
     if((Number(base.version)||1)<4){
       base.version=4;
     }
-    base.chest=clamp(Number(base.chest)||0,0,CHEST_TARGET);
+    if((Number(base.version)||1)<5){
+      // v5 makes the live physics board the inventory, like traditional
+      // merge games. Old permanent gem stockpiles are intentionally retired.
+      base.gemCounts=Array(GEMS.length).fill(0);
+      base.chest=0;
+      base.orders=[];
+      base.version=5;
+    }
+    base.chest=0;
 
     // Old builds allowed any gem in any socket. Empty incompatible draft
     // inlays so every setting now has one fixed, readable gem silhouette.
@@ -405,33 +415,23 @@
   }
 
   function updateGemBadges(){
-    document.querySelectorAll('[data-gem-tier]').forEach(card=>{
-      const tier=Number(card.dataset.gemTier);
-      const count=card.querySelector('.gem-card__count');
-      if(count) count.textContent='×'+(state.gemCounts[tier]||0);
-    });
+    // The showcase is now a discovery catalogue, not a spendable warehouse.
     renderHomeOrder();
+    syncOrderUI();
   }
 
   function onMerge(tier,chain=1,options={}){
     state.totalMerges++;
     const resultTier=Number.isInteger(options.resultTier)?options.resultTier:tier;
-    if(Number.isInteger(tier)&&tier>=0&&tier<GEMS.length){
-      if(options.collect!==false) state.gemCounts[tier]=(state.gemCounts[tier]||0)+1;
-    }
+
     if(Number.isInteger(resultTier)&&resultTier>=0&&resultTier<GEMS.length){
       state.highestTier=Math.max(state.highestTier,resultTier);
       if(resultTier===GEMS.length-1&&!options.master) state.crownstonesCreated++;
     }
-    const level=Number.isInteger(resultTier)?resultTier:0;
-    const gain=1.10+Math.min(level,12)*.16+Math.min(Math.max(0,chain-1),4)*.28+(options.master?3.2:0);
-    const chestBefore=state.chest;
-    state.chest=clamp(state.chest+gain,0,CHEST_TARGET);
-    const chestGain=Math.max(0,state.chest-chestBefore);
+
     save();
-    updateMeter();
-    updateGemBadges();
-    return {chestGain,resultTier};
+    syncOrderUI();
+    return {chestGain:0,resultTier};
   }
 
   function getProgressSnapshot(){
@@ -471,39 +471,49 @@
   }
 
   function eligibleTreasures(){
-    const eligible=TREASURES.filter(t=>state.highestTier>=t.minTier&&state.totalMerges>=t.minMerges);
+    const eligible=TREASURES.filter((treasure,index)=>
+      state.highestTier>=treasure.minTier &&
+      state.ordersCompleted>=(TREASURE_UNLOCK_ORDERS[index]||0)
+    );
     return eligible.length?eligible:[TREASURES[0]];
   }
 
-  function randomTreasure(){
-    const pool=eligibleTreasures();
-    const weighted=pool.map(treasure=>{
-      const copies=copiesFor(treasure.id).length;
-      const undiscovered=!state.discoveredTreasures.includes(treasure.id);
-      const discoveryBoost=undiscovered?3.4:1;
-      const duplicateDecay=1/(1+copies*.72);
-      return {
-        treasure,
-        weight:Math.max(.08,treasure.weight*discoveryBoost*duplicateDecay)
-      };
-    });
+  function undiscoveredEligibleTreasures(){
+    return eligibleTreasures().filter(treasure=>!state.discoveredTreasures.includes(treasure.id));
+  }
 
-    const total=weighted.reduce((sum,item)=>sum+item.weight,0);
+  function randomTreasure(){
+    const pool=undiscoveredEligibleTreasures();
+    if(!pool.length) return null;
+
+    const total=pool.reduce((sum,treasure)=>sum+Math.max(.1,treasure.weight),0);
     let roll=Math.random()*total;
-    for(const item of weighted){
-      roll-=item.weight;
-      if(roll<=0) return item.treasure;
+    for(const treasure of pool){
+      roll-=Math.max(.1,treasure.weight);
+      if(roll<=0) return treasure;
     }
-    return weighted[weighted.length-1].treasure;
+    return pool[pool.length-1];
+  }
+
+  function treasureChestCost(){
+    return TREASURE_BASE_COST+state.discoveredTreasures.length*TREASURE_COST_STEP;
+  }
+
+  function nextLockedTreasure(){
+    return TREASURES.find(treasure=>!state.discoveredTreasures.includes(treasure.id))||null;
   }
 
   function addTreasure(treasure){
+    if(!treasure) return null;
+    const existing=copiesFor(treasure.id)[0];
+    if(existing) return existing;
+
     const copy={
       uid:uid(),
       typeId:treasure.id,
       inlays:Array(treasure.sockets.length).fill(null),
-      completed:false,
-      completionAwarded:false,
+      completed:true,
+      completionAwarded:true,
       completionBonus:0,
       finalValue:null,
       comboId:null,
@@ -516,15 +526,26 @@
   }
 
 
-  function orderGemTier(){
-    const maxTier=clamp(Math.min(state.highestTier,9),0,GEMS.length-1);
-    if(maxTier<=0) return 0;
-    if(Math.random()<.14) return maxTier;
-    return Math.min(maxTier,Math.floor(Math.pow(Math.random(),1.7)*(maxTier+1)));
+  function orderSpawnFloor(){
+    const best=Math.max(0,state.highestTier||0);
+    if(best>=16) return 4;
+    if(best>=13) return 3;
+    if(best>=10) return 2;
+    if(best>=7) return 1;
+    return 0;
   }
 
-  function createGemOrder(slot){
-    const requirementCount=state.highestTier>=2&&Math.random()<.42?2:1;
+  function orderGemTier(){
+    const floor=orderSpawnFloor();
+    const max=clamp(Math.min(state.highestTier,floor+4),floor,GEMS.length-1);
+    if(max<=floor) return floor;
+    const span=max-floor+1;
+    return floor+Math.min(span-1,Math.floor(Math.pow(Math.random(),1.85)*span));
+  }
+
+  function createGemOrder(slot=0){
+    const floor=orderSpawnFloor();
+    const requirementCount=state.ordersCompleted>=4&&Math.random()<.38?2:1;
     const requirements=[];
     const used=new Set();
 
@@ -538,19 +559,25 @@
       if(used.has(tier)) break;
       used.add(tier);
 
-      const qty=tier<=1
-        ? 3+Math.floor(Math.random()*3)
-        : tier<=5
-          ? 2+Math.floor(Math.random()*3)
-          : 1+Math.floor(Math.random()*2);
-
+      const delta=Math.max(0,tier-floor);
+      const qty=delta===0
+        ? 2+Math.floor(Math.random()*3)
+        : delta===1
+          ? 1+Math.floor(Math.random()*2)
+          : 1;
       requirements.push({tier,qty});
     }
 
-    const baseValue=requirements.reduce((sum,item)=>sum+gemContribution(item.tier)*item.qty,0);
-    const reward=Math.max(
-      85,
-      Math.round(baseValue*(1.58+Math.min(.34,state.ordersCompleted*.008))+40+requirements.length*18)
+    const effort=requirements.reduce((sum,item)=>{
+      const delta=Math.max(0,item.tier-floor);
+      return sum+item.qty*Math.pow(2,delta);
+    },0);
+
+    const reward=Math.round(
+      55+
+      effort*28+
+      requirements.length*20+
+      Math.min(110,state.highestTier*5)
     );
 
     state.orderSequence++;
@@ -565,192 +592,107 @@
     };
   }
 
-  function treasureOrderCandidates(){
-    return TREASURES.filter(treasure=>copiesFor(treasure.id).length>0);
-  }
-
-  function createTreasureOrder(slot){
-    const used=new Set(
-      state.orders
-        .filter(order=>order&&order.kind==='treasure')
-        .map(order=>order.treasureId)
-    );
-    let pool=treasureOrderCandidates().filter(treasure=>!used.has(treasure.id));
-    if(!pool.length) pool=treasureOrderCandidates();
-    if(!pool.length) return createGemOrder(slot);
-
-    const treasure=pool[Math.floor(Math.random()*pool.length)];
-    const bonus=Math.max(130,Math.round(treasure.base*.72+90));
-
-    state.orderSequence++;
-    return {
-      id:uid(),
-      number:state.orderSequence,
-      slot,
-      kind:'treasure',
-      treasureId:treasure.id,
-      bonus,
-      createdAt:Date.now()
-    };
-  }
-
   function validOrder(order){
-    if(!order||typeof order!=='object') return false;
-    if(!Number.isInteger(order.slot)||order.slot<0||order.slot>=ORDER_SLOTS) return false;
-
-    if(order.kind==='gems'){
-      return Array.isArray(order.requirements)&&
-        order.requirements.length>0&&
-        order.requirements.every(item=>
-          item&&
-          Number.isInteger(item.tier)&&
-          item.tier>=0&&
-          item.tier<GEMS.length&&
-          Number.isInteger(item.qty)&&
-          item.qty>0
-        );
-    }
-
-    if(order.kind==='treasure'){
-      return !!treasureById(order.treasureId)&&copiesFor(order.treasureId).length>0;
-    }
-
-    return false;
-  }
-
-  function createOrder(slot){
-    const treasurePossible=treasureOrderCandidates().length>0;
-    const wantsTreasure=treasurePossible&&(slot===2||Math.random()<.22);
-    return wantsTreasure?createTreasureOrder(slot):createGemOrder(slot);
+    return !!order &&
+      order.kind==='gems' &&
+      Number.isInteger(order.slot) &&
+      order.slot===0 &&
+      Array.isArray(order.requirements) &&
+      order.requirements.length>0 &&
+      order.requirements.every(item=>
+        item &&
+        Number.isInteger(item.tier) &&
+        item.tier>=0 &&
+        item.tier<GEMS.length &&
+        Number.isInteger(item.qty) &&
+        item.qty>0
+      );
   }
 
   function ensureOrders(){
-    const previous=JSON.stringify(state.orders||[]);
-    const slots=new Map();
-
-    for(const order of state.orders||[]){
-      if(validOrder(order)&&!slots.has(order.slot)) slots.set(order.slot,order);
+    let order=(state.orders||[]).find(validOrder)||null;
+    if(!order){
+      order=createGemOrder(0);
+      state.orders=[order];
+      save();
+    }else if(state.orders.length!==1||state.orders[0]!==order){
+      state.orders=[order];
+      save();
     }
-
-    state.orders=[...slots.values()];
-    for(let slot=0;slot<ORDER_SLOTS;slot++){
-      if(!slots.has(slot)){
-        const order=createOrder(slot);
-        slots.set(slot,order);
-        state.orders.push(order);
-      }
-    }
-
-    state.orders.sort((a,b)=>a.slot-b.slot);
-    if(JSON.stringify(state.orders)!==previous) save();
+    return order;
   }
 
-  function completedCopyForTreasure(id){
-    const treasure=treasureById(id);
-    if(!treasure) return null;
-
-    const completed=copiesFor(id)
-      .filter(copy=>calculateValue(treasure,copy).full)
-      .sort((a,b)=>calculateValue(treasure,a).total-calculateValue(treasure,b).total);
-
-    return completed[0]||null;
+  function boardGemCounts(){
+    const scene=window.GemdropGameScene;
+    if(!scene||!scene.running||typeof scene.getDeliverableGemCounts!=='function'){
+      return Array(GEMS.length).fill(0);
+    }
+    return scene.getDeliverableGemCounts();
   }
 
-  function orderReady(order){
+  function orderReady(order=ensureOrders()){
     if(!order) return false;
-
-    if(order.kind==='gems'){
-      return order.requirements.every(item=>availableGemCount(item.tier)>=item.qty);
-    }
-
-    if(order.kind==='treasure'){
-      return !!completedCopyForTreasure(order.treasureId);
-    }
-
-    return false;
+    const counts=boardGemCounts();
+    return order.requirements.every(item=>(counts[item.tier]||0)>=item.qty);
   }
 
-  function orderTitle(order){
-    if(!order) return 'New commission';
-    if(order.kind==='treasure'){
-      const treasure=treasureById(order.treasureId);
-      return treasure?treasure.name+' commission':'Treasure commission';
-    }
-    if(order.requirements.length>1) return 'Mixed gem commission';
-    const gem=GEMS[order.requirements[0].tier];
-    return (gem?gem.name:'Gem')+' commission';
+  function orderTitle(order=ensureOrders()){
+    if(!order) return 'New order';
+    return order.requirements
+      .map(item=>item.qty+' '+GEMS[item.tier].name)
+      .join(' + ');
   }
 
-  function orderProgressLabel(order){
+  function orderProgressLabel(order=ensureOrders()){
     if(!order) return '';
-    if(order.kind==='treasure'){
-      const treasure=treasureById(order.treasureId);
-      return orderReady(order)
-        ? 'Ready to deliver'
-        : 'Complete one '+(treasure?treasure.name:'treasure')+' in the vault';
-    }
-
-    return order.requirements.map(item=>{
-      const have=Math.min(item.qty,availableGemCount(item.tier));
-      return have+'/'+item.qty+' '+GEMS[item.tier].name;
-    }).join(' · ');
+    const counts=boardGemCounts();
+    return order.requirements
+      .map(item=>Math.min(item.qty,counts[item.tier]||0)+'/'+item.qty)
+      .join('  ·  ');
   }
 
-  function orderRewardLabel(order){
-    if(!order) return '';
-    return order.kind==='treasure'
-      ? '+'+money(order.bonus)+' bonus'
-      : money(order.reward);
+  function orderRewardLabel(order=ensureOrders()){
+    return order?money(order.reward):money(0);
   }
 
   function renderHomeOrder(){
-    ensureOrders();
-
     const fund=$('homeFund');
     if(fund) fund.textContent=money(state.gold);
+  }
 
-    const card=$('homeOrderCard');
-    if(!card) return;
+  function syncOrderUI(){
+    const order=ensureOrders();
+    renderHomeOrder();
 
-    const order=state.orders.find(orderReady)||state.orders[0];
-    if(!order){
-      card.hidden=true;
-      return;
-    }
+    const hud=$('orderHud');
+    if(!hud||!order) return;
 
     const ready=orderReady(order);
-    let titleText='';
-    let progressText='';
+    const title=$('orderHudTitle');
+    const progress=$('orderHudProgress');
+    const action=$('orderHudAction');
+    const scene=window.GemdropGameScene;
+    const playing=!!(scene&&scene.running);
 
-    if(order.kind==='treasure'){
-      const treasure=treasureById(order.treasureId);
-      titleText=treasure?treasure.name:'Finished treasure';
-      progressText=ready?'Ready to deliver':'Finish it in the Treasure Vault';
-    }else{
-      titleText=order.requirements
-        .map(item=>item.qty+' '+GEMS[item.tier].name)
-        .join(' + ');
-      progressText=ready
-        ? 'Ready to deliver'
-        : order.requirements
-            .map(item=>Math.min(item.qty,availableGemCount(item.tier))+'/'+item.qty)
-            .join('  ·  ')+' collected';
+    if(title) title.textContent=orderTitle(order);
+    if(progress){
+      progress.textContent=playing
+        ? orderProgressLabel(order)+' on board'
+        : 'Play to fill · '+orderRewardLabel(order);
     }
+    if(action) action.textContent=ready?'DELIVER':orderRewardLabel(order);
 
-    card.hidden=false;
-    card.classList.toggle('ready',ready);
-    card.setAttribute('aria-label',"Jeweller's order. "+titleText+'. '+progressText);
-
-    const title=$('homeOrderTitle');
-    const progress=$('homeOrderProgress');
-    const reward=$('homeOrderReward');
-
-    if(title) title.textContent=titleText;
-    if(progress) progress.textContent=progressText;
-    if(reward) reward.textContent=orderRewardLabel(order);
+    hud.disabled=!ready;
+    hud.classList.toggle('ready',ready);
+    hud.setAttribute(
+      'aria-label',
+      "Jeweller order: "+orderTitle(order)+'. '+
+      (ready?'Ready to deliver for '+orderRewardLabel(order):orderProgressLabel(order)+' on board')
+    );
   }
 
   function renderOrderGemItem(item){
+    const counts=boardGemCounts();
     const row=document.createElement('div');
     row.className='order-item';
 
@@ -760,11 +702,11 @@
 
     const copy=document.createElement('span');
     copy.className='order-item__copy';
-    copy.innerHTML='<strong>'+GEMS[item.tier].name+'</strong><small>Requested gem</small>';
+    copy.innerHTML='<strong>'+GEMS[item.tier].name+'</strong><small>Keep this gem on the board</small>';
 
     const count=document.createElement('span');
     count.className='order-item__count';
-    const have=availableGemCount(item.tier);
+    const have=counts[item.tier]||0;
     count.textContent=Math.min(have,item.qty)+' / '+item.qty;
     count.classList.toggle('complete',have>=item.qty);
 
@@ -772,215 +714,174 @@
     return row;
   }
 
-  function renderOrderTreasureItem(order){
-    const treasure=treasureById(order.treasureId);
-    const row=document.createElement('div');
-    row.className='order-item order-item--treasure';
+  function treasureUnlockMessage(){
+    const next=nextLockedTreasure();
+    if(!next) return 'Treasure collection complete';
 
-    const art=document.createElement('span');
-    art.className='order-item__art order-item__art--treasure';
-    art.innerHTML=treasureSVG(treasure,false);
+    const index=TREASURES.indexOf(next);
+    const ordersNeeded=Math.max(0,(TREASURE_UNLOCK_ORDERS[index]||0)-state.ordersCompleted);
+    const tierNeeded=Math.max(0,next.minTier-state.highestTier);
 
-    const copy=document.createElement('span');
-    copy.className='order-item__copy';
-    copy.innerHTML='<strong>'+treasure.name+'</strong><small>Completed treasure</small>';
-
-    const count=document.createElement('span');
-    count.className='order-item__count';
-    count.textContent=orderReady(order)?'READY':'0 / 1';
-    count.classList.toggle('complete',orderReady(order));
-
-    row.append(art,copy,count);
-    return row;
+    if(ordersNeeded<=0&&tierNeeded<=0) return 'A new treasure is ready';
+    const parts=[];
+    if(ordersNeeded>0) parts.push(ordersNeeded+' more order'+(ordersNeeded===1?'':'s'));
+    if(tierNeeded>0) parts.push('reach '+GEMS[next.minTier].name);
+    return 'Next treasure: '+parts.join(' · ');
   }
 
   function renderOrders(){
     const root=$('orderBoard');
     if(!root) return;
 
-    ensureOrders();
+    const order=ensureOrders();
+    const ready=orderReady(order);
+    const scene=window.GemdropGameScene;
+    const playing=!!(scene&&scene.running);
+    const chestCost=treasureChestCost();
+    const newTreasure=undiscoveredEligibleTreasures()[0]||null;
+
     root.innerHTML='';
 
     const merchant=document.createElement('section');
-    merchant.className='order-merchant';
+    merchant.className='order-merchant order-merchant--simple';
     merchant.innerHTML=
       '<div class="order-merchant__mark"><i data-lucide="gem" aria-hidden="true"></i></div>'+
-      '<div class="order-merchant__copy"><span>THE JEWELLER</span><strong>Commissions</strong>'+
-      '<p>Bring requested gems or finished treasures. Use the fund to bring more treasure into the vault.</p></div>'+
+      '<div class="order-merchant__copy"><span>THE JEWELLER</span><strong>Fill orders on the board</strong>'+
+      '<p>Keep the requested gems on the play board, deliver them for coins, then spend those coins on new treasures.</p></div>'+
       '<div class="order-wallet"><span>VAULT FUND</span><strong>'+money(state.gold)+'</strong></div>';
     root.appendChild(merchant);
 
-    const spend=document.createElement('div');
-    spend.className='order-spend-grid';
+    const loop=document.createElement('div');
+    loop.className='order-loop';
+    loop.innerHTML=
+      '<span><i data-lucide="play" aria-hidden="true"></i><b>PLAY</b></span>'+
+      '<i data-lucide="chevron-right" aria-hidden="true"></i>'+
+      '<span><i data-lucide="scroll-text" aria-hidden="true"></i><b>ORDER</b></span>'+
+      '<i data-lucide="chevron-right" aria-hidden="true"></i>'+
+      '<span><i data-lucide="coins" aria-hidden="true"></i><b>COINS</b></span>'+
+      '<i data-lucide="chevron-right" aria-hidden="true"></i>'+
+      '<span><i data-lucide="crown" aria-hidden="true"></i><b>TREASURE</b></span>';
+    root.appendChild(loop);
 
-    const chestButton=document.createElement('button');
-    chestButton.type='button';
-    chestButton.className='order-spend-card';
-    chestButton.disabled=state.gold<TREASURE_DELIVERY_COST;
-    chestButton.innerHTML=
-      '<span class="order-spend-card__icon"><i data-lucide="package-open" aria-hidden="true"></i></span>'+
-      '<span><strong>Treasure delivery</strong><small>Buy one random treasure chest</small></span>'+
-      '<b>'+money(TREASURE_DELIVERY_COST)+'</b>';
-    chestButton.addEventListener('click',buyTreasureDelivery);
-
-    const refreshButton=document.createElement('button');
-    refreshButton.type='button';
-    refreshButton.className='order-spend-card';
-    refreshButton.disabled=state.gold<ORDER_REFRESH_COST;
-    refreshButton.innerHTML=
-      '<span class="order-spend-card__icon"><i data-lucide="refresh-cw" aria-hidden="true"></i></span>'+
-      '<span><strong>New commissions</strong><small>Replace all three requests</small></span>'+
-      '<b>'+money(ORDER_REFRESH_COST)+'</b>';
-    refreshButton.addEventListener('click',refreshOrders);
-
-    spend.append(chestButton,refreshButton);
-    root.appendChild(spend);
-
-    const heading=document.createElement('div');
-    heading.className='order-section-heading';
-    heading.innerHTML='<span>OPEN ORDERS</span><strong>'+state.orders.length+'</strong>';
-    root.appendChild(heading);
-
-    const list=document.createElement('div');
-    list.className='order-list';
-
-    state.orders.forEach(order=>{
-      const ready=orderReady(order);
-      const card=document.createElement('article');
-      card.className='order-card'+(ready?' ready':'');
-      card.dataset.orderId=order.id;
-
-      const header=document.createElement('header');
-      header.className='order-card__header';
-      header.innerHTML=
-        '<span>ORDER '+String(order.number).padStart(3,'0')+'</span>'+
+    const current=document.createElement('article');
+    current.className='order-card order-card--current'+(ready?' ready':'');
+    current.innerHTML=
+      '<header class="order-card__header">'+
+        '<span>CURRENT ORDER</span>'+
         '<strong>'+orderTitle(order)+'</strong>'+
-        '<b>'+orderRewardLabel(order)+'</b>';
-      card.appendChild(header);
+        '<b>'+orderRewardLabel(order)+'</b>'+
+      '</header>';
 
-      const items=document.createElement('div');
-      items.className='order-items';
-      if(order.kind==='gems'){
-        order.requirements.forEach(item=>items.appendChild(renderOrderGemItem(item)));
-      }else{
-        items.appendChild(renderOrderTreasureItem(order));
-      }
-      card.appendChild(items);
+    const items=document.createElement('div');
+    items.className='order-items';
+    order.requirements.forEach(item=>items.appendChild(renderOrderGemItem(item)));
+    current.appendChild(items);
 
-      const action=document.createElement('button');
-      action.type='button';
-      action.className='order-deliver'+(ready?' ready':'');
-      if(order.kind==='treasure'&&!ready){
-        action.innerHTML='<i data-lucide="crown" aria-hidden="true"></i><span>OPEN TREASURE</span>';
-        action.addEventListener('click',()=>openTreasureDetail(order.treasureId));
-      }else{
-        action.disabled=!ready;
-        action.innerHTML=ready
-          ? '<i data-lucide="package-check" aria-hidden="true"></i><span>DELIVER ORDER</span>'
-          : '<i data-lucide="circle-dashed" aria-hidden="true"></i><span>KEEP COLLECTING</span>';
-        if(ready) action.addEventListener('click',()=>fulfillOrder(order.id));
-      }
-      card.appendChild(action);
-      list.appendChild(card);
-    });
+    const deliver=document.createElement('button');
+    deliver.type='button';
+    deliver.className='order-deliver'+(ready?' ready':'');
+    deliver.disabled=!ready;
+    deliver.innerHTML=ready
+      ? '<i data-lucide="package-check" aria-hidden="true"></i><span>DELIVER FOR '+orderRewardLabel(order)+'</span>'
+      : '<i data-lucide="circle-dashed" aria-hidden="true"></i><span>'+(playing?'KEEP MERGING':'PLAY TO FILL ORDER')+'</span>';
+    if(ready) deliver.addEventListener('click',()=>fulfillOrder(order.id));
+    current.appendChild(deliver);
 
-    root.appendChild(list);
+    const reroll=document.createElement('button');
+    reroll.type='button';
+    reroll.className='order-reroll';
+    reroll.disabled=state.gold<ORDER_REFRESH_COST;
+    reroll.innerHTML='<i data-lucide="refresh-cw" aria-hidden="true"></i><span>NEW ORDER</span><b>'+money(ORDER_REFRESH_COST)+'</b>';
+    reroll.addEventListener('click',refreshOrders);
+    current.appendChild(reroll);
+    root.appendChild(current);
+
+    const treasure=document.createElement('section');
+    treasure.className='order-treasure-goal';
+    treasure.innerHTML=
+      '<div class="order-treasure-goal__art"><img src="assets/treasures/chest-closed.png?v=20260923-opt1" alt=""></div>'+
+      '<div class="order-treasure-goal__copy"><span>TREASURE COLLECTION</span>'+
+        '<strong>'+(newTreasure?'Open a new treasure':'Keep progressing')+'</strong>'+
+        '<p>'+treasureUnlockMessage()+'</p></div>'+
+      '<button id="buyTreasureButton" type="button" '+((!newTreasure||state.gold<chestCost)?'disabled':'')+'>'+
+        '<span>'+(newTreasure?'OPEN CHEST':'LOCKED')+'</span><b>'+money(chestCost)+'</b>'+
+      '</button>';
+    root.appendChild(treasure);
+
+    const chestButton=treasure.querySelector('#buyTreasureButton');
+    if(chestButton&&newTreasure) chestButton.addEventListener('click',buyTreasureDelivery);
+
+    const stats=document.createElement('div');
+    stats.className='order-stats';
+    stats.innerHTML=
+      '<div><span>ORDERS FILLED</span><strong>'+state.ordersCompleted+'</strong></div>'+
+      '<div><span>TREASURES</span><strong>'+state.discoveredTreasures.length+' / '+TREASURES.length+'</strong></div>';
+    root.appendChild(stats);
 
     const progress=$('collectionProgress');
     if(progress){
-      progress.textContent=state.orders.length+' OPEN';
+      progress.textContent=state.ordersCompleted+' FILLED';
       progress.classList.remove('complete');
     }
 
-    renderHomeOrder();
+    syncOrderUI();
     refreshIcons();
   }
 
-  function orderButtonFeedback(selector){
-    const button=document.querySelector(selector);
-    if(!button) return;
-    button.classList.remove('shake');
-    void button.offsetWidth;
-    button.classList.add('shake');
-  }
-
   function fulfillOrder(orderId){
-    ensureOrders();
-    const order=state.orders.find(item=>item.id===orderId);
-    if(!order||!orderReady(order)) return;
+    const order=ensureOrders();
+    if(!order||order.id!==orderId||!orderReady(order)) return false;
 
-    let payout=0;
+    const scene=window.GemdropGameScene;
+    if(!scene||!scene.running||typeof scene.consumeGemsForOrder!=='function') return false;
+    if(!scene.consumeGemsForOrder(order.requirements)) return false;
 
-    if(order.kind==='gems'){
-      for(const item of order.requirements){
-        if(availableGemCount(item.tier)<item.qty) return;
-      }
-      for(const item of order.requirements){
-        state.gemCounts[item.tier]=Math.max(0,(state.gemCounts[item.tier]||0)-item.qty);
-      }
-      payout=order.reward;
-    }else{
-      const treasure=treasureById(order.treasureId);
-      const copy=completedCopyForTreasure(order.treasureId);
-      if(!treasure||!copy) return;
-
-      const calc=calculateValue(treasure,copy);
-      for(const tier of copy.inlays){
-        if(Number.isInteger(tier)){
-          state.gemCounts[tier]=Math.max(0,(state.gemCounts[tier]||0)-1);
-        }
-      }
-
-      const index=state.treasures.findIndex(item=>item.uid===copy.uid);
-      if(index>=0) state.treasures.splice(index,1);
-
-      payout=calc.total+order.bonus;
-      state.lifetimeTreasureSales+=payout;
-      state.treasureRecords[treasure.id]=Math.max(state.treasureRecords[treasure.id]||0,calc.total);
-    }
-
+    const payout=order.reward;
     state.gold+=payout;
     state.ordersCompleted++;
-    state.orders=state.orders.filter(item=>item.id!==order.id);
+    state.orders=[];
     ensureOrders();
     save();
 
-    updateGemBadges();
-    renderTreasureCollection();
-    renderOrders();
-    renderHomeOrder();
+    syncOrderUI();
+    if($('orderBoard')&&!$('orderBoard').hidden) renderOrders();
 
+    if(typeof scene.noteOrderComplete==='function') scene.noteOrderComplete(payout);
     if(window.GemdropNative) window.GemdropNative.notify('success');
-    else if(navigator.vibrate) navigator.vibrate([14,18,20]);
+    return true;
   }
 
   function buyTreasureDelivery(){
-    if(state.gold<TREASURE_DELIVERY_COST){
-      orderButtonFeedback('#orderBoard .order-spend-card');
-      return;
+    const candidate=undiscoveredEligibleTreasures()[0]||null;
+    const cost=treasureChestCost();
+    if(!candidate||state.gold<cost) return false;
+
+    state.gold-=cost;
+    save();
+    const claimed=claimTreasure('purchase');
+    if(!claimed){
+      state.gold+=cost;
+      save();
+      return false;
     }
 
-    state.gold-=TREASURE_DELIVERY_COST;
-    save();
-    claimTreasure('purchase');
+    syncOrderUI();
     renderOrders();
-    renderHomeOrder();
+    return true;
   }
 
   function refreshOrders(){
-    if(state.gold<ORDER_REFRESH_COST){
-      orderButtonFeedback('#orderBoard .order-spend-card:last-child');
-      return;
-    }
+    if(state.gold<ORDER_REFRESH_COST) return false;
 
     state.gold-=ORDER_REFRESH_COST;
     state.orders=[];
     ensureOrders();
     save();
+    syncOrderUI();
     renderOrders();
-    renderHomeOrder();
 
     if(window.GemdropNative) window.GemdropNative.haptic([8,14,8]);
+    return true;
   }
 
   let rewardTimers=[];
@@ -1167,12 +1068,12 @@
     rewardAnimationFrame=window.requestAnimationFrame(frame);
   }
 
-  function claimTreasure(source='meter'){
-    const purchased=source==='purchase';
-    if(!purchased&&state.chest<CHEST_TARGET) return;
+  function claimTreasure(source='purchase'){
+    if(source!=='purchase') return null;
     const treasure=randomTreasure();
+    if(!treasure) return null;
     const copy=addTreasure(treasure);
-    if(!purchased) state.chest=0;
+    if(!copy) return null;
     rewardCopyUid=copy.uid;
     const scene=window.GemdropGameScene;
     if(scene&&scene.running&&typeof scene.noteTreasureClaim==='function'){
@@ -1222,6 +1123,7 @@
     },revealAt));
 
     refreshIcons();
+    return treasure;
   }
 
   function closeReward(resume=true){
@@ -1272,7 +1174,7 @@
       ? 'Gem Showcase'
       : treasures
         ? 'Treasure Vault'
-        : 'Jeweller Orders';
+        : 'Jeweller';
 
     if(gems){
       const unlocked=window.GemdropGameScene?window.GemdropGameScene.unlockedTiers.size:1;
@@ -1292,22 +1194,20 @@
   function treasureCollectionCard(treasure){
     const discovered=state.discoveredTreasures.includes(treasure.id);
     const copies=copiesFor(treasure.id);
-    const completed=copies.filter(c=>calculateValue(treasure,c).full).length;
     const button=document.createElement('button');
     button.type='button';
     button.className='treasure-card rarity-'+rarityClass(treasure.rarity)+(discovered?'':' locked');
     button.dataset.treasureId=treasure.id;
-    button.disabled=!copies.length;
-    button.setAttribute('aria-label',discovered?treasure.name+', '+copies.length+' owned':'Undiscovered treasure');
+    button.disabled=!discovered||!copies.length;
+    button.setAttribute('aria-label',discovered?treasure.name+', collected':'Undiscovered treasure');
     button.innerHTML=
       '<div class="treasure-card__art">'+treasureSVG(treasure,!discovered)+'</div>'+
       '<div class="treasure-card__meta">'+
         '<strong>'+(discovered?treasure.name:'Undiscovered')+'</strong>'+
         '<span class="treasure-card__rarity">'+(discovered?treasure.rarity:'???')+'</span>'+
-        '<span class="treasure-card__count">'+(discovered?'×'+copies.length:'')+'</span>'+
-        (completed?'<span class="treasure-card__complete"><span>'+completed+' finished</span>'+(state.treasureRecords[treasure.id]?'<span>Best '+money(state.treasureRecords[treasure.id])+'</span>':'')+'</span>':'')+
+        (discovered?'<span class="treasure-card__collected">COLLECTED</span>':'')+
       '</div>';
-    if(copies.length) button.addEventListener('click',()=>openTreasureDetail(treasure.id));
+    if(discovered&&copies.length) button.addEventListener('click',()=>openTreasureDetail(treasure.id));
     return button;
   }
 
@@ -1327,19 +1227,23 @@
   function renderTreasureCollection(){
     const root=$('treasureCollection');
     if(!root) return;
-    root.innerHTML=themeMarkup();
+    root.innerHTML='';
+
+    const intro=document.createElement('div');
+    intro.className='treasure-collection-intro';
+    intro.innerHTML='<strong>Treasure Collection</strong><span>Fill Jeweller orders, earn coins, and use those coins to open new treasure chests.</span>';
+    root.appendChild(intro);
+
     const grid=document.createElement('div');
     grid.className='treasure-grid';
     TREASURES.forEach(t=>grid.appendChild(treasureCollectionCard(t)));
     root.appendChild(grid);
+
     const complete=state.discoveredTreasures.length>=TREASURES.length;
     $('collectionProgress').textContent=complete
       ? TREASURES.length+' / '+TREASURES.length+' · COMPLETE'
       : state.discoveredTreasures.length+' / '+TREASURES.length;
     $('collectionProgress').classList.toggle('complete',complete);
-    root.querySelectorAll('.vault-theme').forEach(button=>{
-      button.addEventListener('click',()=>handleTheme(button.dataset.themeId));
-    });
     refreshIcons();
   }
 
@@ -1501,72 +1405,18 @@
     const copy=getCurrentCopy();
     if(!treasure||!copy) return;
 
-    const copies=copiesFor(treasure.id);
-    const calc=calculateValue(treasure,copy);
     $('treasureDetailRarity').textContent=treasure.rarity.toUpperCase();
     $('treasureDetailTitle').textContent=treasure.name;
     $('treasureDetailDescription').textContent=treasure.description;
-    $('treasureCopyCount').textContent=(currentCopyIndex+1)+' / '+copies.length;
+    $('treasureCopyCount').textContent='COLLECTED';
     $('treasureDetailFill').innerHTML=treasureFillSVG(treasure);
     $('treasureDetailArt').innerHTML=treasureSVG(treasure,false,false);
-    $('treasureBaseValue').textContent=money(treasure.base);
-    $('treasureGemValue').textContent=money(calc.gemValue);
-
-    const known=!calc.combo.hidden||state.comboDiscoveries.includes(calc.combo.id);
-    $('treasureBonusLabel').textContent=known?calc.combo.name:'Mystery setting';
-    $('treasureMultiplier').textContent='×'+calc.combo.multiplier.toFixed(2);
-    $('treasureTotalValue').textContent=money(calc.total);
-    $('treasureCopyStatus').textContent=calc.full
-      ? 'Complete · '+(copy.completionBonus?money(copy.completionBonus)+' completion bonus earned · ':'')+'keep it or sell it'
-      : copies.length>1
-        ? 'Duplicate copy · fill it, keep it, or salvage it'
-        : 'Tap a setting to choose a gem';
+    $('treasureSockets').innerHTML='';
+    $('treasureCopyStatus').textContent='Collected treasure';
+    $('sellTreasureButton').hidden=true;
 
     const copyNav=document.querySelector('.treasure-copy-nav');
-    if(copyNav) copyNav.hidden=copies.length<2;
-    $('treasurePrevCopy').disabled=copies.length<2;
-    $('treasureNextCopy').disabled=copies.length<2;
-
-    const socketRoot=$('treasureSockets');
-    socketRoot.innerHTML='';
-    treasure.sockets.forEach((socket,index)=>{
-      const tier=copy.inlays[index];
-      const button=document.createElement('button');
-      button.type='button';
-      button.className='treasure-socket'+(Number.isInteger(tier)?' filled':'');
-      const socketWidth=Number(socket.width)||Number(socket.size)||40;
-      const socketHeight=Number(socket.height)||Number(socket.size)||40;
-      const socketRotation=Number(socket.rotation)||0;
-
-      // Filled gems and no-inlay.png use this exact same authored frame.
-      // There is no separate empty-state sizing or positioning.
-      button.style.left=(socket.x/3.2)+'%';
-      button.style.top=(socket.y/2.6)+'%';
-      button.style.width=(socketWidth/3.2)+'%';
-      button.style.height=(socketHeight/2.6)+'%';
-      button.style.setProperty('--socket-rotation',socketRotation+'deg');
-      button.dataset.socketX=String(socket.x);
-      button.dataset.socketY=String(socket.y);
-      button.dataset.socketWidth=String(socketWidth);
-      button.dataset.socketHeight=String(socketHeight);
-      button.dataset.cut=socket.cut;
-      button.setAttribute('aria-label',Number.isInteger(tier)
-        ? 'Change '+GEMS[tier].name+' '+CUT_LABELS[socket.cut]+' inlay'
-        : 'Choose a '+CUT_LABELS[socket.cut]+' gem');
-      renderSocketArt(button,socket,tier);
-      button.addEventListener('click',()=>openGemPicker(index));
-      socketRoot.appendChild(button);
-    });
-
-    const sell=$('sellTreasureButton');
-    const duplicate=copies.length>1;
-    const salvage=Math.max(10,Math.round(treasure.base*.55));
-    sell.hidden=!calc.full&&!duplicate;
-    if(calc.full){
-      sell.querySelector('span').textContent='SELL FOR '+money(calc.total);
-    }else if(duplicate){
-      sell.querySelector('span').textContent='SALVAGE DUPLICATE · '+money(salvage);
-    }
+    if(copyNav) copyNav.hidden=true;
     refreshIcons();
   }
 
@@ -1741,15 +1591,15 @@
   }
 
   function bind(){
-    const meter=$('treasureMeter');
-    if(meter) meter.addEventListener('click',claimTreasure);
+    const orderHud=$('orderHud');
+    if(orderHud) orderHud.addEventListener('click',()=>{
+      const order=ensureOrders();
+      if(orderReady(order)) fulfillOrder(order.id);
+    });
 
     $('collectionTabGems').addEventListener('click',()=>selectCollectionTab('gems'));
     $('collectionTabTreasures').addEventListener('click',()=>selectCollectionTab('treasures'));
     $('collectionTabOrders').addEventListener('click',()=>selectCollectionTab('orders'));
-
-    const homeOrder=$('homeOrderCard');
-    if(homeOrder) homeOrder.addEventListener('click',()=>showCollection('orders'));
 
     $('treasureRewardClose').addEventListener('click',()=>closeReward(true));
     $('treasureRewardView').addEventListener('click',()=>closeReward(true));
@@ -1773,10 +1623,10 @@
     applyTheme();
     ensureOrders();
     bind();
-    updateMeter();
     renderTreasureCollection();
     renderOrders();
     renderHomeOrder();
+    syncOrderUI();
     refreshIcons();
   }
 
@@ -1789,6 +1639,7 @@
     getTreasureCount:()=>TREASURES.length,
     getGemCount:tier=>state.gemCounts[tier]||0,
     updateGemBadges,
+    syncOrderUI,
     showCollection,
     selectCollectionTab,
     renderTreasureCollection,

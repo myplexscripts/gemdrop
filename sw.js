@@ -1,6 +1,6 @@
 // Gem Drop service worker: the game shell is precached on install so the
 // game launches offline; everything else is cached the first time it loads.
-const VERSION='gemdrop-v0.10.1-1';
+const VERSION='gemdrop-v0.11.0-1';
 const CORE=[
   './',
   'index.html',

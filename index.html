@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="preload" href="vendor/fonts/fredoka-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="vendor/fonts/fonts.css" />
-  <link rel="stylesheet" href="styles.css?v=20260925-economy3" />
+  <link rel="stylesheet" href="styles.css?v=20260925-economy5" />
 </head>
 <body>
   <div id="rotateOverlay" class="rotate-overlay" role="alertdialog" aria-hidden="true" aria-labelledby="rotateTitle">
@@ -66,13 +66,14 @@
         <i data-lucide="menu" aria-hidden="true"></i>
       </button>
 
-      <button id="treasureMeter" class="treasure-meter" type="button" aria-label="Treasure chest progress" aria-disabled="true">
-        <span class="treasure-meter__track" aria-hidden="true">
-          <span id="treasureMeterFill" class="treasure-meter__fill"></span>
+      <button id="orderHud" class="order-hud" type="button" aria-label="Jeweller order" disabled>
+        <span class="order-hud__icon" aria-hidden="true"><i data-lucide="scroll-text"></i></span>
+        <span class="order-hud__copy">
+          <small>JEWELLER</small>
+          <strong id="orderHudTitle">2 Quartz</strong>
+          <span id="orderHudProgress">Play to fill</span>
         </span>
-        <span class="treasure-meter__chest" aria-hidden="true">
-          <img src="assets/treasures/chest-closed.png?v=20260923-opt1" alt="">
-        </span>
+        <b id="orderHudAction" class="order-hud__action">$0</b>
       </button>
 
       <div class="score">
@@ -164,22 +165,10 @@
           </button>
         </div>
 
-        <button id="homeOrderCard" class="home-order-card" type="button" hidden>
-          <span class="home-order-icon" aria-hidden="true"><i data-lucide="scroll-text"></i></span>
-          <span class="home-order-copy">
-            <small>JEWELLER'S ORDER</small>
-            <strong id="homeOrderTitle">Current commission</strong>
-            <span id="homeOrderProgress">Open orders</span>
-          </span>
-          <span class="home-order-side">
-            <b id="homeOrderReward" class="home-order-reward">$0</b>
-            <i data-lucide="chevron-right" aria-hidden="true"></i>
-          </span>
-        </button>
 
       </div>
 
-      <div class="start-version" aria-label="Game version">v0.10.1</div>
+      <div class="start-version" aria-label="Game version">v0.11.0</div>
     </div>
   </section>
 
@@ -203,7 +192,7 @@
           <i data-lucide="crown" aria-hidden="true"></i><span>Treasures</span>
         </button>
         <button id="collectionTabOrders" class="collection-tab" type="button" aria-selected="false">
-          <i data-lucide="scroll-text" aria-hidden="true"></i><span>Orders</span>
+          <i data-lucide="store" aria-hidden="true"></i><span>Jeweller</span>
         </button>
       </nav>
       <div id="gemCollection" class="gem-collection" aria-label="Gem showcase"></div>
@@ -444,7 +433,7 @@
 
       <section class="run-haul" aria-labelledby="runHaulTitle">
         <div class="run-section-heading">
-          <span id="runHaulTitle">GEMS EARNED</span>
+          <span id="runHaulTitle">GEMS CREATED</span>
           <strong id="runGemTotal">0</strong>
         </div>
         <div id="runGemHaul" class="run-gem-haul"></div>
@@ -471,9 +460,9 @@
   <script src="reactive-gem-system.js?v=20260923-richgems1"></script>
   <script>if (window.lucide) window.lucide.createIcons({attrs:{"stroke-width":1.9}});</script>
   <script src="native.js?v=20260926-feedback1"></script>
-  <script src="meta.js?v=20260925-economy3"></script>
+  <script src="meta.js?v=20260925-economy5"></script>
   <script>window.GemdropBoot&&window.GemdropBoot.progress(.3,'Cutting facets…');</script>
-  <script src="game.js?v=20260925-economy3"></script>
+  <script src="game.js?v=20260925-economy5"></script>
   <script>
     if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())){
       window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });

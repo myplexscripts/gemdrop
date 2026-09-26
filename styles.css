@@ -9787,3 +9787,359 @@ body.is-sideways .game-app,body.is-sideways .overlay{visibility:hidden}
     min-width:58px;
   }
 }
+
+
+/* === MERGE-GAME ECONOMY V5 2026-09-25 === */
+
+.hud{
+  grid-template-columns:48px minmax(0,1fr) auto!important;
+  gap:8px!important;
+}
+.order-hud{
+  min-width:0;
+  min-height:56px;
+  padding:6px 9px 6px 7px;
+  border:1px solid rgba(255,219,145,.14);
+  border-radius:18px;
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  text-align:left;
+  color:#f5e9f5;
+  background:rgba(40,13,50,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+.order-hud:disabled{
+  opacity:1;
+}
+.order-hud.ready{
+  border-color:rgba(255,211,102,.40);
+  background:linear-gradient(180deg,rgba(79,40,58,.92),rgba(44,19,42,.94));
+  box-shadow:
+    0 0 18px rgba(255,190,66,.09),
+    inset 0 1px 0 rgba(255,255,255,.07);
+}
+.order-hud.ready:active{
+  transform:scale(.99);
+}
+.order-hud__icon{
+  width:38px;
+  height:38px;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  color:#ffd36c;
+  background:rgba(255,255,255,.055);
+}
+.order-hud__icon svg{
+  width:19px;
+  height:19px;
+}
+.order-hud__copy{
+  min-width:0;
+  display:grid;
+  gap:0;
+}
+.order-hud__copy small{
+  font-size:14px;
+  line-height:1.05;
+  font-weight:900;
+  letter-spacing:.055em;
+  color:#9f8aa7;
+}
+.order-hud__copy strong{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:14px;
+  line-height:1.18;
+  color:#fff0d2;
+}
+.order-hud__copy>span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:14px;
+  line-height:1.15;
+  color:#bba8c1;
+}
+.order-hud__action{
+  min-width:58px;
+  text-align:right;
+  font-size:14px;
+  color:#ffd36c;
+}
+.order-hud.ready .order-hud__action{
+  color:#ffe5a5;
+}
+
+.gem-card__count{
+  display:none!important;
+}
+
+.order-loop{
+  min-height:66px;
+  margin:10px 0;
+  padding:9px 10px;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,222,165,.09);
+}
+.order-loop>span{
+  min-width:0;
+  display:grid;
+  justify-items:center;
+  gap:3px;
+  color:#d5c3d9;
+}
+.order-loop>span svg{
+  width:20px;
+  height:20px;
+  color:#ffd36d;
+}
+.order-loop>span b{
+  font-size:14px;
+  line-height:1;
+  letter-spacing:.045em;
+}
+.order-loop>svg{
+  width:16px;
+  height:16px;
+  flex:none;
+  color:#735f78;
+}
+.order-card--current{
+  margin-top:0;
+}
+.order-reroll{
+  width:100%;
+  min-height:44px;
+  margin-top:7px;
+  padding:0 12px;
+  border:0;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  color:#bca9c2;
+  background:transparent;
+  font-size:14px;
+  font-weight:800;
+}
+.order-reroll svg{
+  width:18px;
+  height:18px;
+}
+.order-reroll b{
+  color:#d9bd80;
+}
+.order-reroll:disabled{
+  opacity:.4;
+}
+
+.order-treasure-goal{
+  min-height:112px;
+  margin-top:10px;
+  padding:11px;
+  border-radius:22px;
+  display:grid;
+  grid-template-columns:66px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  background:
+    radial-gradient(circle at 0 50%,rgba(255,184,65,.08),transparent 34%),
+    rgba(255,255,255,.038);
+  border:1px solid rgba(255,220,153,.12);
+}
+.order-treasure-goal__art{
+  width:66px;
+  height:66px;
+  display:grid;
+  place-items:center;
+}
+.order-treasure-goal__art img{
+  width:62px;
+  height:62px;
+  object-fit:contain;
+}
+.order-treasure-goal__copy{
+  min-width:0;
+}
+.order-treasure-goal__copy>span{
+  display:block;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.06em;
+  color:#a993af;
+}
+.order-treasure-goal__copy strong{
+  display:block;
+  margin-top:2px;
+  font-size:16px;
+  color:#fff0d1;
+}
+.order-treasure-goal__copy p{
+  margin:4px 0 0;
+  font-size:14px;
+  line-height:1.28;
+  color:#baa7c0;
+}
+.order-treasure-goal button{
+  min-width:104px;
+  min-height:48px;
+  padding:6px 10px;
+  border:0;
+  border-radius:15px;
+  display:grid;
+  place-items:center;
+  color:#32121c;
+  background:linear-gradient(180deg,#ffe07f,#efa137);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.46);
+}
+.order-treasure-goal button:disabled{
+  color:#8f7b93;
+  background:rgba(255,255,255,.05);
+  box-shadow:none;
+}
+.order-treasure-goal button span,
+.order-treasure-goal button b{
+  font-size:14px;
+}
+.order-treasure-goal button b{
+  color:inherit;
+}
+
+.order-stats{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.order-stats>div{
+  min-height:62px;
+  padding:9px 10px;
+  border-radius:18px;
+  display:grid;
+  align-content:center;
+  justify-items:center;
+  background:rgba(255,255,255,.028);
+  border:1px solid rgba(255,255,255,.055);
+}
+.order-stats span{
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.055em;
+  color:#9f8ba5;
+}
+.order-stats strong{
+  margin-top:3px;
+  font-size:19px;
+  color:#f5e8f5;
+}
+
+.treasure-collection-intro{
+  margin:0 2px 12px;
+  padding:13px 14px;
+  border-radius:20px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,220,153,.10);
+}
+.treasure-collection-intro strong,
+.treasure-collection-intro span{
+  display:block;
+}
+.treasure-collection-intro strong{
+  font-size:17px;
+  color:#fff0d2;
+}
+.treasure-collection-intro span{
+  margin-top:4px;
+  font-size:14px;
+  line-height:1.4;
+  color:#b6a3bc;
+}
+.treasure-card__collected{
+  display:inline-flex;
+  width:max-content;
+  margin-top:6px;
+  min-height:28px;
+  padding:0 8px;
+  border-radius:10px;
+  align-items:center;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.055em;
+  color:#ffe39a;
+  background:rgba(120,78,28,.24);
+}
+
+/* Treasure is now the long-term collection reward, not a second crafting game. */
+.treasure-detail-fill,
+.treasure-sockets,
+.treasure-copy-nav,
+.treasure-value-panel,
+.treasure-sell,
+.gem-picker-overlay{
+  display:none!important;
+}
+.treasure-detail-body{
+  justify-content:flex-start;
+}
+.treasure-detail-description{
+  max-width:390px;
+  margin:12px auto 0!important;
+  padding:0 16px;
+  text-align:center;
+  font-size:15px!important;
+  line-height:1.5;
+}
+.treasure-display{
+  margin-top:18px;
+}
+
+@media(max-width:390px){
+  .hud{
+    grid-template-columns:44px minmax(0,1fr) 78px!important;
+    gap:6px!important;
+    padding-left:9px!important;
+    padding-right:9px!important;
+  }
+  .order-hud{
+    min-height:54px;
+    grid-template-columns:34px minmax(0,1fr) auto;
+    padding-left:6px;
+    padding-right:7px;
+    gap:6px;
+  }
+  .order-hud__icon{
+    width:34px;
+    height:34px;
+    border-radius:12px;
+  }
+  .order-hud__action{
+    min-width:52px;
+  }
+  .order-treasure-goal{
+    grid-template-columns:58px minmax(0,1fr);
+  }
+  .order-treasure-goal__art{
+    width:58px;
+    height:58px;
+  }
+  .order-treasure-goal__art img{
+    width:56px;
+    height:56px;
+  }
+  .order-treasure-goal button{
+    grid-column:1 / -1;
+    width:100%;
+  }
+}

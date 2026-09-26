@@ -195,12 +195,65 @@ def orders_screen(driver):
     WebDriverWait(driver, 10).until(
         lambda d: d.execute_script("""
           const board=document.getElementById('orderBoard');
-          return board && !board.hidden && board.querySelectorAll('.order-card').length === 3;
+          return board && !board.hidden &&
+            board.querySelectorAll('.order-card--current').length === 1 &&
+            board.querySelectorAll('.order-treasure-goal').length === 1;
         """)
     )
     assert driver.execute_script("return document.getElementById('collectionTabOrders').getAttribute('aria-selected')") == "true"
     time.sleep(0.25)
     save(driver, "06-jeweller-orders.png")
+
+def economy_loop(driver):
+    driver.get(ROOT + "/index.html")
+    load_game(driver)
+    driver.execute_script("""
+      const s=window.GemdropGameScene;
+      const state=window.GemdropMeta.getState();
+      state.gold=0;
+      state.ordersCompleted=0;
+      state.orderSequence=999;
+      state.orders=[{
+        id:'test-order',
+        number:999,
+        slot:0,
+        kind:'gems',
+        requirements:[{tier:0,qty:1}],
+        reward:123,
+        createdAt:Date.now()
+      }];
+      state.gemCounts=Array(20).fill(0);
+
+      const M=Phaser.Physics.Matter.Matter;
+      const gem=s.createGem(220,650,0);
+      M.Body.setStatic(gem.body,true);
+      gem.born=s.time.now-1000;
+      s.dropGateGem=null;
+      window.GemdropMeta.syncOrderUI();
+    """)
+    WebDriverWait(driver, 10).until(
+        lambda d: d.execute_script("return document.getElementById('orderHud').classList.contains('ready')")
+    )
+    driver.find_element(By.ID, "orderHud").click()
+    WebDriverWait(driver, 10).until(
+        lambda d: d.execute_script("return window.GemdropMeta.getState().ordersCompleted === 1")
+    )
+    result=driver.execute_script("""
+      const state=window.GemdropMeta.getState();
+      const before=state.gemCounts.reduce((a,b)=>a+b,0);
+      window.GemdropMeta.onMerge(0,1,{resultTier:1});
+      const after=state.gemCounts.reduce((a,b)=>a+b,0);
+      return {
+        gold:state.gold,
+        before,
+        after,
+        quartzOnBoard:window.GemdropGameScene.getDeliverableGemCounts()[0]
+      };
+    """)
+    assert result["gold"] == 123
+    assert result["before"] == 0
+    assert result["after"] == 0
+    assert result["quartzOnBoard"] == 0
 
 def tutorial_screen(driver):
     driver.get(ROOT + "/index.html")
@@ -230,6 +283,7 @@ def main():
         run_summary(driver)
         performance_stress(driver)
         orders_screen(driver)
+        economy_loop(driver)
         tutorial_screen(driver)
     finally:
         driver.quit()

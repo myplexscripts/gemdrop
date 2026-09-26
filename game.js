@@ -333,8 +333,8 @@
     },
     {
       key:'treasure',
-      title:'Fill the treasure chest.',
-      copy:'Merging fills the meter. Unlock treasures, set collected gems into them, then complete Jeweller orders for your vault fund.'
+      title:'Fill the Jeweller’s order.',
+      copy:'Keep the requested gems on the board, then tap Deliver. Orders pay coins, and coins open new treasure chests.'
     }
   ];
 
@@ -2326,16 +2326,11 @@
           value.className='gem-card__value';
           value.textContent='$'+fmt(t.score);
 
-          const count=document.createElement('span');
-          count.className='gem-card__count';
-          count.textContent='×'+(window.GemdropMeta?window.GemdropMeta.getGemCount(tier):0);
-
           const description=document.createElement('p');
           description.className='gem-card__description';
           description.textContent=t.description;
 
           meta.append(name,value,description);
-          art.appendChild(count);
         }else{
           const unknown=document.createElement('span');
           unknown.className='gem-card__unknown';
@@ -3101,6 +3096,71 @@
         this.createSpecialVisuals(gem,gem.specialType,tier,false);
       }
       return gem;
+    }
+
+    getDeliverableGems(tier=null) {
+      const now=this.time.now;
+      return this.gems.filter(gem=>
+        gem &&
+        gem.active &&
+        gem.body &&
+        gem.isGem &&
+        !gem.specialType &&
+        !gem.merging &&
+        !gem.dropTransit &&
+        gem!==this.dropGateGem &&
+        now-(gem.born||0)>=220 &&
+        (!Number.isFinite(gem.body.speed)||gem.body.speed<1.35) &&
+        (tier===null||gem.tier===tier)
+      );
+    }
+
+    getDeliverableGemCounts() {
+      const counts=Array(tiers.length).fill(0);
+      this.getDeliverableGems().forEach(gem=>{
+        if(Number.isInteger(gem.tier)&&gem.tier>=0&&gem.tier<counts.length) counts[gem.tier]++;
+      });
+      return counts;
+    }
+
+    consumeGemsForOrder(requirements=[]) {
+      if(!this.running||!Array.isArray(requirements)||!requirements.length) return false;
+
+      const selected=[];
+      for(const item of requirements){
+        const candidates=this.getDeliverableGems(item.tier)
+          .filter(gem=>!selected.includes(gem))
+          .sort((a,b)=>b.y-a.y);
+        if(candidates.length<item.qty) return false;
+        selected.push(...candidates.slice(0,item.qty));
+      }
+
+      const target=$('orderHud');
+      selected.forEach((gem,index)=>{
+        const source=this.scenePointToViewport(gem.x,gem.y);
+        if(source&&target){
+          this.emitHudTrail(source,target,tiers[gem.tier].color,4,index*42);
+        }
+        this.mergeBurst(gem.x,gem.y,tiers[gem.tier],1);
+        this.removeGem(gem);
+      });
+
+      haptic([10,16,18]);
+      return true;
+    }
+
+    noteOrderComplete(payout=0) {
+      this.floatText(
+        W/2,
+        LIMIT_Y+72,
+        'ORDER +$'+fmt(payout),
+        '#ffe0a0',
+        26,
+        {big:true,impact:3}
+      );
+      this.cameras.main.shake(82,.0022);
+      playFanfareSfx();
+      haptic([12,18,22]);
     }
 
     removeGem(gem) {
@@ -5631,6 +5691,10 @@
     update(time,delta) {
       const dt=Math.min(delta,34)/1000;
       this.monitorPerformance(time,delta);
+      if(window.GemdropMeta&&time>=(this.nextOrderUiSyncAt||0)){
+        this.nextOrderUiSyncAt=time+180;
+        if(typeof window.GemdropMeta.syncOrderUI==='function') window.GemdropMeta.syncOrderUI();
+      }
       this.updateHitStop(time);
       this.updateScoreDisplay(dt);
       this.animateGemLights(time);
