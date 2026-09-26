@@ -9658,3 +9658,132 @@ body.is-sideways .game-app,body.is-sideways .overlay{visibility:hidden}
     grid-template-columns:1fr;
   }
 }
+
+
+/* === HOME ORDER POLISH + CACHE FIX 2026-09-25 === */
+
+.start-overlay .start-menu{
+  width:min(420px,100%);
+  margin:34px 0 auto;
+}
+
+.home-stats{
+  width:min(286px,100%);
+  margin:0 auto 14px;
+  gap:8px;
+}
+.home-stat{
+  min-height:54px;
+  padding:8px 12px;
+  border-radius:17px;
+  background:rgba(18,7,25,.36);
+  border:1px solid rgba(255,226,165,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+.home-stat span{
+  font-size:14px;
+  letter-spacing:.055em;
+  color:rgba(222,207,225,.68);
+}
+.home-stat strong{
+  margin-top:2px;
+  font-size:20px;
+  color:#ffe19a;
+}
+
+.start-actions{
+  margin-bottom:10px;
+}
+
+.home-order-card{
+  width:100%;
+  min-height:66px;
+  margin:0;
+  padding:9px 10px;
+  border:1px solid rgba(255,225,166,.13);
+  border-radius:18px;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:10px;
+  color:#f5eaf6;
+  background:rgba(34,13,43,.58);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.home-order-card[hidden]{
+  display:none!important;
+}
+.home-order-card:active{
+  transform:scale(.992);
+}
+.home-order-card.ready{
+  border-color:rgba(255,209,103,.28);
+  background:rgba(50,24,49,.68);
+}
+.home-order-icon{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+  color:#ffd16a;
+}
+.home-order-icon svg{
+  width:20px;
+  height:20px;
+}
+.home-order-copy{
+  gap:1px;
+}
+.home-order-copy small{
+  font-size:14px;
+  letter-spacing:.06em;
+  color:#a993af;
+}
+.home-order-copy strong{
+  font-size:15px;
+  line-height:1.2;
+  color:#fff1d1;
+}
+.home-order-copy>span{
+  font-size:14px;
+  line-height:1.2;
+  color:#c2afc7;
+}
+.home-order-side{
+  min-width:64px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+}
+.home-order-side svg{
+  width:18px;
+  height:18px;
+  color:#8f7a96;
+}
+.home-order-reward{
+  min-width:0;
+  font-size:14px;
+  color:#ffd36c;
+}
+
+@media(max-width:390px){
+  .start-overlay .start-menu{
+    margin-top:26px;
+  }
+  .home-stats{
+    width:min(270px,100%);
+  }
+  .home-order-card{
+    grid-template-columns:40px minmax(0,1fr) auto;
+    padding-left:9px;
+    padding-right:8px;
+  }
+  .home-order-icon{
+    width:40px;
+    height:40px;
+  }
+  .home-order-side{
+    min-width:58px;
+  }
+}

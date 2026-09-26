@@ -181,6 +181,27 @@ def performance_stress(driver):
     assert stats["invalid"] == 0
     save(driver, "05-performance-stress.png")
 
+def orders_screen(driver):
+    driver.get(ROOT + "/index.html")
+    WebDriverWait(driver, 20).until(
+        lambda d: d.execute_script("return !!window.GemdropGameScene && !!window.GemdropMeta")
+    )
+    WebDriverWait(driver, 20).until(
+        EC.element_to_be_clickable((By.ID, "collectionButton"))
+    ).click()
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.ID, "collectionTabOrders"))
+    ).click()
+    WebDriverWait(driver, 10).until(
+        lambda d: d.execute_script("""
+          const board=document.getElementById('orderBoard');
+          return board && !board.hidden && board.querySelectorAll('.order-card').length === 3;
+        """)
+    )
+    assert driver.execute_script("return document.getElementById('collectionTabOrders').getAttribute('aria-selected')") == "true"
+    time.sleep(0.25)
+    save(driver, "06-jeweller-orders.png")
+
 def tutorial_screen(driver):
     driver.get(ROOT + "/index.html")
     WebDriverWait(driver, 20).until(
@@ -198,7 +219,7 @@ def tutorial_screen(driver):
         lambda d: "visible" in d.find_element(By.ID, "tutorialOverlay").get_attribute("class")
     )
     time.sleep(0.25)
-    save(driver, "06-first-run-tutorial.png")
+    save(driver, "07-first-run-tutorial.png")
 
 def main():
     driver=make_driver()
@@ -208,6 +229,7 @@ def main():
         high_tier_merge(driver)
         run_summary(driver)
         performance_stress(driver)
+        orders_screen(driver)
         tutorial_screen(driver)
     finally:
         driver.quit()

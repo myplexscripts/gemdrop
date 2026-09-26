@@ -713,18 +713,40 @@
     if(!card) return;
 
     const order=state.orders.find(orderReady)||state.orders[0];
-    if(!order) return;
+    if(!order){
+      card.hidden=true;
+      return;
+    }
 
     const ready=orderReady(order);
+    let titleText='';
+    let progressText='';
+
+    if(order.kind==='treasure'){
+      const treasure=treasureById(order.treasureId);
+      titleText=treasure?treasure.name:'Finished treasure';
+      progressText=ready?'Ready to deliver':'Finish it in the Treasure Vault';
+    }else{
+      titleText=order.requirements
+        .map(item=>item.qty+' '+GEMS[item.tier].name)
+        .join(' + ');
+      progressText=ready
+        ? 'Ready to deliver'
+        : order.requirements
+            .map(item=>Math.min(item.qty,availableGemCount(item.tier))+'/'+item.qty)
+            .join('  ·  ')+' collected';
+    }
+
+    card.hidden=false;
     card.classList.toggle('ready',ready);
-    card.setAttribute('aria-label',orderTitle(order)+'. '+orderProgressLabel(order));
+    card.setAttribute('aria-label',"Jeweller's order. "+titleText+'. '+progressText);
 
     const title=$('homeOrderTitle');
     const progress=$('homeOrderProgress');
     const reward=$('homeOrderReward');
 
-    if(title) title.textContent=orderTitle(order);
-    if(progress) progress.textContent=orderProgressLabel(order);
+    if(title) title.textContent=titleText;
+    if(progress) progress.textContent=progressText;
     if(reward) reward.textContent=orderRewardLabel(order);
   }
 
@@ -1222,16 +1244,29 @@
     const treasures=active==='treasures';
     const orders=active==='orders';
 
-    $('collectionTabGems').classList.toggle('active',gems);
-    $('collectionTabTreasures').classList.toggle('active',treasures);
-    $('collectionTabOrders').classList.toggle('active',orders);
-    $('collectionTabGems').setAttribute('aria-selected',gems?'true':'false');
-    $('collectionTabTreasures').setAttribute('aria-selected',treasures?'true':'false');
-    $('collectionTabOrders').setAttribute('aria-selected',orders?'true':'false');
+    const gemsTab=$('collectionTabGems');
+    const treasuresTab=$('collectionTabTreasures');
+    const ordersTab=$('collectionTabOrders');
+    const gemsPanel=$('gemCollection');
+    const treasuresPanel=$('treasureCollection');
+    const ordersPanel=$('orderBoard');
 
-    $('gemCollection').hidden=!gems;
-    $('treasureCollection').hidden=!treasures;
-    $('orderBoard').hidden=!orders;
+    if(gemsTab){
+      gemsTab.classList.toggle('active',gems);
+      gemsTab.setAttribute('aria-selected',gems?'true':'false');
+    }
+    if(treasuresTab){
+      treasuresTab.classList.toggle('active',treasures);
+      treasuresTab.setAttribute('aria-selected',treasures?'true':'false');
+    }
+    if(ordersTab){
+      ordersTab.classList.toggle('active',orders);
+      ordersTab.setAttribute('aria-selected',orders?'true':'false');
+    }
+
+    if(gemsPanel) gemsPanel.hidden=!gems;
+    if(treasuresPanel) treasuresPanel.hidden=!treasures;
+    if(ordersPanel) ordersPanel.hidden=!orders;
 
     $('collectionTitle').textContent=gems
       ? 'Gem Showcase'
